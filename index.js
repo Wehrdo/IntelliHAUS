@@ -5,6 +5,7 @@
 var express = require("express");
 var app = express();
 var models = require("./models");
+var routes = require("./routes");
 
 app.set('port', 5000);
 
@@ -21,22 +22,7 @@ app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-app.get('/', function(request, response) {
-    response.end("Homepage");
-});
-
-app.get('/homes', function(request, response) {
-    models.User.findAll({
-        include: [models.Home]
-    }).then(function(users) {
-        var toSend = "";
-        users.forEach(function(user) {
-            user.homes.forEach(function(home) {
-                toSend += home.name += ": " + home.created.toString() + "<br/>";
-            })
-        });
-        response.end(toSend);
-    });
-});
+// Initialize routes
+routes(app);
 
 
