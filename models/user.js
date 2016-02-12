@@ -16,10 +16,7 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false
         },
         pwHash: {
-            type: DataTypes.STRING
-        },
-        salt: {
-            type: DataTypes.STRING
+            type: DataTypes.STRING(270)
         }
     },
     {

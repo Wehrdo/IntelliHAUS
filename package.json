@@ -5,25 +5,29 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-	"start": "node index.js"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
     "url": "https://git.linux.iastate.edu/309Spring2016/G30_IntelliHAUS.git"
   },
   "engines": {
-	"node": "0.12.7"
+    "node": "0.12.7"
   },
   "dependencies": {
+    "body-parser": "^1.15.0",
     "ejs": "2.3.3",
     "express": "4.13.3",
+    "jsonwebtoken": "^5.5.4",
+    "password-hash-and-salt": "^0.1.3",
     "pg": "^4.4.3",
     "pg-hstore": "^2.3.2",
     "sequelize": "^3.18.0"
   },
-  
-  "keywords": ["node", "express"],
+  "keywords": [
+    "node",
+    "express"
+  ],
   "author": "",
   "license": "ISC"
-  
 }
