@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "sourceMap": true,
+    "declaration": true
+  },
+  "files": [
+    "./models/home.ts",
+    "./models/user.ts",
+    "./index.ts"
+  ]
+}
