@@ -8,8 +8,6 @@ var bodyParser = require('body-parser');
 var password = require('password-hash-and-salt');
 var models = require('../../models/index');
 
-var urlParser = bodyParser.urlencoded({extended: true});
-
 /*
  Ensures username is only letters
  */
@@ -66,7 +64,7 @@ var hashPassword = function(req, res, next) {
 };
 
 // Signup
-router.use(urlParser).route('/')
+router.route('/')
     .get(function (req, res) {
         res.send("<h1>This is the signup page</h1>");
     })

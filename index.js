@@ -6,6 +6,8 @@ var express = require("express");
 var app = express();
 var models = require("./models");
 var routes = require("./routes");
+var cookieParser = require("cookie-parser");
+var bodyParser = require('body-parser');
 
 app.set('port', 5000);
 
@@ -15,7 +17,9 @@ models.sequelize.sync().then(function() {
     });
 });
 
-
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 
 // views is directory for all template files

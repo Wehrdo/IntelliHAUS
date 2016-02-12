@@ -5,7 +5,6 @@
 var express = require('express');
 var router = express.Router();
 var models = require('../models');
-var bodyParser = require('body-parser');
 
 // Query by id
 router.get('/:id(\\d+)', function(req, res) {

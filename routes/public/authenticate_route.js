@@ -12,12 +12,6 @@ var models = require('../../models');
 // TODO: Make this secret for real
 var SECRET = "hahaThisIsntSecret";
 
-var urlParser = bodyParser.urlencoded({extended: true});
-var jsonParser = bodyParser.json();
-
-router.use(urlParser);
-router.use(jsonParser);
-
 var findUser = function(req, res, next) {
     models.User.findOne({
         where: {username: req.body.username.toLowerCase()}
