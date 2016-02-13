@@ -12,7 +12,7 @@ module.exports = function(sequelize, DataTypes) {
 
     var Node = sequelize.define("Node", {
         name: {
-            type: DataTypes.INTEGER
+            type: DataTypes.STRING
         },
         inputTypes: {
             type: DataTypes.ARRAY(DataTypes.STRING)

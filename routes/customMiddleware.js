@@ -5,8 +5,15 @@ var jwt = require('jsonwebtoken');
 var models = require('../models');
 var config = require("../" + (process.env.NODE_ENV || "dev") + "_config");
 
+/*
+Attempts to verify the token (possibly) given in request
+Responds with HTTP 403 if failed
+pre-conditions: None
+post-conditions: req.parsedToken gets set to the token payload if successful
+ */
 exports.authVerify = function(req, res, next) {
-    var token = req.cookies.accessToken || req.body.accessToken || req.query.accessToken || req.headers['x-access-token'];
+    // Check for accessToken in cookie, request body, query, and headers
+    var token = (req.cookies.accessToken || req.body.accessToken || req.query.accessToken || req.headers['x-access-token']);
     if (!token) {
         res.status(403).json({
             success: false,
@@ -14,6 +21,7 @@ exports.authVerify = function(req, res, next) {
         });
         return;
     }
+    // Verify token was signed by this server and is valid (not expired)
     jwt.verify(token, config.jwt_secret, function(err, decoded) {
         if (err) {
             res.status(403).json({
@@ -28,6 +36,12 @@ exports.authVerify = function(req, res, next) {
     });
 };
 
+/*
+Gets the user identified in the authentication token
+Responds with HTTP 400 if user can't be found
+pre-conditions: req.parsedToken is set
+post-conditions: req.user is set if successful
+ */
 exports.getUser = function(req, res, next) {
     models.User.findById(req.parsedToken.user)
         .then(function(user) {
@@ -44,3 +58,26 @@ exports.getUser = function(req, res, next) {
         })
 };
 
+/*
+Gets the home passed in the request body associated with user
+Pre-conditions: req.user has been set
+Post-conditions: req.home is set
+ */
+exports.getHome = function(req, res, next) {
+    // Search for home with given ID and matching user
+    var homeId = (req.body.homeid || req.query.homeid || req.headers.homeid);
+    models.Home.findOne({where: {
+        id: homeId,
+        UserId: req.user.id
+    }}).then(function(home) {
+        if (home) {
+            req.home = home;
+            next();
+        } else {
+            res.status(400).json({
+                success: false,
+                error: "Could not find home with ID " + req.body.homeId
+            })
+        }
+    })
+};

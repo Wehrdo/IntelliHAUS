@@ -14,4 +14,6 @@ module.exports = function(app) {
     app.use('/signup', signup);
     var authenticate = require('./public/authenticate_route');
     app.use('/authenticate', authenticate);
+    var userQuery = require('./public/user_route');
+    app.use('/user', userQuery);
 };

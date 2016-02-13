@@ -23,7 +23,12 @@ module.exports = function(sequelize, DataTypes) {
                     }
                 });
 
-                Home.hasMany(models.Node);
+                Home.hasMany(models.Node, {
+                    onDelete: "CASCADE",
+                    foreignKey: {
+                        allowNull: false
+                    }
+                });
             }
         }
     });
