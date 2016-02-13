@@ -6,12 +6,12 @@ var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
 var password = require('password-hash-and-salt');
-var bodyParser = require('body-parser');
 var models = require('../../models');
+var config = require("../../" + (process.env.NODE_ENV || "dev") + "_config");
 
-// TODO: Make this secret for real
-var SECRET = "hahaThisIsntSecret";
-
+/*
+Looks for the user with username that was passed into the request
+ */
 var findUser = function(req, res, next) {
     models.User.findOne({
         where: {username: req.body.username.toLowerCase()}
@@ -26,6 +26,9 @@ var findUser = function(req, res, next) {
     });
 };
 
+/*
+Checks if the given password matches the password stored for this user
+ */
 var verifyPassword = function(req, res, next) {
     password(req.body.password)
         .verifyAgainst(req.user.pwHash, function(error, verified) {
@@ -50,8 +53,10 @@ var verifyPassword = function(req, res, next) {
         })
 };
 
+// Main authenticate route. Looks for user, then verifies password, then creates a token
 router.post('/', [findUser, verifyPassword], function(req, res) {
-    var token = jwt.sign(req.user.username, SECRET);
+    var token = jwt.sign({user: req.user.id}, config.jwt_secret);
+    // Set a browser cookie with the accessToken
     res.cookie('accessToken', token);
     res.json({
         success: true,

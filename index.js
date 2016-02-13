@@ -8,8 +8,9 @@ var models = require("./models");
 var routes = require("./routes");
 var cookieParser = require("cookie-parser");
 var bodyParser = require('body-parser');
+var config = require("./" + (process.env.NODE_ENV || "dev") + "_config");
 
-app.set('port', 5000);
+app.set('port', config.port);
 
 models.sequelize.sync().then(function() {
     var server = app.listen(app.get('port'), function() {

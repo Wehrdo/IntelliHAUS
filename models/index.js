@@ -7,10 +7,11 @@
 var fs        = require("fs");
 var path      = require("path");
 var Sequelize = require("sequelize");
-var env       = process.env.NODE_ENV || "development";
+var env       = process.env.NODE_ENV || "dev";
+var config = require("../" + env + "_config");
 //var config    = require(path.join(__dirname, '..', 'config', 'config.json'))[env];
 //var sequelize = new Sequelize(config.database, config.username, config.password, config);
-var sequelize = new Sequelize('postgres://postgres:postgres@localhost:5432/intellihaus');
+var sequelize = new Sequelize(config.pg_conn_URL);
 var db        = {};
 
 fs
