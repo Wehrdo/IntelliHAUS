@@ -76,7 +76,7 @@ exports.getHome = function(req, res, next) {
         } else {
             res.status(400).json({
                 success: false,
-                error: "Could not find home with ID " + req.body.homeId
+                error: "Could not find home with ID " + homeId
             })
         }
     })
