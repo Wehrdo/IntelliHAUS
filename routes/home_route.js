@@ -26,7 +26,7 @@ Get home by ID
  */
 router.get('/:id(\\d+)', function (req, res, next) {
         // Set homeId for getHome middleware
-        req.body.homeId = req.params.id;
+        req.body.homeid = req.params.id;
         next();
     },
     middleware.getHome,
