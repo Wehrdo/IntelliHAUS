@@ -10,6 +10,14 @@ var config = {};
 config.jwt_secret = "A#RLLXFpH1%L1c%9xIO963@b3g23#Ii!gnuJmv^MvZdw%#";
 config.port = 80;
 
-config.pg_conn_URL = 'postgres://postgres:postgres@localhost:5432/intellihaus';
+// Database connection options
+config.db_name = 'intellihaus';
+config.db_username = 'postgres';
+config.db_password = 'postgres';
+config.db_options = {
+    'dialect': 'postgres',
+    'port': 5432,
+    'timezone': 'America/Chicago'
+};
 
 module.exports = config;

@@ -11,7 +11,11 @@ var env       = process.env.NODE_ENV || "dev";
 var config = require("../" + env + "_config");
 //var config    = require(path.join(__dirname, '..', 'config', 'config.json'))[env];
 //var sequelize = new Sequelize(config.database, config.username, config.password, config);
-var sequelize = new Sequelize(config.pg_conn_URL);
+var sequelize = new Sequelize(
+    config.db_name,
+    config.db_username,
+    config.db_password,
+    config.db_options);
 var db        = {};
 
 fs
