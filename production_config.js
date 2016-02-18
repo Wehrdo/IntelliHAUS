@@ -17,7 +17,8 @@ config.db_password = 'postgres';
 config.db_options = {
     'dialect': 'postgres',
     'port': 5432,
-    'timezone': 'America/Chicago'
+    'timezone': 'America/Chicago',
+    'host': '127.0.0.1'
 };
 
 module.exports = config;
