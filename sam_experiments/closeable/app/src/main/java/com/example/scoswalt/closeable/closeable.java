@@ -30,7 +30,7 @@ public class closeable extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
-                popup.showAtLocation(findViewById(R.id.android), 1, 0, 0);
+                finish();
             }
 
         });
