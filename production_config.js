@@ -13,7 +13,7 @@ config.port = 80;
 // Database connection options
 config.db_name = 'intellihaus';
 config.db_username = 'postgres';
-config.db_password = 'postgres';
+config.db_password = 'gobildegook';
 config.db_options = {
     'dialect': 'postgres',
     'port': 5432,
