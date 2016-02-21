@@ -2,12 +2,13 @@
  * Created by David on 2/11/2016.
  */
 var express = require('express');
+var path = require('path');
 
 
 module.exports = function(app) {
 // Homepage
     app.get('/', function (request, response) {
-        response.send("<h1>This is the homepage.</h1><br /> Please move along...")
+        response.sendFile('/html/homepage.html',  { root : path.join(__dirname, '../public')});
     });
 
     var signup = require('./public/signup_route');
