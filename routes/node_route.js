@@ -26,23 +26,41 @@ var genNames = function(n) {
     return arr;
 };
 
-router.post('/', [middleware.getHome], function(req, res) {
-    var name = (req.body.name || "Your Node");
-    var inputTypes =(req.body.inputTypes || []);
-    var inputNames =(req.body.inputNames || genNames(inputTypes.length));
-    var outputType =(req.body.outputType || "");
-    var outputName =(req.body.outputName || "Output");
+router.post('/', middleware.getHome, function(req, res, next) {
+    // If datastreamid was passed, get datastream
+    if (req.body.datastreamid) {
+        middleware.getDatastream(req, res, next);
+    }
+    else {
+        next();
+    }
+}, function(req, res) {
+    // If a datastream was passed, verify that types match
+    if (req.datastream && (req.datastream.datatype != req.body.outputtype)) {
+        res.status(400).json({
+            success: false,
+            error: "Output datatype and datastream types don't match"
+        });
+    }
+    else {
+        // Set some defaults if not given
+        var name = (req.body.name || "Your Node");
+        var inputTypes = (req.body.inputtypes || []);
+        var inputNames = (req.body.inputnames || genNames(inputTypes.length));
+        var outputType = (req.body.outputtype || "");
+        var outputName = (req.body.outputname || "Output");
 
-    var newNode = models.Node.build({
-        name: name,
-        inputTypes: inputTypes,
-        inputNames: inputNames,
-        outputType: outputType,
-        outputName: outputName,
-        HomeId: req.home.id
-    });
-    newNode.save()
-        .then(function() {
+        models.Node.create({
+            name: name,
+            inputTypes: inputTypes,
+            inputNames: inputNames,
+            outputType: outputType,
+            outputName: outputName,
+            DatastreamId: req.body.datastreamid,
+            HomeId: req.home.id,
+            UserId: req.user.id
+        })
+        .then(function (newNode) {
             res.status(201).json({
                 success: true,
                 id: newNode.id
@@ -54,5 +72,6 @@ router.post('/', [middleware.getHome], function(req, res) {
                 error: error.toString()
             })
         });
+    }
 });
 module.exports = router;

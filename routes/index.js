@@ -10,10 +10,12 @@ module.exports = function(app) {
 
     var node = require('./node_route');
     var datapoint = require('./datapoint_route');
+    var datastream = require('./datastream_route');
     var home = require('./home_route');
 
     var privateMiddleware = [middleware.authVerify, middleware.getUser];
     app.use('/node', privateMiddleware, node);
+    app.use('/datastream', privateMiddleware, datastream);
     app.use('/datapoint', privateMiddleware, datapoint);
     app.use('/home', privateMiddleware, home);
 };

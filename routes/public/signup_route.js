@@ -13,13 +13,14 @@ var models = require('../../models/index');
  */
 var verifyUsername = function(req, res, next) {
     if (req.body.username.length >= 1 &&
-        /^[a-zA-Z\d]+$/.test(req.body.username)) {
+        /^[a-zA-Z\d]+$/.test(req.body.username) &&
+        req.body.password.length >= 1) {
         next()
     }
     else {
         res.status(400).json({
             success: false,
-            error: "Invalid username"
+            error: "Invalid username/password"
         });
     }
 };
@@ -57,7 +58,7 @@ var hashPassword = function(req, res, next) {
                 });
             }
             else {
-                req.body.pwHash = hash;
+                req.body.pwhash = hash;
                 next();
             }
         });
@@ -73,10 +74,10 @@ router.route('/')
         function (req, res) {
             // Create new user
             var newUser = models.User.build({
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
+                firstName: req.body.firstname,
+                lastName: req.body.lastname,
                 username: req.body.username,
-                pwHash: req.body.pwHash
+                pwHash: req.body.pwhash
             });
 
             // Save into database

@@ -6,7 +6,7 @@
 module.exports = function(sequelize, DataTypes) {
     var iotypes = DataTypes.ENUM(
         'continuous',
-        'events',
+        'discrete',
         'binary'
     );
 
@@ -30,13 +30,19 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 Node.belongsTo(models.Home, {
+                    foreignKey: {
+                        allowNull: false
+                    }
+                });
+
+                Node.belongsTo(models.User, {
                     onDelete: "CASCADE",
                     foreignKey: {
                         allowNull: false
                     }
                 });
 
-                Node.hasOne(models.Datastream);
+                Node.belongsTo(models.Datastream);
             }
         }
     });

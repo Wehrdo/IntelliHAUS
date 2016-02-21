@@ -81,3 +81,30 @@ exports.getHome = function(req, res, next) {
         }
     })
 };
+
+/*
+Gets the datastream given an ID
+Pre-conditions: req.user has been set
+Post-conditions: req.datastream is set
+ */
+exports.getDatastream = function(req, res, next) {
+    var dsId = (req.body.datastreamid || req.query.datastreamid || req.headers.datastreamid);
+
+    models.Datastream.findOne({
+            where: {
+                id: dsId,
+                UserId: req.user.id
+            }
+        })
+        .then(function (datastream) {
+            if (datastream) {
+                req.datastream = datastream;
+                next();
+            } else {
+                res.status(400).json({
+                    success: false,
+                    error: "Unable to get datastream " + dsId
+                });
+            }
+        });
+};

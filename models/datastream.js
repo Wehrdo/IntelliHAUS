@@ -6,7 +6,7 @@
 module.exports = function(sequelize, DataTypes) {
     var iotypes = DataTypes.ENUM(
         'continuous',
-        'events',
+        'discrete',
         'binary'
     );
 
@@ -19,13 +19,18 @@ module.exports = function(sequelize, DataTypes) {
         },
         datatype: {
             type: DataTypes.STRING
+        },
+        discreteLabels: {
+            type: DataTypes.ARRAY(DataTypes.STRING)
         }
     }, {
         classMethods: {
             associate: function(models) {
                 Datastream.belongsTo(models.User);
+                Datastream.hasMany(models.Node);
 
                 Datastream.hasMany(models.Datapoint);
+
             }
         }
     });
