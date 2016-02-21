@@ -1,0 +1,36 @@
+<html>
+<head>
+<script src="knockout-3.4.0.js"></script>
+<script src="homepage.js"></script>
+</head>
+<!--Tabs-->
+<ul class="tabs" data-bind="foreach: tabs">
+	<li data-bind="text: $data,
+				   css: {selected: $data == $root.chosenTabId() },
+				   click: $root.goToTab"></li>
+</ul>
+
+<!--Recent Rules Table-->
+<table>
+	<thead><tr>
+		<th>Recent Rules</th>
+	</tr></thead>
+	<tbody data-bind="foreach: rules">
+		<tr>
+			<td data-bind="text: ruleTime + ": Set " + nodeName + " to " + nodeState"></td>
+		</tr>
+	</tbody>
+</table>
+
+<!--Pinned Datastreams-->
+<table>
+	<thead><tr>
+		<th>Pinned Datastreams</th>
+	</tr></thead>
+	<tbody data-bind="foreach: datastream">
+		<tr>
+			<td data-bind="data for graph here"></td>
+		</tr>
+	</tbody>
+</table>
+</html>
