@@ -36,7 +36,14 @@ ko.applyBindings(new RulesTableViewModel());
 //Class to represent a row in the Datastreams table
 var PinnedDataStreamsViewModel = function(){
 	var self = this;
-	
+	self.datastreams = ko.observableArray([]);
+	$.getJSON('/datastream', function(data) {
+		if (data.success) {
+			ko.utils.arrayPushAll(self.datastreams, data.datastreams);
+			//self.datastreams = data.datastreams;
+		}
+	});
+
 	//Non-editable catalog data - would come from the server 
 	self.availableNodes = [
 		{nodeName: "Thermostat", dsGraph: "data"},
@@ -44,4 +51,10 @@ var PinnedDataStreamsViewModel = function(){
 	];
 };
 
-ko.applyBindings(new PinnedDataStreamsViewModel());
+var applyBindings = function() {
+	ko.applyBindings(new PinnedDataStreamsViewModel(), document.getElementById("pinned-ds"));
+};
+
+window.onload = function() {
+	applyBindings();
+};
