@@ -10,18 +10,45 @@
 
 using namespace std;
 
+namespace Hub
+{
+
 class HTTP
 {
 public:
+	class Message
+	{
+		public:
+			Message(string header, string body);
+
+			string& GetHeader() const;
+			string& GetBody() const;
+
+			void SetHeader(const string &header);
+			void SetBody(const string &body);
+
+		private:
+			string header, body;
+	};
+
 	HTTP(string hostName);
 	~HTTP();
 
-	string Get(string path);
+	int Connect();
+	int Disconnect();
+
+	bool IsConnected();
+
+	Message& Get(const string &path, const string &header);
+
+	string& Post(const Message &postMessage);
 
 private:
 	string hostName;
 	boost::asio::io_service ioService;
 	unique_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 };
+
+} //namespace Hub
 
 #endif //HTTP_HPP

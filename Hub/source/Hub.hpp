@@ -6,6 +6,6 @@
 #include <array>
 #include <string>
 
-#include "HTTP.hpp"
+#include "Server.hpp"
 
 #endif //HUB_HPP
