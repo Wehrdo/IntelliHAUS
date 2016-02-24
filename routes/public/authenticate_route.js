@@ -21,7 +21,10 @@ var findUser = function(req, res, next) {
             next();
         }
         else {
-            res.status(403).end();
+            res.status(403).json({
+                success: false,
+                error: "User not found"
+            });
         }
     });
 };
@@ -61,6 +64,15 @@ router.post('/', [findUser, verifyPassword], function(req, res) {
     res.json({
         success: true,
         token: token
+    });
+});
+
+router.post('/login', [findUser, verifyPassword], function(req, res) {
+    var token = jwt.sign({user: req.user.id}, config.jwt_secret);
+    res.cookie('accessToken', token);
+    res.json({
+        success: true,
+        accessToken: token
     });
 });
 

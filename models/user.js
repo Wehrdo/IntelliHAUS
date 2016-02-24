@@ -5,6 +5,10 @@
 
 module.exports = function(sequelize, DataTypes) {
     var User = sequelize.define("User", {
+        email: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
         firstName: {
             type: DataTypes.STRING
         },
@@ -16,7 +20,8 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false
         },
         pwHash: {
-            type: DataTypes.STRING(270)
+            type: DataTypes.STRING(270),
+            allowNull: false
         }
     },
     {

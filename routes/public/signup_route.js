@@ -4,9 +4,10 @@
 
 var express = require('express');
 var router = express.Router();
-var bodyParser = require('body-parser');
 var password = require('password-hash-and-salt');
 var models = require('../../models/index');
+var config = require("../../" + (process.env.NODE_ENV || "dev") + "_config");
+var jwt = require('jsonwebtoken');
 
 /*
  Ensures username is only letters
@@ -20,7 +21,7 @@ var verifyUsername = function(req, res, next) {
     else {
         res.status(400).json({
             success: false,
-            error: "Invalid username/password"
+            error: "Invalid username/password text"
         });
     }
 };
@@ -34,7 +35,7 @@ var checkUsernameOpen = function(req, res, next) {
         // Check if user with username already exists
         .then(function(user) {
             if (user) {
-                res.status(409).json({
+                res.status(400).json({
                     success: false,
                     error: "User already exists"});
             }
@@ -74,6 +75,7 @@ router.route('/')
         function (req, res) {
             // Create new user
             var newUser = models.User.build({
+                email: req.body.email,
                 firstName: req.body.firstname,
                 lastName: req.body.lastname,
                 username: req.body.username,
@@ -83,7 +85,10 @@ router.route('/')
             // Save into database
             newUser.save()
                 .then(function() {
-                    // Good, return success and newly created id
+                    // Good, create token for future use
+                    var token = jwt.sign({user: newUser.id}, config.jwt_secret);
+                    res.cookie('accessToken', token);
+                    // return success and newly created id
                     res.status(201).json({
                         success: true,
                         id: newUser.id
