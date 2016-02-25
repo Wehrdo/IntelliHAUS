@@ -1,5 +1,35 @@
 #include "HTTP.hpp"
 
+
+Hub::HTTP::Message::Message() {
+
+}
+
+Hub::HTTP::Message::Message(const string& header, const string& body) : header(header), body(body) {
+
+}
+
+string Hub::HTTP::Message::GetHeader() const {
+	return header;
+}
+
+string Hub::HTTP::Message::GetBody() const {
+	return body;
+}
+
+void Hub::HTTP::Message::SetHeader(const string& header) {
+	this->header = header;
+}
+
+void Hub::HTTP::Message::SetBody(const string& body) {
+	this->body = body;
+}
+
+string Hub::HTTP::Message::ToString() const {
+	return header + "\r\n" + body;
+}
+
+
 Hub::HTTP::HTTP(string hostName) : hostName(hostName) {
 	//this->hostName = hostName;
 }
@@ -22,20 +52,23 @@ int Hub::HTTP::Connect() {
 	try {
 		//Connect to the HTTP server by iteratively trying all endpoints
 		boost::asio::connect(*tcpSocket, endpoint_iterator);
-	catch(Exception &e) {
+	}
+	catch(exception &e) {
 		return -1;
 		//TODO: Return meaningfull error code
 	}
+
+	return 0;
 }
 
-int Hub::HTTP:Disconnect() {
+int Hub::HTTP::Disconnect() {
 	boost::system::error_code error;
 
 	//Disables sending and receiving to enable gracefull socket closure
 	tcpSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_send, error);
 
 	//error occurred
-	if(ec) {
+	if(error) {
 		//TODO: return meaningful error code
 		return -1;
 	}
@@ -54,7 +87,7 @@ Hub::HTTP::~HTTP() {
  * with each line terminating in single '\r\n' (including last line)
  * @returns: HTTP::Header containing the response from the server
 */
-Hub::HTTP::Header& Hub::HTTP::Get(const string &path, const string &header) {
+Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 	boost::asio::streambuf request, response;
 	boost::system::error_code error;
 
@@ -71,8 +104,10 @@ Hub::HTTP::Header& Hub::HTTP::Get(const string &path, const string &header) {
 
 	boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
 
-	string header;
-	while(getline(responseStream, header) && header != "\r");
+	string temp, responseHeader;
+
+	while(getline(responseStream, temp) && temp != "\r")
+		responseHeader += temp + "\r\n";
 
 	if(response.size() > 0)
 		outStream << &response;
@@ -83,7 +118,7 @@ Hub::HTTP::Header& Hub::HTTP::Get(const string &path, const string &header) {
 	if(error != boost::asio::error::eof)
 		throw boost::system::system_error(error);
 
-	return outStream.str();
+	return Message(responseHeader, outStream.str());
 }
 
 /* @param path: string containing path for request
@@ -91,9 +126,10 @@ Hub::HTTP::Header& Hub::HTTP::Get(const string &path, const string &header) {
  * @returns: HTTP::Message containing the response from the server
  *
 */
-Message& Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessage) {
+Hub::HTTP::Message Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessage) {
 	boost::asio::streambuf request, response;
 	boost::system::error_code error;
+	Message msg;
 
 	ostream requestStream(&request);
 	istream responseStream(&response);
@@ -105,21 +141,35 @@ Message& Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessa
 	requestStream << postMessage.GetHeader() << "\r\n";
 	requestStream << postMessage.GetBody();
 
+//	cout << "POST Request: " << endl << &request << endl;
+
 	boost::asio::write(*tcpSocket, request);
 
+	try {
 	boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
+	}
+	catch(exception &e) {
+		cout << "Exception: " << e.what() << endl;
+		cout << "Data read so far: " << endl << &response << endl;
+	}
+	string temp, responseHeader;
 
-	string header;
-	while(getline(responseStream, header) && header != "\r");
+	while(getline(responseStream, temp) && temp != "\r")
+		responseHeader += temp + "\r\n";
 
 	if(response.size() > 0)
 		outStream << &response;
 
+	try{
 	while(boost::asio::read(*tcpSocket, response, boost::asio::transfer_at_least(1), error))
 		outStream << &response;
 
 	if(error != boost::asio::error::eof)
 		throw boost::system::system_error(error);
+	}
+	catch(exception &e) {
+		cout << "Exception: " << e.what() << endl;
+	}
 
-	return outStream.str();
+	return Message(responseHeader, outStream.str());
 }

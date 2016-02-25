@@ -19,13 +19,16 @@ public:
 	class Message
 	{
 		public:
-			Message(string header, string body);
+			Message();
+			Message(const string& header, const string& body);
 
-			string& GetHeader() const;
-			string& GetBody() const;
+			string GetHeader() const;
+			string GetBody() const;
 
 			void SetHeader(const string &header);
 			void SetBody(const string &body);
+
+			string ToString() const;
 
 		private:
 			string header, body;
@@ -39,9 +42,9 @@ public:
 
 	bool IsConnected();
 
-	Message& Get(const string &path, const string &header);
+	Message Get(const string &path, const string &header);
 
-	string& Post(const Message &postMessage);
+	Message Post(const string &path, const Message &postMessage);
 
 private:
 	string hostName;

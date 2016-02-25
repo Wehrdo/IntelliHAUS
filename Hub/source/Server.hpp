@@ -1,7 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "HTTP.h"
+#include "HTTP.hpp"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ public:
 	int CreateDatastream(string name, vector<string> ioTypes);
 	int SendDatapoint(string name, string data);
 
-	
+
 
 private:
 	std::unique_ptr<HTTP> httpREST;
