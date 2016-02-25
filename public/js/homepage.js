@@ -35,7 +35,7 @@ var RulesTableViewModel = function () {
 var PinnedDataStreamsViewModel = function () {
     var self = this;
     self.datastreams = ko.observableArray([]);
-    $.getJSON('/datastream', function (data) {
+    $.getJSON('/api/datastream', function (data) {
         if (data.success) {
             ko.utils.arrayPushAll(self.datastreams, data.datastreams);
             //self.datastreams = data.datastreams;

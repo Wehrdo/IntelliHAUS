@@ -56,6 +56,11 @@ var verifyPassword = function(req, res, next) {
         })
 };
 
+router.get('/logout', function(req, res) {
+    res.clearCookie('accessToken');
+    res.redirect('/');
+});
+
 // Main authenticate route. Looks for user, then verifies password, then creates a token
 router.post('/', [findUser, verifyPassword], function(req, res) {
     var token = jwt.sign({user: req.user.id}, config.jwt_secret);

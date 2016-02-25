@@ -1,10 +1,9 @@
 /**
  * Created by David on 2/10/2016.
  */
-
 var express = require('express');
 var router = express.Router();
-var models = require('../models');
+var models = require('../../models/index');
 
 // Getting datapoint with integer ID
 router.get('/:id(\\d+)', function(req, res) {

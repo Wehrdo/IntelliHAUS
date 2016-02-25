@@ -4,8 +4,8 @@
 
 var express = require('express');
 var router = express.Router();
-var models = require('../models');
-var middleware = require('./customMiddleware');
+var models = require('../../models/index');
+var middleware = require('./../customMiddleware');
 
 /*
 Get all homes for authenticated user

@@ -6,16 +6,14 @@ var middleware = require('./customMiddleware');
 
 module.exports = function(app) {
     // Initialize public routes
-    require('./public_routes')(app);
+    var publicRoutes = require('./public_routes');
+    app.use('/', publicRoutes);
 
-    var node = require('./node_route');
-    var datapoint = require('./datapoint_route');
-    var datastream = require('./datastream_route');
-    var home = require('./home_route');
-
+    // Middleware to use on all private API routes
     var privateMiddleware = [middleware.authVerify, middleware.getUser];
-    app.use('/node', privateMiddleware, node);
-    app.use('/datastream', privateMiddleware, datastream);
-    app.use('/datapoint', privateMiddleware, datapoint);
-    app.use('/home', privateMiddleware, home);
+    // API routes are all prefixed by /api
+    var apiRoutes = require('./api_routes');
+    app.use('/api', privateMiddleware, apiRoutes);
+
+
 };

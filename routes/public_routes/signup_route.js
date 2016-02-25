@@ -66,41 +66,37 @@ var hashPassword = function(req, res, next) {
 };
 
 // Signup
-router.route('/')
-    .get(function (req, res) {
-        res.send("<h1>This is the signup page</h1>");
-    })
-    .post(
-        [verifyUsername, checkUsernameOpen, hashPassword], // Set of preconditions/validations
-        function (req, res) {
-            // Create new user
-            var newUser = models.User.build({
-                email: req.body.email,
-                firstName: req.body.firstname,
-                lastName: req.body.lastname,
-                username: req.body.username,
-                pwHash: req.body.pwhash
-            });
-
-            // Save into database
-            newUser.save()
-                .then(function() {
-                    // Good, create token for future use
-                    var token = jwt.sign({user: newUser.id}, config.jwt_secret);
-                    res.cookie('accessToken', token);
-                    // return success and newly created id
-                    res.status(201).json({
-                        success: true,
-                        id: newUser.id
-                    });
-                })
-                .catch(function(error) {
-                    // Failed to save
-                    res.status(400).json({
-                        success: false,
-                        error: error.toString()
-                    });
-                });
+router.post('/',
+    [verifyUsername, checkUsernameOpen, hashPassword], // Set of preconditions/validations
+    function (req, res) {
+        // Create new user
+        var newUser = models.User.build({
+            email: req.body.email,
+            firstName: req.body.firstname,
+            lastName: req.body.lastname,
+            username: req.body.username,
+            pwHash: req.body.pwhash
         });
+
+        // Save into database
+        newUser.save()
+            .then(function() {
+                // Good, create token for future use
+                var token = jwt.sign({user: newUser.id}, config.jwt_secret);
+                res.cookie('accessToken', token);
+                // return success and newly created id
+                res.status(201).json({
+                    success: true,
+                    id: newUser.id
+                });
+            })
+            .catch(function(error) {
+                // Failed to save
+                res.status(400).json({
+                    success: false,
+                    error: error.toString()
+                });
+            });
+    });
 
 module.exports = router;
