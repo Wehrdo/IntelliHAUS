@@ -74,7 +74,7 @@ router.post('/',
             email: req.body.email,
             firstName: req.body.firstname,
             lastName: req.body.lastname,
-            username: req.body.username,
+            username: req.body.username.toLowerCase(),
             pwHash: req.body.pwhash
         });
 
