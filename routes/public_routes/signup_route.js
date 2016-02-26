@@ -83,7 +83,7 @@ router.post('/',
             .then(function() {
                 // Good, create token for future use
                 var token = jwt.sign({user: newUser.id}, config.jwt_secret);
-                res.cookie('accessToken', token);
+                res.cookie('accesstoken', token);
                 // return success and newly created id
                 res.status(201).json({
                     success: true,

@@ -13,7 +13,7 @@ post-conditions: req.parsedToken gets set to the token payload if successful
  */
 exports.authVerify = function(req, res, next) {
     // Check for accessToken in cookie, request body, query, and headers
-    var token = (req.cookies.accessToken || req.body.accessToken || req.query.accessToken || req.headers['x-access-token']);
+    var token = (req.cookies.accesstoken || req.body.accesstoken || req.query.accesstoken || req.headers['x-access-token']);
     if (!token) {
         res.status(403).json({
             success: false,

@@ -65,19 +65,10 @@ router.get('/logout', function(req, res) {
 router.post('/', [findUser, verifyPassword], function(req, res) {
     var token = jwt.sign({user: req.user.id}, config.jwt_secret);
     // Set a browser cookie with the accessToken
-    res.cookie('accessToken', token);
+    res.cookie('accesstoken', token);
     res.json({
         success: true,
         token: token
-    });
-});
-
-router.post('/login', [findUser, verifyPassword], function(req, res) {
-    var token = jwt.sign({user: req.user.id}, config.jwt_secret);
-    res.cookie('accessToken', token);
-    res.json({
-        success: true,
-        accessToken: token
     });
 });
 
