@@ -7,32 +7,22 @@ using namespace Hub;
 #define PASSWORD	"test1234"
 
 int main() {
-	//Hub::Server cloudServer("intellihaus.ece.iastate.edu");
-	HTTP httpClient("intellihaus.ece.iastate.edu");
-	HTTP::Message authMsg("Connection: close\r\n", string("{\"username\": \"") + USERNAME + "\",\r\n"
-				"\"password\": \"" + PASSWORD + "\"}");
+	Hub::Server server(SERVER_URL);
 
-	int retVal = httpClient.Connect();
+	int retVal = server.Connect();
 
-	if(retVal != 0) {
-		cout << "Error connecting to server" << endl;
+	if(retVal < 0) {
+		cout << "Error connecting to server." << endl;
 		return -1;
 	}
+	try {
+		retVal = server.CreateUser("test1", "test1234", "Test", "Test", "test@test.test");
+	}
+	catch(exception &e) {
+		cout << "Exception caught: " << e.what() << endl;
+	}
 
-//	HTTP::Message getResponse = httpClient.Get("/", "Connection: close\r\n");
-
-//	cout << "Server GET response:\r\nHeader:\r\n" << getResponse.GetHeader() << endl
-//			<< endl << getResponse.GetBody() << endl << endl;
-
-	cout << "Attempting to authenticate..." << endl;
-	cout << "Sending Message: " << endl << authMsg.ToString() << endl;
-
-	HTTP::Message authResponse = httpClient.Post("/authenticate", authMsg);
-
-	cout << "Authentication response: " << endl << authResponse.GetHeader() << endl
-		<< endl << authResponse.GetBody() << endl << endl;
-
-	httpClient.Disconnect();
+	server.Disconnect();
 
 	return 0;
 }

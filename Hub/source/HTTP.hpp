@@ -9,6 +9,7 @@
 #include <sstream>
 
 using namespace std;
+//using namespace Hub;
 
 namespace Hub
 {
@@ -47,10 +48,13 @@ public:
 	Message Post(const string &path, const Message &postMessage);
 
 private:
+	int ParseBodyLength(const string& header);
 	string hostName;
 	boost::asio::io_service ioService;
 	unique_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 };
+
+int FindInStrIC(const string& haystack, const string& needle);
 
 } //namespace Hub
 

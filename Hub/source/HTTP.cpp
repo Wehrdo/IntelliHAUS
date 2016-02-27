@@ -1,5 +1,7 @@
 #include "HTTP.hpp"
 
+using namespace std;
+using namespace Hub;
 
 Hub::HTTP::Message::Message() {
 
@@ -31,7 +33,7 @@ string Hub::HTTP::Message::ToString() const {
 
 
 Hub::HTTP::HTTP(string hostName) : hostName(hostName) {
-	//this->hostName = hostName;
+
 }
 
 int Hub::HTTP::Connect() {
@@ -102,6 +104,8 @@ Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 
 	boost::asio::write(*tcpSocket, request);
 
+	cout << "Sending Request..." << endl;
+
 	boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
 
 	string temp, responseHeader;
@@ -109,14 +113,27 @@ Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 	while(getline(responseStream, temp) && temp != "\r")
 		responseHeader += temp + "\r\n";
 
+	cout << "Received response header." << endl;
+
+	int length = ParseBodyLength(responseHeader);
+
+	cout << "Body length: " << length << endl;
+
+	int lengthNeeded = length - response.size();
+
 	if(response.size() > 0)
 		outStream << &response;
 
-	while(boost::asio::read(*tcpSocket, response, boost::asio::transfer_at_least(1), error))
-		outStream << &response;
+	cout << "Remaining body length: " << lengthNeeded << endl;
 
-	if(error != boost::asio::error::eof)
+	boost::asio::read(*tcpSocket, response, boost::asio::transfer_exactly(lengthNeeded), error);
+
+	outStream << &response;
+
+	if(error != boost::asio::error::eof && error != boost::system::errc::success)
 		throw boost::system::system_error(error);
+
+	cout << "Actually read: " << outStream.str().length() << endl;
 
 	return Message(responseHeader, outStream.str());
 }
@@ -138,15 +155,14 @@ Hub::HTTP::Message Hub::HTTP::Post(const string& path, const Hub::HTTP::Message&
 
 	requestStream << "POST " << path << " HTTP/1.1\r\n";
 	requestStream << "Host: " << hostName << "\r\n";
+	requestStream << "Content-Length: " << postMessage.GetBody().length() << "\r\n";
 	requestStream << postMessage.GetHeader() << "\r\n";
 	requestStream << postMessage.GetBody();
-
-//	cout << "POST Request: " << endl << &request << endl;
 
 	boost::asio::write(*tcpSocket, request);
 
 	try {
-	boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
+		boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
 	}
 	catch(exception &e) {
 		cout << "Exception: " << e.what() << endl;
@@ -157,19 +173,44 @@ Hub::HTTP::Message Hub::HTTP::Post(const string& path, const Hub::HTTP::Message&
 	while(getline(responseStream, temp) && temp != "\r")
 		responseHeader += temp + "\r\n";
 
+	int lengthRemaining = ParseBodyLength(responseHeader) - response.size();
+
 	if(response.size() > 0)
 		outStream << &response;
 
-	try{
-	while(boost::asio::read(*tcpSocket, response, boost::asio::transfer_at_least(1), error))
-		outStream << &response;
-
-	if(error != boost::asio::error::eof)
-		throw boost::system::system_error(error);
+	try {
+		while(boost::asio::read(*tcpSocket, response, boost::asio::transfer_exactly(lengthRemaining), error))
+			outStream << &response;
 	}
 	catch(exception &e) {
 		cout << "Exception: " << e.what() << endl;
 	}
 
 	return Message(responseHeader, outStream.str());
+}
+
+int Hub::HTTP::ParseBodyLength(const string& header) {
+	const string token = "Content-Length: ";
+
+	int pos = FindInStrIC(header, token), retVal;
+
+	if(pos < 0)
+		return -1;
+
+	stringstream stream(header.substr(pos + token.length()));
+	stream >> retVal;
+
+	return retVal;
+}
+
+
+int Hub::FindInStrIC(const string& haystack, const string& needle) {
+	auto it = std::search(haystack.begin(), haystack.end(),
+				needle.begin(), needle.end(),
+				[](char ch1, char ch2) {return std::toupper(ch1) == std::toupper(ch2);});
+
+	if(it == haystack.end())
+		return -1;
+	else
+		return it - haystack.begin();
 }
