@@ -5,6 +5,32 @@
 
 .info-settings {
     flex-grow: 1;
+    padding: 10px;
+}
+
+.settings, .info {
+    padding: 10px;
+}
+.settings:before {
+    top: 15px;
+    left: 15px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #747474;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    content: "Settings";
+}
+
+.info:before {
+    top: 15px;
+    left: 15px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #747474;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    content: "Information";
 }
 
 .data-area {

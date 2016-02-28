@@ -17,23 +17,38 @@
 
 <div class="main-area">
     <div class="info-settings">
-        <div class>
-            <label>Name:</label>
-            <input data-bind="value: info.name" type="text" class="form-control">
+        <div class="settings panel panel-default">
+            <div class="form-group">
+                <label for="ds_name">Name:</label>
+                <input id="ds_name" data-bind="value: info.name" type="text" class="form-control">
+            </div>
+            <label>Make datastream public:</label>
+            <br />
+            <div class="btn-group">
+                <button type="button"
+                        class="btn"
+                        data-bind="css: {'btn-warning': info.public()},
+                        click: function(){info.public(true)}">
+                    Yes
+                </button>
+                <button type="button"
+                        class="btn"
+                        data-bind="css: {'btn-primary': !info.public()},
+                        click: function(){info.public(false)}">
+                    No
+                </button>
+            </div>
         </div>
-        <div class="btn-group">
-            <button type="button"
-                    class="btn"
-                    data-bind="css: {'btn-warning': info.public()},
-                    click: function(){info.public(true)}">
-                Public
-            </button>
-            <button type="button"
-                    class="btn"
-                    data-bind="css: {'btn-primary': !info.public()},
-                    click: function(){info.public(false)}">
-                Private
-            </button>
+        <div class="info panel panel-default">
+            <h5><strong>Receives data from nodes:</strong></h5>
+            <div data-bind="foreach: info.Nodes" class="list-group">
+                <a data-bind="attr: {href: '/node/' + $data.id()}" class="list-group-item">
+                    <span data-bind="text: $data.name"></span>
+                </a>
+            </div>
+
+            <h5><strong>Created on:</strong></h5>
+            <span data-bind="text: createdAtPretty"></span>
         </div>
     </div>
     <div class="data-area">
@@ -44,6 +59,7 @@
             <p>Adjust date range</p>
         </div>
     </div>
+
 </div>
 
 </body>

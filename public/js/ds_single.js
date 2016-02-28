@@ -61,6 +61,10 @@ function Plot() {
 
         newPlot.select(".axis-x").duration(750).call(xAxis);
         newPlot.select(".axis-y").duration(750).call(yAxis);
+    };
+
+    this.resize = function(event) {
+
     }
 }
 
@@ -75,7 +79,12 @@ function DatastreamModel() {
     var self = this;
     self.info = ko.mapping.fromJS({
         name: null,
-        public: null
+        public: null,
+        Nodes: [],
+        createdAt: "1700-01-01"
+    });
+    self.createdAtPretty = ko.computed(function() {
+        return new Date(self.info.createdAt()).toDateString();
     });
     self.dataPoints = ko.observableArray();
 
@@ -98,9 +107,18 @@ function DatastreamModel() {
     self.setPublic = function() {
         console.log("set public!");
         self.info.public(true);
+    };
+
+    self.resized = function(event) {
+        plot.resize(event);
     }
 }
 
 window.onload = function() {
-    ko.applyBindings(new DatastreamModel());
+    window.DsModel = new DatastreamModel();
+    ko.applyBindings(window.DsModel);
+};
+
+window.onresize = function(event) {
+    window.DsModel.resized(event);
 };

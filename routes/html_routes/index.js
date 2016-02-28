@@ -6,6 +6,6 @@ var express = require('express');
 var router = express.Router();
 
 var datastream = require('./datastream_route');
-router.use('/datastreams', datastream);
+router.use('/datastream', datastream);
 
 module.exports = router;

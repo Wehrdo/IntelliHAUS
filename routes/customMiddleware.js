@@ -94,7 +94,11 @@ exports.getDatastream = function(req, res, next) {
             where: {
                 id: dsId,
                 UserId: req.user.id
-            }
+            },
+        include: [{
+            model: models.Node,
+            attributes: ['id', 'name']
+            }]
         })
         .then(function (datastream) {
             if (datastream) {
