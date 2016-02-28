@@ -3,8 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <title>Single Datastream</title>
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/ds_single.css">
+    <script src="/js/d3/d3.js" charset="utf-8"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script src="/js/knockout/knockout.mapping-latest.js"></script>
+    <script src="/js/ds_single.js"></script>
 </head>
 <body>
+<h1 data-bind="text: info.name"></h1>
+
+<div class="main-area">
+    <div class="info-settings">
+        <div class>
+            <label>Name:</label>
+            <input data-bind="value: info.name" type="text" class="form-control">
+        </div>
+        <div class="btn-group">
+            <button type="button"
+                    class="btn"
+                    data-bind="css: {'btn-warning': info.public()},
+                    click: function(){info.public(true)}">
+                Public
+            </button>
+            <button type="button"
+                    class="btn"
+                    data-bind="css: {'btn-primary': !info.public()},
+                    click: function(){info.public(false)}">
+                Private
+            </button>
+        </div>
+    </div>
+    <div class="data-area">
+        <div class="data-plot">
+            <svg id="d3_plot"></svg>
+        </div>
+        <div class="data-settings">
+            <p>Adjust date range</p>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

@@ -14,12 +14,12 @@ router.get('/', function (req, res) {
     var publicRoot = path.join(__dirname, '../../public');
     // Reusable function for sending non-logged-in homepage
     var homeNoUser = function() {
-        res.clearCookie('accessToken');
+        res.clearCookie('accesstoken');
         res.sendFile('/html/homepage_nouser.html',  {root: publicRoot});
     };
 
     // Check for accessToken in cookie, request body, query, and headers
-    var token = (req.cookies.accessToken || req.body.accessToken || req.query.accessToken || req.headers['x-access-token']);
+    var token = (req.cookies.accesstoken || req.body.accesstoken || req.query.accesstoken || req.headers['x-access-token']);
     if (!token) {
         homeNoUser();
     }

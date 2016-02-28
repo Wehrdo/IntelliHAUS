@@ -30,4 +30,3 @@ app.set('view engine', 'ejs');
 // Initialize routes
 routes(app);
 
-

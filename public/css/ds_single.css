@@ -1,0 +1,17 @@
+
+.main-area {
+    display: flex;
+}
+
+.info-settings {
+    flex-grow: 1;
+}
+
+.data-area {
+    flex-grow: 3;
+}
+
+.data-plot svg {
+    width: 100%;
+    height: 100%;
+}

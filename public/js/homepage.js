@@ -37,8 +37,7 @@ var PinnedDataStreamsViewModel = function () {
     self.datastreams = ko.observableArray([]);
     $.getJSON('/api/datastream', function (data) {
         if (data.success) {
-            ko.utils.arrayPushAll(self.datastreams, data.datastreams);
-            //self.datastreams = data.datastreams;
+            self.datastreams(data.datastreams);
         }
     });
 

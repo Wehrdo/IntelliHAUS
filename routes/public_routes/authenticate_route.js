@@ -57,7 +57,7 @@ var verifyPassword = function(req, res, next) {
 };
 
 router.get('/logout', function(req, res) {
-    res.clearCookie('accessToken');
+    res.clearCookie('accesstoken');
     res.redirect('/');
 });
 

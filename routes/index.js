@@ -15,5 +15,7 @@ module.exports = function(app) {
     var apiRoutes = require('./api_routes');
     app.use('/api', privateMiddleware, apiRoutes);
 
+    var htmlRoutes = require('./html_routes');
+    app.use('/', privateMiddleware, htmlRoutes);
 
 };
