@@ -22,6 +22,12 @@ public:
 		string msg;
 	};
 
+	enum Datatype {
+		CONTINUOUS,
+		DISCRETE,
+		BINARY
+	};
+
 	Server(string url);
 	~Server();
 
@@ -39,20 +45,20 @@ public:
 			const string& email);
 
 	//Needs authentication
-	string& ListNodes(int homeID);
-
-	//Needs authentication
-	int CreateNode(int home, const string& inTypes, const string& inNames,
-			const string& outTypes, const string& outNames);
-
-	//Needs authentication
 	int CreateHome(const string& homeName);
 
 	//Needs authentication
-	int CreateDatastream(string name, vector<string> ioTypes);
+	int CreateDatastream(const string& name, Datatype datatype);
 
 	//Needs authentication
-	int SendDatapoint(string name, string data);
+	int CreateNode(int homeID, const string& name, Datatype datatype,
+			const string& outputName, int datastreamID);
+
+	//Needs authentication
+	int GetHomeID(const string& homeName);
+
+	//Needs authentication
+	int SendDatapoint(int nodeID, float data);
 
 
 

@@ -104,8 +104,6 @@ Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 
 	boost::asio::write(*tcpSocket, request);
 
-	cout << "Sending Request..." << endl;
-
 	boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
 
 	string temp, responseHeader;
@@ -113,18 +111,12 @@ Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 	while(getline(responseStream, temp) && temp != "\r")
 		responseHeader += temp + "\r\n";
 
-	cout << "Received response header." << endl;
-
 	int length = ParseBodyLength(responseHeader);
-
-	cout << "Body length: " << length << endl;
 
 	int lengthNeeded = length - response.size();
 
 	if(response.size() > 0)
 		outStream << &response;
-
-	cout << "Remaining body length: " << lengthNeeded << endl;
 
 	boost::asio::read(*tcpSocket, response, boost::asio::transfer_exactly(lengthNeeded), error);
 
@@ -132,8 +124,6 @@ Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 
 	if(error != boost::asio::error::eof && error != boost::system::errc::success)
 		throw boost::system::system_error(error);
-
-	cout << "Actually read: " << outStream.str().length() << endl;
 
 	return Message(responseHeader, outStream.str());
 }
