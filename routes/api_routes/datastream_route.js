@@ -16,13 +16,25 @@ router.get('/:id(\\d+)/data',
         next();
     },
     middleware.getDatastream,
+    function(req, res, next) {
+        models.Datapoint.count({
+            where: {
+                DatastreamId: req.datastream.id
+            }
+        }).then(function(cnt) {
+            req.totalCount = cnt;
+            next();
+        });
+    },
     function(req, res) {
     // If "number" passed as query parameter, return that many points
     // Otherwise, get 50 points
     // Never get more than 300 points, even if requested
     var qLimit = Math.min((req.query.number || 50), 300);
+
     models.Datapoint.findAll({
         attributes: ['time', 'continuousData', 'discreteData', 'binaryData'],
+        offset: req.totalCount - qLimit,
         limit: qLimit,
         where: {
             DatastreamId: req.datastream.id
@@ -117,6 +129,26 @@ router.post('/', function (req, res) {
                 error: error.toString()
             })
         });
+});
+
+router.put('/',
+    middleware.getDatastream,
+    function(req, res) {
+        req.datastream.update(
+            req.body,
+        {fields: ['name', 'public']}
+        )
+            .then(function() {
+                res.status(200).json({
+                    success: true
+                })
+            })
+            .catch(function(error) {
+                res.status(500).json({
+                    success: false,
+                    error: error
+                })
+            });
 });
 
 module.exports = router;

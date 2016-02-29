@@ -51,6 +51,7 @@ function Plot() {
 
     var curData = [];
 
+    // Redraws the line for the data
     this.updateData = function(newData) {
         if (newData) {
             curData = newData;
@@ -69,6 +70,7 @@ function Plot() {
     };
     var updateData = this.updateData;
 
+    // called when the window resizes
     this.resize = function(event) {
         var plotContainer = $("#data_plot")[0];
         var WIDTH = plotContainer.clientWidth;
@@ -91,37 +93,92 @@ function DatastreamModel() {
     var dsId = splitURL[splitURL.length-1];
 
     var self = this;
+    // Similar JSON object as given from the server
+    // We need to populate some values so it doesn't error on load
     self.info = ko.mapping.fromJS({
         name: null,
         public: null,
         Nodes: [],
         createdAt: "1700-01-01"
     });
+    // computed KO object for a pretty-printed version of the date
     self.createdAtPretty = ko.computed(function() {
         return new Date(self.info.createdAt()).toDateString();
     });
     self.dataPoints = ko.observableArray();
 
+    // Function that saves the changes
+    function putData() {
+        saveTimer = null;
+        console.log("saving");
+        $.ajax({
+            url: '/api/datastream',
+            type: 'PUT',
+            dataType: 'json',
+            data: {
+                datastreamid: dsId,
+                name: self.info.name,
+                public: self.info.public
+            },
+            success: function(data) {
+                // On success, remove 'unsaved changes' box and replace it with a saved box
+                $('#unsaved-alert')[0].style.display = 'none';
+                var errorAlert = $('#failsave-alert')[0].style.display = 'none';
+                var savedAlert = $('#saved-alert');
+                savedAlert.fadeIn(150);
+                // after 1s, begin fading out the 'saved changes' box
+                setTimeout(function() {
+                    savedAlert.fadeOut(1500);
+                }, 1000)
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // In error, show error warning
+                var errorAlert = $('#failsave-alert')[0];
+                errorAlert.style.display = '';
+                errorAlert.innerHTML = '<strong>Error: </string>' + errorThrown;
+            }
+        })
+    }
+
+    // time to wait after changes have been made to save
+    var saveDelay = 1200;
+    var saveTimer = null;
+    // called whenever a change that can be saved is detected on the page
+    function optionsChanged(newObj) {
+        // If already planning to save, just reset timer
+        if (saveTimer) {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(putData, saveDelay);
+        }
+        else {
+            // Need to make a timer, so we don't save on every keystroke
+            saveTimer = setTimeout(putData, saveDelay);
+            $('#saved-alert')[0].style.display = 'none';
+            $('#unsaved-alert').fadeIn(150);
+        }
+    }
+
     // Get info about the datastream
     $.getJSON('/api/datastream/' + dsId + '/info', function(data) {
-        console.log(data);
+        // auto-map JSON from server to knockout observables
         ko.mapping.fromJS(data.datastream, self.info);
+        // Subscribe to each property that can be changed and saved to the server
+        ['name', 'public'].forEach(
+            function(watchedProp) {
+                self.info[watchedProp].subscribe(optionsChanged);
+            }
+        )
     });
 
     // Get the datapoints
     $.getJSON('/api/datastream/' + dsId + '/data', function(data) {
-        console.log(data);
         self.dataPoints(data.datapoints);
     });
 
+    // re-draws the line when the data has been changed
     self.dataPoints.subscribe(function(newData) {
         plot.updateData(newData);
     });
-
-    self.setPublic = function() {
-        console.log("set public!");
-        self.info.public(true);
-    };
 
     self.resized = function(event) {
         plot.resize(event);
@@ -131,9 +188,12 @@ function DatastreamModel() {
 window.onload = function() {
     window.DsModel = new DatastreamModel();
     ko.applyBindings(window.DsModel);
+    // call resize initially to set the correct size
+    // TODO: Make the plot just start with the correct size, instead of having to call resize
     window.DsModel.resized();
 };
 
+// re-scale the plot when the window changes size
 window.onresize = function(event) {
     window.DsModel.resized(event);
 };
