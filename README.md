@@ -1,5 +1,1 @@
-Group 30
-IntelliHAUS
-
-David Wehr
-Sam Oswalt
+Node emulator for intelliHAUS project
