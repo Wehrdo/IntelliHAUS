@@ -1,11 +1,13 @@
 
 .main-area {
     display: flex;
+    flex-wrap: wrap;
 }
 
 .info-settings {
     flex-grow: 1;
     padding: 10px;
+    min-width: 150px;
 }
 
 .settings, .info {
@@ -35,6 +37,7 @@
 
 .data-area {
     flex-grow: 3;
+    min-width: 10rem;
 }
 
 .data-plot svg {

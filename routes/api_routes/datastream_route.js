@@ -10,7 +10,13 @@ var middleware = require('./../customMiddleware');
 /*
 Get datapoints of a datastream
  */
-router.get('/:id(\\d+)/data', function(req, res) {
+router.get('/:id(\\d+)/data',
+    function(req, res, next) {
+        req.query.datastreamid = req.params.id;
+        next();
+    },
+    middleware.getDatastream,
+    function(req, res) {
     // If "number" passed as query parameter, return that many points
     // Otherwise, get 50 points
     // Never get more than 300 points, even if requested
@@ -19,7 +25,7 @@ router.get('/:id(\\d+)/data', function(req, res) {
         attributes: ['time', 'continuousData', 'discreteData', 'binaryData'],
         limit: qLimit,
         where: {
-            DatastreamId: req.params.id
+            DatastreamId: req.datastream.id
         }
     })
         .then(function(datapoints) {

@@ -5,9 +5,9 @@
 function Plot() {
     var plot = d3.select("#d3_plot");
 
-    var WIDTH = $("#d3_plot")[0].clientWidth;
+    var WIDTH = $("#d3_plot")[0].clientWidth;;
     var HEIGHT = $("#d3_plot")[0].clientHeight;
-    var MARGINS = {
+    MARGINS = {
         top: 20,
         right: 20,
         bottom: 20,
@@ -49,22 +49,36 @@ function Plot() {
         .attr('stroke-width', 2)
         .attr('fill', 'none');
 
-    this.updateData = function(newData) {
-        xScale.domain([new Date(newData[0].time), new Date(newData[newData.length-1].time)]);
+    var curData = [];
 
-        var tempPts = $.map(newData, function(pt) {return pt.time});
-        yScale.domain(d3.extent(newData, function(d) {return d.continuousData}));
+    this.updateData = function(newData) {
+        if (newData) {
+            curData = newData;
+        }
+        xScale.domain([new Date(curData[0].time), new Date(curData[curData.length-1].time)]);
+
+        var tempPts = $.map(curData, function(pt) {return pt.time});
+        yScale.domain(d3.extent(curData, function(d) {return d.continuousData}));
 
         // Must update scales before updating line
         var newPlot = plot.transition();
-        newPlot.select(".line").duration(750).attr("d", lineGen(newData));
+        newPlot.select(".line").duration(750).attr("d", lineGen(curData));
 
         newPlot.select(".axis-x").duration(750).call(xAxis);
         newPlot.select(".axis-y").duration(750).call(yAxis);
     };
+    var updateData = this.updateData;
 
     this.resize = function(event) {
-
+        var plotContainer = $("#data_plot")[0];
+        var WIDTH = plotContainer.clientWidth;
+        // Make the height 1/2 the width, but don't exceed 90% of the window height
+        var HEIGHT = Math.min(WIDTH * 0.5, window.innerHeight*0.9);
+        plotContainer.setAttribute("style", "height:" + HEIGHT + "px;");
+        xScale.range([MARGINS.left, WIDTH - MARGINS.right]);
+        yScale.range([HEIGHT - MARGINS.top, MARGINS.bottom]);
+        plot.select(".axis-x").attr("transform", "translate(0," + (HEIGHT - MARGINS.bottom) + ")");
+        updateData();
     }
 }
 
@@ -117,6 +131,7 @@ function DatastreamModel() {
 window.onload = function() {
     window.DsModel = new DatastreamModel();
     ko.applyBindings(window.DsModel);
+    window.DsModel.resized();
 };
 
 window.onresize = function(event) {
