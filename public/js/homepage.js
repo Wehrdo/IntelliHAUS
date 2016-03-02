@@ -55,6 +55,7 @@ var applyBindings = function () {
     ko.applyBindings(new PinnedDataStreamsViewModel(), document.getElementById("pinned-ds"))
 };
 
-window.onload = function () {
+window.addEventListener('load', function() {
     applyBindings();
-};
+    $('#navbar').load('/html/navbar.html');
+});

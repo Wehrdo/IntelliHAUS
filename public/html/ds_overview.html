@@ -3,8 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Datastreams Overview</title>
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <script src="/js/d3/d3.js" charset="utf-8"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script src="/js/knockout/knockout.mapping-latest.js"></script>
+    <script src="/js/ds_overview.js"></script>
 </head>
 <body>
+<div id="navbar"></div>
 
+<h2>Your Datastreams</h2>
+<div data-bind="foreach: dsList" class="list-group">
+    <a data-bind="attr: {href: '/datastream/' + $data.id}" class="list-group-item">
+        <span data-bind="text: $data.name"></span>
+    </a>
+</div>
 </body>
 </html>

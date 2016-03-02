@@ -14,16 +14,17 @@
     <script src="/js/ds_single.js"></script>
 </head>
 <body>
+<div id="navbar"></div>
 <h1 data-bind="text: info.name"></h1>
 
 <div class="main-area">
     <div class="info-settings">
         <div class="settings panel panel-default">
-            <div class="alert alert-success" id="saved-alert", style="display:none">
+            <div class="alert alert-success" id="saved-alert" style="display:none">
                 <strong>All changes saved</strong>
             </div>
             <div class="alert alert-warning" id="unsaved-alert" style="display:none">
-                <strong>Unsaved changes</strong>
+                <strong>Saving...</strong>
             </div>
             <div class="alert alert-danger" id="failsave-alert" style="display:none">
                 <strong>Failed to save</strong>

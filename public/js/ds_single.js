@@ -56,6 +56,7 @@ function Plot() {
         if (newData) {
             curData = newData;
         }
+        if (curData.length == 0) {return;}
         xScale.domain([new Date(curData[0].time), new Date(curData[curData.length-1].time)]);
 
         var tempPts = $.map(curData, function(pt) {return pt.time});
@@ -110,7 +111,6 @@ function DatastreamModel() {
     // Function that saves the changes
     function putData() {
         saveTimer = null;
-        console.log("saving");
         $.ajax({
             url: '/api/datastream',
             type: 'PUT',
@@ -185,13 +185,14 @@ function DatastreamModel() {
     }
 }
 
-window.onload = function() {
+window.addEventListener('load', function() {
     window.DsModel = new DatastreamModel();
     ko.applyBindings(window.DsModel);
     // call resize initially to set the correct size
     // TODO: Make the plot just start with the correct size, instead of having to call resize
     window.DsModel.resized();
-};
+    $('#navbar').load('/html/navbar.html');
+});
 
 // re-scale the plot when the window changes size
 window.onresize = function(event) {

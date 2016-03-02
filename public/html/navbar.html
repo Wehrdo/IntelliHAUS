@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    .navbar {
+    }
+</style>
+<body>
+<script>
+    function NavbarModel() {
+        var domain = document.domain;
+        var splitURL = window.location.pathname.split('/');
+        var curPage = splitURL[1];
+        this.curPage = ko.observable(curPage);
+    }
+    ko.applyBindings(new NavbarModel(), $('#navbar')[0]);
+</script>
+<nav class="navbar navbar-default">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="/">IntelliHAUS</a>
+    </div>
+    <ul class="nav navbar-nav">
+        <li data-bind="css: {active: curPage == 'rule'}">
+            <a href="/rule">Rules</a>
+        </li>
+        <li data-bind="css: {active: curPage() == 'datastream'}">
+            <a href="/datastream">Datastreams</a>
+        </li>
+        <li data-bind="css: {active: curPage() == 'node'}">
+            <a href="/node">Nodes</a>
+        </li>
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+        <li data-bind="css: {active: curPage() == 'account'}">
+            <a href="/account">Account</a>
+        </li>
+        <li>
+            <a href="/authenticate/logout">Logout</a>
+        </li>
+    </ul>
+
+</nav>
+</body>
+</html>

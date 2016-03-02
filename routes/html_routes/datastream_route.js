@@ -8,12 +8,13 @@ var router = express.Router();
 var path = require('path');
 var models = require('../../models');
 
+var publicRoot = path.join(__dirname, '../../public');
+
 router.get('/', function(req, res) {
-    res.send("This is the datastreams overview page");
+    res.sendFile('html/ds_overview.html', {root: publicRoot});
 });
 
 router.get('/:id(\\d+)', function(req, res) {
-    var publicRoot = path.join(__dirname, '../../public');
     res.sendFile('html/ds_single.html', {root: publicRoot});
 });
 
