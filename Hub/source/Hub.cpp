@@ -32,17 +32,13 @@ int main() {
 		cout << "Authenticating as user '" << USERNAME << "'..." << endl;
 		retVal = server.Authenticate(USERNAME, PASSWORD);
 
-		for(int i = 0; i < 100; i++) {
-			cout << "Sending datapoint " << i+1 << endl;
-			server.SendDatapoint(NODEID, i + 1);
-		}
-
-		while(data >= 0) {
-			cout << "Datapoint: ";
-			cin >> data;
-			cout << endl;
-
+		while(1) {
+			data = (rand() % 1000) / 10.f;
+			cout << "Sending datapoint '" << data << "'...";
 			retVal = server.SendDatapoint(NODEID, data);
+			cout << "done" << endl;
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(60000));
 		}
 	}
 	catch(exception &e) {
