@@ -17,7 +17,40 @@ using namespace Hub;
 
 #define NODEID		3
 
+using boost::asio::ip::tcp;
+
 int main() {
+	boost::asio::io_service io_service;
+
+	tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 80));
+
+	for(;;) {
+		unsigned char buffer[1];
+		vector<unsigned char> data;
+
+		tcp::socket socket(io_service);
+		acceptor.accept(socket);
+
+		cout << "Client connected." << endl;
+		boost::system::error_code error;
+
+		while(!error) {
+			int length = boost::asio::read(socket, boost::asio::buffer(buffer, 1), error);
+			if(length > 0) {
+				data.push_back(buffer[0]);
+				cout << "Read " << length << " bytes." << endl;
+			}
+		}
+
+		for(auto &b : data) {
+			cout << (int)b << " ";
+		}
+		cout << endl;
+	}
+
+
+
+
 	Hub::Server server(SERVER_URL);
 
 	int retVal = server.Connect();
