@@ -14,20 +14,27 @@ var TabsModel = function () {
 //Class to represent a row in the Recent Rules table
 var Rules = function (nodeName, nodeState, ruleSetTime) {
     var self = this;
-    self.name = ko.observable(nodeName);
-    self.state = ko.observable(nodeState);
-    self.time = ko.observation(ruleSetTime);
-};
+    self.name = nodeName;        //ko.observable(nodeName);
+    self.state = nodeState;      //ko.observable(nodeState);
+    self.time = ruleSetTime;     //ko.observation(ruleSetTime);
 
+};
 var RulesTableViewModel = function () {
     var self = this;
-    self.rules = ko.observableArray([]);
+    var nn2 = "Thermostat";
 
     //Non-editable catalog data - would come from the server
-    self.rules = [
+    /*self.rules = [
         {nodeName: "Thermostat", nodeState: "71", ruleSetTime: "5:00pm"},
         {nodeName: "Bedroom Light", nodeState: "Off", ruleSetTime: "11:00pm"}
-    ];
+    ];*/
+
+    //To show what the table would look like
+    //Again, this would come from the server
+    self.rulesTable = ko.observableArray([
+        new Rules(nn2, "71", "5:00pm"),
+        new Rules ("Bedroom Light", "Off", "11:00pm")
+    ]);
 };
 
 
@@ -49,7 +56,7 @@ var PinnedDataStreamsViewModel = function () {
 };
 
 
-var applyBindings = function () {
+var applyBindings = function (){
     ko.applyBindings(new TabsModel(), document.getElementById("tabs-view"));
     ko.applyBindings(new RulesTableViewModel(), document.getElementById("rules-view"));
     ko.applyBindings(new PinnedDataStreamsViewModel(), document.getElementById("pinned-ds"))

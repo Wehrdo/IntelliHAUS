@@ -22,19 +22,23 @@
 
 <div id="rules-view">
     <!--Recent Rules Table-->
-    <table>
+    <table id="table1">
         <thead>
         <tr>
-            <th>Recent Rules</th>
+            <th id = table1_title, colspan="3">Recent Rules</th>
         </tr>
         </thead>
-        <tbody data-bind="foreach: rules">
-        <tr>
-            <td data-bind="text "></td>
+        <tr align="center">
+            <td>Node</td>
+            <td>State</td>
+            <td>Time</td>
         </tr>
-        <!--<tr>
-            <td data-bind="text: ruleTime + ": Set " + nodeName + " to " + nodeState"></td>
-        </tr> -->
+        <tbody>
+        <tr data-bind="foreach: rulesTable">
+            <td data-bind="text: name"></td>
+            <td data-bind="text: state"></td>
+            <td data-bind="text: time"></td>
+        </tr>
         </tbody>
     </table>
 </div>

@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script src="/js/node_overview.js"></script>
     <title>Nodes Overview</title>
 </head>
 <body>
+    <h1><strong>List of Nodes</strong></h1>
+    <ul data-bind="foreach: data">
+        <li data-bind="text: data.name"></li>
+    </ul>
 
 </body>
 </html>
