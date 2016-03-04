@@ -36,6 +36,7 @@ function Plot() {
         .call(yAxis);
 
     lineGen = d3.svg.line()
+        .interpolate("bundle")
         .x(function(d) {
             return xScale(new Date(d.time));
         })
