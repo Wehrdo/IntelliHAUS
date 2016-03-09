@@ -11,7 +11,7 @@ var models = require('../../models');
 var publicRoot = path.join(__dirname, '../../public');
 
 router.get('/', function(req, res) {
-    res.sendFile('html/nodes_overview.html', {root: publicRoot});
+    res.sendFile('html/node_overview.html', {root: publicRoot});
 });
 
 router.get('/:id(\\d+)', function(req, res) {

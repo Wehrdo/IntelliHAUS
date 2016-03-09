@@ -4,12 +4,13 @@
     <script src="/js/knockout/knockout-3.4.0.js"></script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <script src="/js/node_overview.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <title>Nodes Overview</title>
 </head>
 <body>
-    <h1><strong>List of Nodes</strong></h1>
-    <ul data-bind="foreach: data">
-        <li data-bind="text: data.name"></li>
+    <h1><strong>Choose Home:</strong></h1>
+    <ul data-bind="foreach: home">
+        <li data-bind="text: name"></li>
     </ul>
 
 </body>

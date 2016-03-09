@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="/js/node_overview.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <title>Nodes Overview</title>
+</head>
+<body>
+<div id="navbar"></div>
+
+<h3>Choose Home:</h3>
+<div>
+    <table>
+        <tbody data-bind="foreach: home" class="list-group">
+            <tr class ="list-group-item">
+                <td align ="left"><span data-bind="text: $data.name"></span></td>
+                <td align="right"><a href="#" data-bind="click: $root.listNodes($data.id)">List Nodes</a></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<h2><strong>List of Nodes</strong></h2>
+<div data-bind="foreach: node" class="list-group">
+    <a data-bind="attr: {href: '/node/' + $data.id}" class="list-group-item">
+        <span data-bind="text: $data.name"></span>
+    </a>
+</div>
+
+</body>
+</html>

@@ -112,3 +112,29 @@ exports.getDatastream = function(req, res, next) {
             }
         });
 };
+
+exports.getNode = function(req, res, next) {
+    var nodeId = (req.body.node.id || req.query.node.id || req.headers.node.id);
+
+    models.Node.findOne({
+            where: {
+                id: nodeId,
+                UserId: req.user.id
+            },
+            include: [{
+                model: models.Node,
+                attributes: ['id', 'name']
+            }]
+        })
+        .then(function (node) {
+            if (node) {
+                req.node = node;
+                next();
+            } else {
+                res.status(400).json({
+                    success: false,
+                    error: "Unable to get node " + nodeId
+                });
+            }
+        });
+};

@@ -6,33 +6,40 @@
  * still needs to be implemented
  */
 
-var NodesViewModel;
+function Node(name, index){
+    var self = this;
+    self.name = name;
+    self.index = index;
+}
 
-//Default data in case there is no data initially
-//
-$(document).ready(function() {
-    var defaultData = {name: "Node Name"};
-    NodesViewModel = ko.mapping.fromJS(defaultData);
-    ko.applyBindings(NodesViewModel);
-    getNodesFromServer();
-});
+/**function Home(name, homeid){
+    var self = this;
+    self.name = name;
+    self.homeid = homeid;
+}*/
 
-function getNodesFromServer(){
 
-    // Get the home ID from the URL
-    var splitURL = window.location.href.split('/');
-    var homeID = splitURL[splitURL.length];
+function NodesViewModel(){
+    var self = this;
+    self.home = ko.observableArray();
+    self.node = ko.observableArray();
 
-    //Collect Data from server
-    $.getJSON("/api/node"+homeID, function(data){
+    $.getJSON("api/home/", function(data){
         console.log(data);
-        mapServerData(data);
+        self.home(data.homes);
     });
+
+    self.listNodes = function(homeid){
+        console.log(homeid);
+        $.getJSON("api/node/?homeid="+homeid, function(data){
+            console.log(data);
+            self.node(data.nodes);
+        })
+    }
 }
 
-//map the data to model in function above
-function mapServerData(node){
-    alert(JSON.stringify(node));
-    ko.mapping.fromJS(nodes, NodesViewModel);
-}
-
+window.addEventListener('load', function() {
+    window.NodesViewModel = new NodesViewModel();
+    ko.applyBindings(window.NodesViewModel);
+    $('#navbar').load('/html/navbar.html');
+});

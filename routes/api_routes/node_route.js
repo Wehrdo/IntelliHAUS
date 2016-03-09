@@ -74,4 +74,24 @@ router.post('/', middleware.getHome, function(req, res, next) {
         });
     }
 });
+
+router.put('/',
+    middleware.getNode,
+    function(req, res) {
+        req.node.update(
+            req.body,
+            {fields: ['name', 'public']}
+            )
+            .then(function() {
+                res.status(200).json({
+                    success: true
+                })
+            })
+            .catch(function(error) {
+                res.status(500).json({
+                    success: false,
+                    error: error
+                })
+            });
+    });
 module.exports = router;
