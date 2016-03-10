@@ -39,7 +39,7 @@ void Node::Communicator::Packet::SetData(const vector<char>& data) {
 
 Node::Communicator::Communicator(const string& remoteHostName)
 				: hostName(remoteHostName) {
-
+	cout << "Connector initialized with hostname: " << hostName << endl;
 }
 
 int Node::Communicator::Connect() {
@@ -47,6 +47,8 @@ int Node::Communicator::Connect() {
 
 	//Initialize DNS resolver
 	boost::asio::ip::tcp::resolver resolver(ioService);
+
+	cout << "Connecting with hostname: " << hostName << endl;
 
 	//Initialize DNS resolver query
 	//TODO: Maybe pick a different port
@@ -62,6 +64,7 @@ int Node::Communicator::Connect() {
 		boost::asio::connect(*tcpSocket, endpointIterator);
 	}
 	catch(exception &e) {
+		cout << "Node::Communicator exception: " << e.what() << endl;
 		return -1;
 	}
 
