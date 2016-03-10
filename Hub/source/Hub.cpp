@@ -19,39 +19,34 @@ using namespace Hub;
 
 using boost::asio::ip::tcp;
 
+using namespace Hub;
+using namespace Node;
+
+#include <cerrno>
+
 int main() {
-	boost::asio::io_service io_service;
+	cout << "Starting Node Server" << endl;
+	NodeServer nodeServer([](Hub::Node* node){
+			cout << "Node connected: " << node->GetID() << endl;
+			} );
 
-	tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 80));
+	cout << "Created Node Server instance" << endl;
 
-	for(;;) {
-		unsigned char buffer[1];
-		vector<unsigned char> data;
+	this_thread::sleep_for(chrono::seconds(2));
 
-		tcp::socket socket(io_service);
-		acceptor.accept(socket);
+	nodeServer.Start();
 
-		cout << "Client connected." << endl;
-		boost::system::error_code error;
+	cout << "Node Server started." << endl;
 
-		while(!error) {
-			int length = boost::asio::read(socket, boost::asio::buffer(buffer, 1), error);
-			if(length > 0) {
-				data.push_back(buffer[0]);
-				cout << "Read " << length << " bytes." << endl;
-			}
-		}
-
-		for(auto &b : data) {
-			cout << (int)b << " ";
-		}
-		cout << endl;
+	while(1) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
+	cout << errno << endl;
 
+/*	boost::asio::io_service ioService;
 
-
-	Hub::Server server(SERVER_URL);
+	Hub::Server server(ioService, SERVER_URL);
 
 	int retVal = server.Connect();
 
@@ -79,6 +74,6 @@ int main() {
 	}
 
 	server.Disconnect();
-
+*/
 	return 0;
 }

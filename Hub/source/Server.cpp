@@ -1,15 +1,8 @@
 #include "Server.hpp"
 
 
-Hub::Server::Exception::Exception(const string& msg) : msg(msg) {
-
-}
-
-const char* Hub::Server::Exception::what() const noexcept {
-	return msg.c_str();
-}
-
-Hub::Server::Server(string url) : http(url) {
+Hub::Server::Server(boost::asio::io_service& ioService, string url)
+			: http(ioService, url) {
 
 }
 

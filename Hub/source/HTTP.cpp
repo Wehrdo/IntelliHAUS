@@ -32,7 +32,9 @@ string Hub::HTTP::Message::ToString() const {
 }
 
 
-Hub::HTTP::HTTP(string hostName) : hostName(hostName) {
+Hub::HTTP::HTTP(boost::asio::io_service& ioService, string hostName)
+		: hostName(hostName) {
+	this->ioService = &ioService;
 
 }
 
@@ -40,7 +42,7 @@ int Hub::HTTP::Connect() {
 	boost::system::error_code error;
 
 	//Initialize DNS resolver
-	boost::asio::ip::tcp::resolver resolver(ioService);
+	boost::asio::ip::tcp::resolver resolver(*ioService);
 
 	//Initialize resolver query
 	boost::asio::ip::tcp::resolver::query query(hostName, "http");
@@ -49,7 +51,7 @@ int Hub::HTTP::Connect() {
 	boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
 	//Create a socket
-	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));
+	tcpSocket.reset(new boost::asio::ip::tcp::socket(*ioService));
 
 	try {
 		//Connect to the HTTP server by iteratively trying all endpoints

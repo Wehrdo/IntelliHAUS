@@ -10,6 +10,8 @@
 #include <thread>
 
 #include "Server.hpp"
+#include "NodeServer.hpp"
+#include "Node.hpp"
 
 #define SERVER_URL	"intellihaus.ece.iastate.edu"
 

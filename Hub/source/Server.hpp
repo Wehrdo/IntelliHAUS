@@ -2,33 +2,25 @@
 #define SERVER_HPP
 
 #include <sstream>
-#include <exception>
+#include "Exception.hpp"
 #include "HTTP.hpp"
 #include "json/json/json.h"
 
 using namespace std;
+using namespace Hub;
 
 namespace Hub {
 
 class Server
 {
 public:
-	class Exception : public exception {
-	public:
-		Exception(const string& msg);
-
-		virtual const char* what() const noexcept;
-	private:
-		string msg;
-	};
-
 	enum Datatype {
 		CONTINUOUS,
 		DISCRETE,
 		BINARY
 	};
 
-	Server(string url);
+	Server(boost::asio::io_service& ioService, string url);
 	~Server();
 
 	int Connect();

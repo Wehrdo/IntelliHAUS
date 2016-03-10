@@ -35,7 +35,7 @@ public:
 			string header, body;
 	};
 
-	HTTP(string hostName);
+	HTTP(boost::asio::io_service& ioService, string hostName);
 	~HTTP();
 
 	int Connect();
@@ -50,7 +50,7 @@ public:
 private:
 	int ParseBodyLength(const string& header);
 	string hostName;
-	boost::asio::io_service ioService;
+	boost::asio::io_service *ioService;
 	unique_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 };
 
