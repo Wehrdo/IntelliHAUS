@@ -8,7 +8,7 @@
 using namespace std;
 
 
-namespace Node {
+namespace Hub {
 	class Packet
 	{
 	public:

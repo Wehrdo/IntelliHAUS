@@ -1,8 +1,8 @@
 #include "Node.hpp"
 
 
-Hub::Node::Node(function<void(Node::Packet)> cbPacket, function<void(Node*)> cbClose) :
-		comm([this](const Node::Packet& packet){cbCheckPacket(packet);}),
+Hub::Node::Node(function<void(Packet)> cbPacket, function<void(Node*)> cbClose) :
+		comm([this](const Packet& packet){cbCheckPacket(packet);}),
 		asyncThread([this](){ThreadRoutine();}) {
 
 	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));
@@ -37,7 +37,7 @@ uint64_t Hub::Node::GetID() {
 	return id;
 }
 
-void Hub::Node::cbCheckPacket(const Node::Packet& packet) {
+void Hub::Node::cbCheckPacket(const Packet& packet) {
 	if(id == 0) {
 		nodeID = packet.GetNodeID();
 	}

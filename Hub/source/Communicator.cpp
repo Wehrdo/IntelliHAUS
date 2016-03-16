@@ -16,6 +16,7 @@ void Node::Communicator::ProcessSingleByte(unsigned char byte) {
 		if(byte == PACKET_START_BYTE) {
 			index = 0;
 			tempInt = 0;
+			tempPacket = Packet();
 			state = STATE_ID;
 		}
 	break;
@@ -28,8 +29,13 @@ void Node::Communicator::ProcessSingleByte(unsigned char byte) {
 
 			index = 0;
 			tempInt = 0;
-			state = STATE_LENGTH;
+			state = STATE_TYPE;
 		}
+	break;
+
+	case STATE_TYPE:
+		tempPacket.SetMsgType(byte);
+		state = STATE_LENGTH;
 	break;
 
 	case STATE_LENGTH:
@@ -37,7 +43,10 @@ void Node::Communicator::ProcessSingleByte(unsigned char byte) {
 		index++;
 		if(index == 2) {
 			tempPacket.SetLength(tempInt);
-
+			if(tempInt == 0) {
+				cbPacket(tempPacket);
+				state = STATE_READY;
+			}
 			tempData.clear();
 			state = STATE_PAYLOAD;
 		}

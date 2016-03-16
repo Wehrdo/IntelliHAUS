@@ -9,14 +9,13 @@
 #include <stdint.h>
 
 using namespace std;
-//using namespace Hub;
-//using namespace Node;
+using namespace Hub;
 
 namespace Hub {
 class Node
 {
 public:
-	Node(function<void(Node*)> cbPacket, function<void(Node*)> cbClose);
+	Node(function<void(Packet)> cbPacket, function<void(Node*)> cbClose);
 
 	shared_ptr<boost::asio::ip::tcp::socket> GetSocket();
 
@@ -41,7 +40,7 @@ private:
 	shared_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 	thread asyncThread;
 
-	function<void(Node::Packet)> cbPacket;
+	function<void(Packet)> cbPacket;
 	function<void(Node*)> cbClose;
 };
 }

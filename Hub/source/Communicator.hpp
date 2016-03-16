@@ -23,6 +23,7 @@ private:
 	enum {
 		STATE_READY,
 		STATE_ID,
+		STATE_TYPE,
 		STATE_LENGTH,
 		STATE_PAYLOAD,
 	} state;

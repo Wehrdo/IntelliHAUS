@@ -36,7 +36,7 @@ private:
 	void AcceptHandler(Node *newNode, const boost::system::error_code& error);
 
 	void cbNodeClose(Node* node);
-	void cbNodeReadPacket(Node* node);
+	void cbNodeReadPacket(cbNodeReadPacket);
 
 	boost::asio::io_service ioService;
 	boost::asio::ip::tcp::acceptor tcpAcceptor;

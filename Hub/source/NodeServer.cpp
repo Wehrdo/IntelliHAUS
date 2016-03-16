@@ -89,7 +89,15 @@ void Hub::NodeServer::cbNodeClose(Node* node) {
 	ioService.post([this, node](){RemoveNode(node); delete node;});
 }
 
-void Hub::NodeServer::cbNodeReadPacket(Node* node) {
+void Hub::NodeServer::cbNodeReadPacket(const Node::Packet& packet) {
 	//TODO: something
-	cout << "Received packet" << endl;
+	cout << "Received packet:" << endl;
+	cout << "ID: " << packet.GetNodeID << ", Type: " << packet.GetMsgType()
+		<< ", Data: ";
+
+	for(auto &byte : packet.GetData()) {
+		cout << (int)byte << " ";
+	}
+
+	cout << endl;
 }
