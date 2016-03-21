@@ -80,7 +80,7 @@ router.put('/',
     function(req, res) {
         req.node.update(
             req.body,
-            {fields: ['name', 'public']}
+            {fields: ['name', 'inputNames', 'outputName', 'DatastreamId']}
             )
             .then(function() {
                 res.status(200).json({

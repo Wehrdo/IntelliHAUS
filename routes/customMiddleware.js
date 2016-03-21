@@ -114,7 +114,7 @@ exports.getDatastream = function(req, res, next) {
 };
 
 exports.getNode = function(req, res, next) {
-    var nodeId = (req.body.node.id || req.query.node.id || req.headers.node.id);
+    var nodeId = (req.body.nodeid || req.query.nodeid || req.headers.nodeid);
 
     models.Node.findOne({
             where: {
@@ -122,7 +122,7 @@ exports.getNode = function(req, res, next) {
                 UserId: req.user.id
             },
             include: [{
-                model: models.Node,
+                model: models.Datastream,
                 attributes: ['id', 'name']
             }]
         })
