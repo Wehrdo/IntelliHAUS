@@ -19,4 +19,7 @@ router.use('/datapoint', datapoint_rt);
 var datastream_rt = require('./datastream_route');
 router.use('/datastream', datastream_rt);
 
+var rule_rt = require('./rule_route');
+router.use('/rule', rule_rt);
+
 module.exports = router;
