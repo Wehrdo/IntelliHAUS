@@ -11,8 +11,9 @@ var ruleUtils = require('./rule_utils');
 // Upload new route
 router.post('/',
     ruleUtils.schemaValidate,
+    ruleUtils.logicValidate,
     function(req, res) {
-        res.status(400).end();
+        res.status(200).end("Good");
 });
 
 module.exports = router;

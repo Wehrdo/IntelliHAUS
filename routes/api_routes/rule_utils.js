@@ -54,7 +54,7 @@ var Queue = function() {
 
 exports.schemaValidate = function(req, res, next) {
     var schemaValidated = validator.validate(req.body.rule, ruleSchema);
-    console.log(schemaValidated);
+    var q = new Queue();
     if (req.body.rule && schemaValidated.valid) {
         next();
     }
@@ -78,7 +78,7 @@ function validateBranchCoverage(branches, range) {
             return Number[branch.value[0]];
         }
         else {
-            return branches.value[0];
+            return branch.value[0];
         }
     };
     // Returns the value of the top of the branch value range
@@ -89,7 +89,7 @@ function validateBranchCoverage(branches, range) {
             return Number[branch.value[1]];
         }
         else {
-            return branches.value[1];
+            return branch.value[1];
         }
     };
     // Sort branches by the start of their ranges
@@ -107,37 +107,68 @@ function validateBranchCoverage(branches, range) {
     // Now that branches are sorted in ascending order, we can iterate through
     // them linearly to check for completeness and gaps
     // Where next range should start
-    var range_start = range[0];
+    var progress = range[0];
     for (var i = 0; i < branches.length; i++) {
         // if this range doesn't start where it should, then there are gaps in the range
-        if (getRangeStart(branches[i]) != range_start) {
+        if (getRangeStart(branches[i]) != progress) {
             return false;
         }
-        range_start = getRangeEnd(branches[i]);
+        progress = getRangeEnd(branches[i]);
     }
     // After last branch range, range_start should be at the end
     // of the required range
-    return range_start === range[1];
+    return progress === range[1];
 }
 
 exports.logicValidate = function(req, res, next) {
     var q = new Queue();
     var rule = req.body.rule;
     q.add(rule);
-    while (!q.empty()) {
+    var valid = true;
+    while (!q.empty() && valid) {
         rule = q.get();
         for (var i = 0, keys = Object.keys(rule); i < keys.length; i++) {
             var decisionType = keys[i];
+            var check_range;
             if (decisionType === "TimeDecision") {
-                if (!validateBranchCoverage(rule[decisionType].branches, [-Infinity, Infinity])) {
-                    return false;
+                check_range = [0, 86400];
+            }
+            else if (decisionType === "DataDecision") {
+                check_range = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+            }
+            else if (decisionType === "DayDecision") {
+                check_range = [1, 7]
+            }
+            else if (decisionType === "EventDecision") {
+
+                q.add(rule[decisionType].default)
+            }
+            else {
+                // Not a branch, skip to the next item
+                continue;
+            }
+            // Is a branch, so check coverage
+            if (!validateBranchCoverage(rule[decisionType].branches, check_range)) {
+                valid = false;
+            }
+            // Add all subactions
+            for (var b = 0; b < rule[decisionType].branches.length; b++) {
+                var action = rule[decisionType].branches[b].action;
+                if (action != null) {
+                    q.add(action);
                 }
             }
-
-            for (var b = 0; b < rule[decisionType].branches; b++) {
-                q.add(rule[decisionType].action);
-            }
         }
+    }
+
+    if (valid) {
+        next();
+    }
+    else {
+        res.status(400).json({
+            success: false,
+            error: "Invalid branch coverage"
+        });
     }
 };
 
