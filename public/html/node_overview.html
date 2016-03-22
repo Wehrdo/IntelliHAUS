@@ -19,7 +19,7 @@
         <tbody data-bind="foreach: home" class="list-group">
             <tr class ="list-group-item">
                 <td align ="left"><span data-bind="text: $data.name"></span></td>
-                <td align="right"><a href="#" data-bind="click: $root.listNodes($data.id)">List Nodes</a></td>
+                <td align="right"><a ref="#" data-bind="click: $root.listNodes($data.id)">List Nodes</a></td>
             </tr>
         </tbody>
     </table>
