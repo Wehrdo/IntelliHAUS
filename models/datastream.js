@@ -18,7 +18,7 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.BOOLEAN
         },
         datatype: {
-            type: DataTypes.STRING
+            type: iotypes
         },
         discreteLabels: {
             type: DataTypes.ARRAY(DataTypes.STRING)
@@ -26,10 +26,16 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         classMethods: {
             associate: function(models) {
+                // A datastream belongs to a user
                 Datastream.belongsTo(models.User);
+                // A datastream can get data from multiple nodes
                 Datastream.hasMany(models.Node);
-
+                // A datastream can have many points
                 Datastream.hasMany(models.Datapoint);
+                // A datastream can be used in multiple rules
+                Datastream.belongsToMany(models.Rule, {
+                    through: 'RuleDatastream'
+                });
 
             }
         }

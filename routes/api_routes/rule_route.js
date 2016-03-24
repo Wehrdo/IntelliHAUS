@@ -12,8 +12,11 @@ var ruleUtils = require('./rule_utils');
 router.post('/',
     ruleUtils.schemaValidate,
     ruleUtils.logicValidate,
+    ruleUtils.idValidate,
     function(req, res) {
-        res.status(200).end("Good");
+        res.status(200).json({
+            success: true
+        });
 });
 
 module.exports = router;

@@ -4,7 +4,11 @@
 
 var validator = new (require('jsonschema').Validator)();
 var ruleSchema = require('./rule.schema.json');
+var models = require('../../models/index');
 
+/*
+Reusable high-performance Queue object
+ */
 var Queue = function() {
     var self = this;
     self.start_pt = 0;
@@ -12,6 +16,9 @@ var Queue = function() {
     self.size = 0;
     self.cur_size = 1;
     self.container = new Array(self.cur_size);
+    /*
+    Add new item to the head of the queue
+     */
     self.add = function(item) {
         if (self.size == self.cur_size) {
             self.resizeQueue();
@@ -20,12 +27,18 @@ var Queue = function() {
         self.end_pt = (self.end_pt + 1) % self.cur_size;
         self.size += 1;
     };
+    /*
+    Remove oldest item from queue
+     */
     self.get = function() {
         var to_ret = self.container[self.start_pt];
         self.start_pt = (self.start_pt + 1) % self.cur_size;
         self.size -= 1;
         return to_ret;
     };
+    /*
+    Internal function for resizing size of holding array.
+     */
     self.resizeQueue = function() {
         var oldSize = self.cur_size;
         // Double array size
@@ -47,14 +60,19 @@ var Queue = function() {
         // Need to move start point ahead, since we shifted elements from [start_pt, cur_size]
         self.start_pt += size_change;
     };
+    /*
+    Whether the queue is empty or not
+     */
     self.empty = function() {
         return self.size === 0;
     }
 };
 
+/*
+Middleware to check the given rule against the rule JSON schema
+ */
 exports.schemaValidate = function(req, res, next) {
     var schemaValidated = validator.validate(req.body.rule, ruleSchema);
-    var q = new Queue();
     if (req.body.rule && schemaValidated.valid) {
         next();
     }
@@ -67,7 +85,7 @@ exports.schemaValidate = function(req, res, next) {
 };
 
 /*
-Checks to see if the array of branches completely covers the given range
+Returns true if the array of branches completely covers the given range
  */
 function validateBranchCoverage(branches, range) {
     // Returns the value of the bottom of the branch value range
@@ -120,11 +138,16 @@ function validateBranchCoverage(branches, range) {
     return progress === range[1];
 }
 
+/*
+Middleware verifies the logic of the rule
+ */
 exports.logicValidate = function(req, res, next) {
     var q = new Queue();
     var rule = req.body.rule;
     q.add(rule);
     var valid = true;
+
+    // Look through all the decisions and make sure their branches cover the necessary cases
     while (!q.empty() && valid) {
         rule = q.get();
         for (var i = 0, keys = Object.keys(rule); i < keys.length; i++) {
@@ -140,7 +163,8 @@ exports.logicValidate = function(req, res, next) {
                 check_range = [1, 7]
             }
             else if (decisionType === "EventDecision") {
-
+                // Since EventDecisions have the 'default' option, we do not need to check
+                // their branch coverage
                 q.add(rule[decisionType].default)
             }
             else {
@@ -172,6 +196,103 @@ exports.logicValidate = function(req, res, next) {
     }
 };
 
+/*
+Verifies that all the datastream and node IDs in the rule exist, are of the correct type, and belong to this user
+ */
+exports.idValidate = function(req, res, next) {
+    var q = new Queue();
+    var rule = req.body.rule;
+    q.add(rule);
+
+    // Create a list of all the database queries we need.
+    // By creating this list beforehand, we will know when all the asynchronous calls have completed
+    var to_check = [];
+    while (!q.empty()) {
+        rule = q.get();
+        for (var i = 0, keys = Object.keys(rule); i < keys.length; i++) {
+            var decisionType = keys[i];
+            var where;
+            if (decisionType === "DataDecision") {
+                // "Where" for the query
+                where = {
+                    id: rule[decisionType].datastreamId, // ID sould exist
+                    UserId: req.user.id, // Should belong to this user
+                    datatype: 'continuous' // Datastream should be the correct datatype
+                };
+                // Add the necessary query to our array
+                to_check.push({
+                    model: 'Datastream',
+                    where: where
+                });
+            }
+            else if (decisionType === "EventDecision") {
+                where = {
+                    id: rule[decisionType].datastreamId,
+                    UserId: req.user.id,
+                    datatype: 'discrete'
+                };
+                to_check.push({
+                    model: 'Datastream',
+                    where: where
+                });
+
+            }
+            else if (decisionType === "NodeInput") {
+                // Sequelize "AND" query
+                where = models.sequelize.and(
+                        {'id': rule[decisionType].nodeId},
+                        {'UserId': req.user.id},
+                        // This verifies that the data given for a node input is the same number of elements as expected
+                        models.sequelize.where(models.sequelize.fn('array_length', models.sequelize.col('inputTypes'), 1), rule[decisionType].data.length)
+                );
+
+                to_check.push({
+                    model: 'Node',
+                    where: where
+                });
+            }
+
+            // Add all subactions if this action has branches
+            if (rule[decisionType].branches) {
+                for (var b = 0; b < rule[decisionType].branches.length; b++) {
+                    var action = rule[decisionType].branches[b].action;
+                    if (action != null) {
+                        q.add(action);
+                    }
+                }
+            }
+        }
+    }
+
+    // Number of queries completed
+    var nDone = 0;
+    var all_success = true;
+
+    // Query for all the IDs
+    to_check.forEach(function(query) {
+        models[query.model].findOne({
+            where: query.where
+        }).then(function(result) {
+            nDone += 1;
+            if (!result) {
+                // Requested query was not found
+                all_success = false;
+            }
+            // If it's the last query
+            if (nDone == to_check.length) {
+                if (all_success) {
+                    next();
+                } else {
+                    res.json({
+                        success: false,
+                        error: "Invalid id"
+                    })
+                }
+            }
+        })
+    });
+};
+
 var inst =
 {
     "TimeDecision": {
@@ -180,7 +301,7 @@ var inst =
                 "value": [0, 600],
                 "action": {
                     "NodeInput": {
-                        "nodeId": 5,
+                        "nodeId": 1,
                         "data": [50]
                     }
                 }

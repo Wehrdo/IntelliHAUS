@@ -42,7 +42,11 @@ module.exports = function(sequelize, DataTypes) {
                     }
                 });
 
+                // A node can have its output go to one datastrseam
                 Node.belongsTo(models.Datastream);
+
+                // A node can be actuated by one rule
+                Node.belongsTo(models.Rule);
             }
         }
     });

@@ -57,7 +57,8 @@ function Plot() {
             curData = newData;
         }
         if (curData.length == 0) {return;}
-        xScale.domain([new Date(curData[0].time), new Date(curData[curData.length-1].time)]);
+        xScale.domain(d3.extent(curData, function(d) {return d.time}).map(function(d_s) {return new Date(d_s);}));
+        //xScale.domain([new Date(curData[0].time), new Date(curData[curData.length-1].time)]);
 
         var tempPts = $.map(curData, function(pt) {return pt.time});
         yScale.domain(d3.extent(curData, function(d) {return d.continuousData}));

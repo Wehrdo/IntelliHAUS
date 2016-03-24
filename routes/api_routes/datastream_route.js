@@ -34,7 +34,7 @@ router.get('/:id(\\d+)/data',
 
     models.Datapoint.findAll({
         attributes: ['time', 'continuousData', 'discreteData', 'binaryData'],
-        offset: req.totalCount - qLimit,
+        order: [['time', 'DESC']],
         limit: qLimit,
         where: {
             DatastreamId: req.datastream.id
