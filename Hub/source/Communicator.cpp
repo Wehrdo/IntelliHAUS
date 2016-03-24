@@ -1,62 +1,95 @@
 #include "Communicator.hpp"
 
-Node::Communicator::Communicator(function<void(Node::Packet&)> cbPacket) {
+Hub::Communicator::Communicator(function<void(Hub::Packet&)> cbPacket) {
 	this->cbPacket = cbPacket;
 	state = STATE_READY;
 }
 
-void Node::Communicator::ProcessBytes(vector<unsigned char> bytes) {
+void Hub::Communicator::ProcessBytes(vector<unsigned char> bytes) {
 	for(auto &byte : bytes)
 		ProcessSingleByte(byte);
 }
 
-void Node::Communicator::ProcessSingleByte(unsigned char byte) {
+vector<unsigned char> Hub::Communicator::CreateBinaryMessage(const Packet& p) {
+	vector<unsigned char> binaryMessage;
+
+	//Start byte
+	binaryMessage.push_back(0xAA);
+
+	//4 byte Node ID
+	binaryMessage.push_back( (p.nodeID >> 24) & 0xFF);
+	binaryMessage.push_back( (p.nodeID >> 16) & 0xFF);
+	binaryMessage.push_back( (p.nodeID >> 8) & 0xFF);
+	binaryMessage.push_back( (p.nodeID) & 0xFF);
+
+	//Message type
+	binaryMessage.push_back(p.msgType);
+
+	//Payload length
+	int length = p.data.size();
+	binaryMessage.push_back( (length >> 8) & 0xFF);
+	binaryMessage.push_back( (length) & 0xFF);
+
+	//Payload
+	for(auto &b : p.data)
+		binaryMessage.push_back(b);
+
+	return binaryMessage;
+}
+
+void Hub::Communicator::ProcessSingleByte(unsigned char byte) {
+	static int index = 0;
+	static uint64_t tempID = 0;
+	static uint64_t tempLength = 0;
+	static Packet tempPacket;
+
 	switch(state) {
 	case STATE_READY:
 		if(byte == PACKET_START_BYTE) {
 			index = 0;
-			tempInt = 0;
+			tempID = 0;
+			tempLength = 0;
 			tempPacket = Packet();
 			state = STATE_ID;
 		}
 	break;
 
 	case STATE_ID:
-		tempInt |= byte << (8 * (3 - index));
+		tempID |= byte << (8 * (3 - index));
 		index++;
 		if(index == 4) {
-			tempPacket.SetID(tempInt);
+			tempPacket.nodeID = tempID;
 
 			index = 0;
-			tempInt = 0;
 			state = STATE_TYPE;
 		}
 	break;
 
 	case STATE_TYPE:
-		tempPacket.SetMsgType(byte);
+		tempPacket.msgType = byte;
 		state = STATE_LENGTH;
 	break;
 
 	case STATE_LENGTH:
-		tempInt |= byte << (8 * (1 - index));
+		tempLength |= byte << (8 * (1 - index));
 		index++;
 		if(index == 2) {
-			tempPacket.SetLength(tempInt);
-			if(tempInt == 0) {
+			if(tempLength == 0) {
 				cbPacket(tempPacket);
 				state = STATE_READY;
 			}
-			tempData.clear();
-			state = STATE_PAYLOAD;
+			else {
+				tempData.clear();
+				state = STATE_PAYLOAD;
+			}
 		}
 	break;
 
 	case STATE_PAYLOAD:
 		tempData.push_back(byte);
 
-		if(tempData.size() == tempPacket.GetLength()) {
-			tempPacket.SetData(tempData);
+		if(tempData.size() == tempLength) {
+			tempPacket.data = tempData;
 
 			cbPacket(tempPacket);
 			state = STATE_READY;

@@ -20,60 +20,110 @@ using namespace Hub;
 using boost::asio::ip::tcp;
 
 using namespace Hub;
-using namespace Node;
 
 #include <cerrno>
 
-int main() {
-	cout << "Starting Node Server" << endl;
-	NodeServer nodeServer([](Hub::Node* node){
-			cout << "Node connected: " << node->GetID() << endl;
-			} );
+void PacketCallback(Hub::Packet p, Server &server) {
+	string message;
+	uint32_t nodeID = p.GetNodeID();
 
-	cout << "Created Node Server instance" << endl;
+	switch(p.GetMsgType()) {
+		case Packet::TYPE_ID:
+			message = "Identification received from Node " +
+				to_string(nodeID);
+		break;
+
+		case Packet::TYPE_INT:
+			message = "Received int from node " +
+				to_string(nodeID) + ": " +
+				to_string(p.GetDataAsInt());
+			server.SendDatapoint(nodeID, p.GetDataAsInt());
+		break;
+
+		case Packet::TYPE_FLOAT:
+			message = "Received float from node " +
+				to_string(nodeID) + ": " +
+				to_string(p.GetDataAsFloat());
+			server.SendDatapoint(nodeID, p.GetDataAsFloat());
+		break;
+
+		default:
+			message = "Received unimplemented message type from"
+				"node " + to_string(nodeID) + ": " +
+				to_string(p.GetMsgType());
+		break;
+	}
+
+	cout << message << endl;
+}
+
+int main() {
+	boost::asio::io_service ioService;
+
+	//Create thread for ioService tasks
+	/*thread([&ioService]() {
+		while(1) {
+			ioService.run();
+			ioService.reset();
+
+			this_thread::sleep_for(chrono::milliseconds(10));
+		}
+	});*/
+
+	Server server(ioService, SERVER_URL);
+
+	NodeServer nodeServer([&ioService, &server](Packet p){
+		ioService.post([&server, p](){
+			PacketCallback(p, server);
+			});
+		});
+
+/*	NodeServer nodeServer([&server](Packet p) {
+		PacketCallback(p, server);
+		});*/
+
+	int retVal = server.Connect();
+	if(retVal < 0) {
+		cout << "Error connecting to server." << endl;
+		return -1;
+	}
+
+	try {
+		server.Authenticate(USERNAME, PASSWORD);
+	}
+	catch(Exception e) {
+		cout << "Exception caught: " << e.what() << endl;
+		return -1;
+	}
 
 	this_thread::sleep_for(chrono::seconds(2));
 
 	nodeServer.Start();
 
-	cout << "Node Server started." << endl;
+	thread hubThread([&ioService]() {
+		while(1) {
+			ioService.run();
+			ioService.reset();
+
+			this_thread::sleep_for(chrono::milliseconds(10));
+		}
+	});
 
 	while(1) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-	}
+		Packet p = Packet::FromInt(4, 0x00FF0000);
 
-	cout << errno << endl;
+		cout << "Sending packet" << endl;
 
-/*	boost::asio::io_service ioService;
-
-	Hub::Server server(ioService, SERVER_URL);
-
-	int retVal = server.Connect();
-
-	if(retVal < 0) {
-		cout << "Error connecting to server." << endl;
-		return -1;
-	}
-	try {
-		float data = 0;
-
-		cout << "Authenticating as user '" << USERNAME << "'..." << endl;
-		retVal = server.Authenticate(USERNAME, PASSWORD);
-
-		while(1) {
-			data = (rand() % 1000) / 10.f;
-			cout << "Sending datapoint '" << data << "'...";
-			retVal = server.SendDatapoint(NODEID, data);
-			cout << "done" << endl;
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(60000));
+		try {
+			nodeServer.SendPacket(p);
+		} catch(Exception &e) {
+			cout << "SendPacket exception: " << e.what() << endl;
 		}
-	}
-	catch(exception &e) {
-		cout << "Exception caught: " << e.what() << endl;
+
+		this_thread::sleep_for(chrono::seconds(1));
 	}
 
 	server.Disconnect();
-*/
+
 	return 0;
 }

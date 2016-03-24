@@ -11,8 +11,6 @@
 #include "Node.hpp"
 
 using namespace std;
-using namespace Hub;
-using namespace Node;
 
 namespace Hub
 {
@@ -20,32 +18,35 @@ namespace Hub
 class NodeServer
 {
 public:
-	NodeServer(function<void(Node*)> cbConnect);
+	NodeServer(function<void(Hub::Packet)> cbPacket);
 
 	void Start();
 
 	int Stop();
 
-	bool IsNodeConnected(uint64_t id);
-	Node* GetNode(uint64_t id);
+	int SendPacket(const Packet& p);
 
-	void RemoveNode(Node* node);
+	bool IsNodeConnected(uint64_t id);
+	Hub::Node* GetNode(uint64_t id);
+
+	void RemoveNode(Hub::Node* node);
 private:
 	void ThreadRoutine();
 
-	void AcceptHandler(Node *newNode, const boost::system::error_code& error);
+	void AcceptHandler(Hub::Node *newNode,
+		const boost::system::error_code& error);
 
-	void cbNodeClose(Node* node);
-	void cbNodeReadPacket(cbNodeReadPacket);
+	void cbNodeClose(Hub::Node* node);
+	void cbNodeReadPacket(Hub::Packet packet);
 
 	boost::asio::io_service ioService;
 	boost::asio::ip::tcp::acceptor tcpAcceptor;
 
 	thread asyncThread;
 
-	function<void(Node*)> cbConnect;
+	function<void(Hub::Packet)> cbPacket;
 
-	vector<Node*> connectedNodes;
+	vector<Hub::Node*> connectedNodes;
 };
 
 }

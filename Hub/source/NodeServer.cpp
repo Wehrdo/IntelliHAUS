@@ -2,11 +2,13 @@
 
 //using boost::asio;
 
-Hub::NodeServer::NodeServer(function<void(Node*)> cbConnect) :
+using namespace Hub;
+
+Hub::NodeServer::NodeServer(function<void(Hub::Packet)> cbPacket) :
 			tcpAcceptor(ioService, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 80)),
 			asyncThread([this](){
 				ThreadRoutine();}) {
-	this->cbConnect = cbConnect;
+	this->cbPacket = cbPacket;
 
 //	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 80);
 
@@ -15,22 +17,29 @@ Hub::NodeServer::NodeServer(function<void(Node*)> cbConnect) :
 }
 
 void Hub::NodeServer::Start() {
-	auto fConnect = [this](Node* node){cbConnect(node);};
-	auto fPacket = [this](Node* node){cbNodeReadPacket(node);};
+	auto fPacket = [this](const Packet& p){cbNodeReadPacket(p);};
+	auto fClose = [this](Node *n) {cbNodeClose(n);};
 
 //	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 80);
 
-	Node *newNode = new Node(fConnect, fPacket);
+	Node *newNode = new Node(fPacket, fClose);
 
 //	tcpAcceptor.accept(*(newNode->GetSocket()));
-
-	cout << "Starting TCP acceptor" << endl;
 
 	tcpAcceptor.async_accept(*(newNode->GetSocket()),
 			boost::bind(&Hub::NodeServer::AcceptHandler, this, newNode,
 			boost::asio::placeholders::error));
+}
 
-	cout << "Done starting TCP acceptor" << endl;
+int Hub::NodeServer::SendPacket(const Packet& p) {
+	Node* node = GetNode(p.GetNodeID());
+
+	if(node == nullptr)
+		throw Exception("SendPacket exception: node not found");
+
+	node->SendPacket(p);
+
+	return 0;
 }
 
 void Hub::NodeServer::ThreadRoutine() {
@@ -45,7 +54,7 @@ void Hub::NodeServer::ThreadRoutine() {
 }
 
 void Hub::NodeServer::AcceptHandler(Node *newNode, const boost::system::error_code& error) {
-	cout << "Accept handler entry" << endl;
+//	cout << "Accept handler entry" << endl;
 	if(!error) {
 		newNode->Start();
 		connectedNodes.push_back(newNode);
@@ -60,6 +69,7 @@ void Hub::NodeServer::AcceptHandler(Node *newNode, const boost::system::error_co
 }
 
 bool Hub::NodeServer::IsNodeConnected(uint64_t id) {
+	//TODO: Replace with std::find
 	for(auto &node : connectedNodes) {
 		if(node->GetID() == id) {
 			return true;
@@ -70,6 +80,7 @@ bool Hub::NodeServer::IsNodeConnected(uint64_t id) {
 }
 
 Hub::Node* Hub::NodeServer::GetNode(uint64_t id) {
+	//TODO: replace with std::find
 	for(auto &node : connectedNodes) {
 		if(node->GetID() == id) {
 			return node;
@@ -86,18 +97,18 @@ void Hub::NodeServer::RemoveNode(Node* node) {
 }
 
 void Hub::NodeServer::cbNodeClose(Node* node) {
+	cout << "Node " << node->GetID() << " disconnected." << endl;
+
+	//Have the NodeServer thread delete the node instance
 	ioService.post([this, node](){RemoveNode(node); delete node;});
 }
 
-void Hub::NodeServer::cbNodeReadPacket(const Node::Packet& packet) {
-	//TODO: something
-	cout << "Received packet:" << endl;
-	cout << "ID: " << packet.GetNodeID << ", Type: " << packet.GetMsgType()
-		<< ", Data: ";
+void Hub::NodeServer::cbNodeReadPacket(Packet packet) {
+	auto cbLambda = [&, this, packet](){
+//				cout << "Calling cbPacket inside NodeServer thread." << endl;
+				cbPacket(packet);
+			};
 
-	for(auto &byte : packet.GetData()) {
-		cout << (int)byte << " ";
-	}
-
-	cout << endl;
+	//Have the NodeServer thread call the cbPakcet callback procedure
+	ioService.post(cbLambda);
 }

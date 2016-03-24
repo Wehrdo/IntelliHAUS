@@ -4,32 +4,42 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include "Exception.hpp"
 
 using namespace std;
 
-
 namespace Hub {
+class Communicator;
+
 	class Packet
 	{
 	public:
-		static const unsigned char TYPE_IDENTIFY = 0;
-		static const unsigned char TYPE_DATAPOINT = 1;
+		static const unsigned char TYPE_ID = 0x00;
+		static const unsigned char TYPE_INT = 0x01;
+		static const unsigned char TYPE_FLOAT = 0x02;
 
 		Packet();
-		Packet(int nodeID, int msgType, const vector<char>& data);
+		Packet(int nodeID, int msgType,
+			const vector<unsigned char>& data);
+
+		static Packet FromInt(uint32_t nodeID, int32_t value);
 
 		unsigned int GetNodeID() const;
 		unsigned char GetMsgType() const;
-		const vector<char>& GetData() const;
+		const vector<unsigned char>& GetData() const;
+
+		int32_t GetDataAsInt() const;
+		float GetDataAsFloat() const;
 
 		void SetNodeID(unsigned int nodeID);
 		void SetMsgType(unsigned char msgType);
-		void SetData(const vector<char>& data);
+		void SetData(const vector<unsigned char>& data);
 
 	private:
+		friend class Hub::Communicator;
 		uint64_t nodeID;
 		int msgType;
-		vector<char> data;
+		vector<unsigned char> data;
 	};
 }
 

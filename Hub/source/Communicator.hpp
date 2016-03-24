@@ -8,12 +8,14 @@
 
 using namespace std;
 
-namespace Node
+namespace Hub
 {
 class Communicator
 {
 public:
-	Communicator(function<void(Node::Packet&)> cbPacket);
+	Communicator(function<void(Hub::Packet&)> cbPacket);
+
+	static vector<unsigned char> CreateBinaryMessage(const Packet& p);
 
 	void ProcessBytes(vector<unsigned char> bytes);
 private:
@@ -28,10 +30,10 @@ private:
 		STATE_PAYLOAD,
 	} state;
 
-	function<void(Node::Packet&)> cbPacket;
+	function<void(Hub::Packet&)> cbPacket;
 
-	int index;
-	uint32_t tempInt;
+	//int index;
+	//uint32_t tempInt;
 	vector<unsigned char> tempData;
 
 	Packet tempPacket;
