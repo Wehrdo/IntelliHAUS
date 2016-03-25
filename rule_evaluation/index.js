@@ -1,7 +1,14 @@
 var models = require('../models/index');
 
-function RuleEvaluator() {
+
+
+function evaluate(updatedInst) {
+    console.log(updatedInst.RuleId);
+}
+
+function evalRule(ruleId) {
 
 }
 
-module.exports = RuleEvaluator;
+exports.evaluate = evaluate;
+exports.evalRulle = evalRule;

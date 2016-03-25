@@ -20,7 +20,6 @@ router.post('/', function(req, res) {
     } else {
         time = new Date();
     }
-    var type;
 
     var node = models.Node.findOne({
         attributes: ['id'],

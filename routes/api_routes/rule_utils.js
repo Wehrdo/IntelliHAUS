@@ -207,6 +207,12 @@ exports.idValidate = function(req, res, next) {
     // Create a list of all the database queries we need.
     // By creating this list beforehand, we will know when all the asynchronous calls have completed
     var to_check = [];
+    // Collect the datastreams that a rule uses, so we can create the rule-datastream links when inserting into the database
+    var datastream_ids = [];
+    // Same for the affected nodes
+    var node_ids = [];
+
+    // Traverse rule to find all used IDs and create queries to verify them
     while (!q.empty()) {
         rule = q.get();
         for (var i = 0, keys = Object.keys(rule); i < keys.length; i++) {
@@ -224,6 +230,8 @@ exports.idValidate = function(req, res, next) {
                     model: 'Datastream',
                     where: where
                 });
+                // Add this datastream
+                datastream_ids.push(rule[decisionType].datastreamId);
             }
             else if (decisionType === "EventDecision") {
                 where = {
@@ -235,7 +243,7 @@ exports.idValidate = function(req, res, next) {
                     model: 'Datastream',
                     where: where
                 });
-
+                datastream_ids.push(rule[decisionType].datastreamId);
             }
             else if (decisionType === "NodeInput") {
                 // Sequelize "AND" query
@@ -245,11 +253,11 @@ exports.idValidate = function(req, res, next) {
                         // This verifies that the data given for a node input is the same number of elements as expected
                         models.sequelize.where(models.sequelize.fn('array_length', models.sequelize.col('inputTypes'), 1), rule[decisionType].data.length)
                 );
-
                 to_check.push({
                     model: 'Node',
                     where: where
                 });
+                node_ids.push(rule[decisionType].nodeId);
             }
 
             // Add all subactions if this action has branches
@@ -291,6 +299,9 @@ exports.idValidate = function(req, res, next) {
             }
         })
     });
+
+    req.used_ds_ids = datastream_ids;
+    req.used_node_ids = node_ids;
 };
 
 var inst =

@@ -15,13 +15,14 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             // A rule can affect one node
             associate: function(models) {
-                // A rule can only actuate one node
-                Rule.hasOne(models.Node);
+                // A rule could actuate multiple different nodes
+                Rule.hasMany(models.Node);
 
                 // A rule can use multiple datastreams
                 Rule.belongsToMany(models.Datastream, {
                     through: 'RuleDatastream'
-                })
+                });
+
             }
 
         }
