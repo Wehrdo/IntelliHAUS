@@ -2,10 +2,13 @@
 #define COMMUNICATOR_HPP
 
 #include <string>
-//#include <function>
+#include "Packet.hpp"
 #include <memory>
 #include <boost/asio.hpp>
 #include <sstream>
+#include <functional>
+#include <stdint.h>
+#include <thread>
 
 using namespace std;
 
@@ -14,47 +17,53 @@ namespace Node {
 class Communicator
 {
 public:
-	class Packet
-	{
-	public:
-		Packet();
-		Packet(int nodeID, int msgType, const vector<char>& data);
 
-		unsigned int GetNodeID() const;
-		unsigned char GetMsgType() const;
-		const vector<char>& GetData() const;
-
-		void SetNodeID(unsigned int nodeID);
-		void SetMsgType(unsigned char msgType);
-		void SetData(const vector<char>& data);
-
-	private:
-		unsigned int nodeID;
-		int msgType;
-		vector<char> data;
-	};
-
-	Communicator(const string& remoteHostName);
+	Communicator(uint32_t nodeID, const string& remoteHostName,
+			function<void(const Node::Packet&)> cbPacket);
 
 	int Connect();
 	int Disconnect();
 
-	int SendPacket(const Packet& p);
+	int SendPacket(const Node::Packet& p);
 
-	int PacketsReceived();
-
-	Packet RetreivePacket();
-
-//	int SetCallback(function<void(const Packet&)> cb);
+	int SendID();
+	int SendInt(int32_t datapoint);
+	int SendFloat(float datapoint);
 
 private:
+	static const int BUFFER_SIZE = 1;
+	static const unsigned char PACKET_START_BYTE = 0xAA;
+
+	enum {
+		STATE_READY,
+		STATE_ID,
+		STATE_TYPE,
+		STATE_LENGTH,
+		STATE_PAYLOAD
+	} state;
+
+	Node::Packet tempPacket;
+	vector<unsigned char> tempData;
+
+	void ProcessSingleByte(unsigned char byte);
+
+	void ThreadRoutine();
+
+	void StartListening();
+
+	void cbReceive(const boost::system::error_code& error,
+			size_t bytesTransferred);
+
 	boost::asio::io_service ioService;
 	unique_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 
-	string hostName;
-//	function<Packet> cb;
+	thread asyncThread;
 
-	vector<Packet> receiveBuffer;
+	unsigned char buffer[BUFFER_SIZE];
+
+	uint32_t nodeID;
+	string hostName;
+	function<void(const Node::Packet&)> cbPacket;
 };
 
 }; //namespace Node

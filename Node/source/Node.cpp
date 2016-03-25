@@ -1,25 +1,48 @@
 #include "Node.hpp"
 
+#define NODEID		4
+#define DELAY		1000
+
 using namespace std;
 using namespace Node;
 
+void cbPacket(const Packet& p);
+
 int main() {
-	vector<char> data;
+	unsigned int nodeID = 0;
 
-	data.push_back(0);
-	data.push_back(1);
-	data.push_back(2);
-	data.push_back(3);
+	cout << "Node ID: ";
+	cin >> nodeID;
 
-	Communicator::Packet p(1, 1, data);
+	Communicator comm(nodeID, "intellihub.ece.iastate.edu", cbPacket);
 
-	Communicator comm("intellihub.ece.iastate.edu");
+	this_thread::sleep_for(chrono::seconds(2));
 
 	comm.Connect();
 
-	comm.SendPacket(p);
+	for(int32_t i = 0; ; ++i) {
+		comm.SendFloat(i);
+
+		this_thread::sleep_for(chrono::milliseconds(DELAY));
+	}
 
 	comm.Disconnect();
 
 	return 0;
+}
+
+void cbPacket(const Packet& p) {
+
+	switch(p.GetMsgType()) {
+	case Packet::TYPE_INT:
+		cout << "Received int: " << p.GetDataAsInt() << endl;
+	break;
+
+	case Packet::TYPE_FLOAT:
+		cout << "Received float: " << p.GetDataAsFloat() << endl;
+	break;
+
+	default:
+		cout << "Received non int/float packet" << endl;
+	}
 }

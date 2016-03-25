@@ -1,44 +1,16 @@
 #include "Communicator.hpp"
 
+using namespace Node;
 
-Node::Communicator::Packet::Packet() {
-
-}
-
-Node::Communicator::Packet::Packet(int nodeID, int msgType,
-					const vector<char>& data) {
+Node::Communicator::Communicator(uint32_t nodeID, const string& remoteHostName,
+					function<void(const Packet&)> cbPacket)
+				: hostName(remoteHostName),
+				asyncThread([this](){ThreadRoutine();}) {
 	this->nodeID = nodeID;
-	this->msgType = msgType;
-	this->data = data;
-}
+	this->cbPacket = cbPacket;
 
-unsigned int Node::Communicator::Packet::GetNodeID() const {
-	return nodeID;
-}
+	state = STATE_READY;
 
-unsigned char Node::Communicator::Packet::GetMsgType() const {
-	return msgType;
-}
-
-const vector<char>&  Node::Communicator::Packet::GetData() const {
-	return data;
-}
-
-void Node::Communicator::Packet::SetNodeID(unsigned int nodeID) {
-	this->nodeID = nodeID;
-}
-
-void Node::Communicator::Packet::SetMsgType(unsigned char msgType) {
-	this->msgType = msgType;
-}
-
-void Node::Communicator::Packet::SetData(const vector<char>& data) {
-	this->data = data;
-}
-
-
-Node::Communicator::Communicator(const string& remoteHostName)
-				: hostName(remoteHostName) {
 	cout << "Connector initialized with hostname: " << hostName << endl;
 }
 
@@ -68,8 +40,17 @@ int Node::Communicator::Connect() {
 		return -1;
 	}
 
-	return 0;
+	StartListening();
 
+	return 0;
+}
+
+void Node::Communicator::StartListening() {
+	//Start asynchronously listening for data
+	tcpSocket->async_receive(boost::asio::buffer(buffer, BUFFER_SIZE), 0,
+			[this](const boost::system::error_code& error, size_t bytesTransferred) {
+				cbReceive(error, bytesTransferred);
+			});
 }
 
 int Node::Communicator::Disconnect() {
@@ -89,8 +70,97 @@ int Node::Communicator::Disconnect() {
 	return 0;
 }
 
-int Node::Communicator::SendPacket(const Packet& p) {
-	vector<char> outData;
+void Node::Communicator::ThreadRoutine() {
+	while(1) {
+		ioService.run();
+		ioService.reset();
+
+		this_thread::sleep_for(chrono::milliseconds(10));
+	}
+}
+
+void Node::Communicator::ProcessSingleByte(unsigned char byte) {
+        static int index = 0;
+        static uint64_t tempID = 0;
+        static uint64_t tempLength = 0;
+        static Packet tempPacket;
+
+        switch(state) {
+        case STATE_READY:
+                if(byte == PACKET_START_BYTE) {
+                        index = 0;
+                        tempID = 0;
+                        tempLength = 0;
+                        tempPacket = Packet();
+                        state = STATE_ID;
+                }
+        break;
+
+        case STATE_ID:
+                tempID |= byte << (8 * (3 - index));
+                index++;
+                if(index == 4) {
+                        tempPacket.nodeID = tempID;
+
+                        index = 0;
+                        state = STATE_TYPE;
+                }
+        break;
+
+        case STATE_TYPE:
+                tempPacket.msgType = byte;
+                state = STATE_LENGTH;
+        break;
+
+        case STATE_LENGTH:
+                tempLength |= byte << (8 * (1 - index));
+                index++;
+                if(index == 2) {
+                        if(tempLength == 0) {
+                                cbPacket(tempPacket);
+                                state = STATE_READY;
+                        }
+                        else {
+                                tempData.clear();
+                                state = STATE_PAYLOAD;
+                        }
+                }
+        break;
+
+        case STATE_PAYLOAD:
+                tempData.push_back(byte);
+
+                if(tempData.size() == tempLength) {
+                        tempPacket.data = tempData;
+
+                        cbPacket(tempPacket);
+                        state = STATE_READY;
+                }
+        break;
+
+        default:
+                state = STATE_READY;
+        }
+}
+
+void Node::Communicator::cbReceive(const boost::system::error_code& error,
+				size_t bytesTransferred) {
+	if(error) {
+		cout << "General async_receive error" << endl;
+	}
+	else {
+		for(int i = 0; i < bytesTransferred; i++) {
+//			cout << "Received byte: " << (int)buffer[i] << endl;
+			ProcessSingleByte(buffer[i]);
+		}
+	}
+
+	//Keep listening
+	StartListening();
+}
+
+int Node::Communicator::SendPacket(const Node::Packet& p) {
+	vector<unsigned char> outData;
 
 	unsigned int nodeID = p.GetNodeID();
 	unsigned char msgType = p.GetMsgType();
@@ -107,10 +177,12 @@ int Node::Communicator::SendPacket(const Packet& p) {
 	//Send Message Type
 	outData.push_back(msgType);
 
+	int length = p.GetData().size();
 	//Send Payload length
-	outData.push_back( (nodeID >> 8) & 0xFF);
-	outData.push_back( (nodeID) & 0xFF);
+	outData.push_back( (length >> 8) & 0xFF);
+	outData.push_back( (length) & 0xFF);
 
+	//TODO: replace with std::move
 	//Send payload
 	for(auto &b : p.GetData())
 		outData.push_back(b);
@@ -123,18 +195,40 @@ int Node::Communicator::SendPacket(const Packet& p) {
 	return 0;
 }
 
-int Node::Communicator::PacketsReceived() {
-	return receiveBuffer.size();
+int Node::Communicator::SendID() {
+	Packet p(nodeID, Packet::TYPE_ID, vector<unsigned char>());
+
+	return SendPacket(p);
 }
 
-/*
-Packet Node::Communicator::RetreivePacket() {
+int Node::Communicator::SendInt(int32_t datapoint) {
+	vector<unsigned char> data;
 
+	uint32_t dataBits = *(uint32_t*)(&datapoint);
+
+	data.push_back( (dataBits >> 24) & 0xFF);
+	data.push_back( (dataBits >> 16) & 0xFF);
+	data.push_back( (dataBits >> 8) & 0xFF);
+	data.push_back( (dataBits) & 0xFF);
+
+	Packet p(nodeID, Packet::TYPE_INT, data);
+
+	return SendPacket(p);
 }
 
+int Node::Communicator::SendFloat(float datapoint) {
+	vector<unsigned char> data;
 
-int Node::Communicator::SetCallback(function<void(const Packet&)> cb) {
-	this->cb = cb;
+	//Convert the bits of the datapoint float into an int
+	//So we can do bitwise operations on the bits
+	uint32_t dataBits = *(uint32_t*)(&datapoint);
+
+	data.push_back( (dataBits >> 24) & 0xFF);
+	data.push_back( (dataBits >> 16) & 0xFF);
+	data.push_back( (dataBits >> 8) & 0xFF);
+	data.push_back( (dataBits) & 0xFF);
+
+	Packet p(nodeID, Packet::TYPE_FLOAT, data);
+
+	return SendPacket(p);
 }
-
-*/

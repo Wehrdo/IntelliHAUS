@@ -3,5 +3,8 @@
 
 #include "Communicator.hpp"
 #include <vector>
+#include <chrono>
+#include <thread>
+#include <cmath>
 
 #endif
