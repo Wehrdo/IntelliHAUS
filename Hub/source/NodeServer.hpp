@@ -26,11 +26,11 @@ public:
 
 	int SendPacket(const Packet& p);
 
-	bool IsNodeConnected(uint64_t id);
-	Hub::Node* GetNode(uint64_t id);
-
-	void RemoveNode(Hub::Node* node);
+	bool IsNodeConnected(uint32_t id);
 private:
+	Hub::Node* GetNode(uint32_t id);
+	void RemoveNode(Hub::Node* node);
+
 	void ThreadRoutine();
 
 	void AcceptHandler(Hub::Node *newNode,

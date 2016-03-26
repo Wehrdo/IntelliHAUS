@@ -23,8 +23,9 @@ Hub::Node::~Node() {
 	tcpSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_send, error);
 
 	if(error) {
-		throw Hub::Exception("~Node exception: "
-					"Generic socket::shutdown error");
+//		throw Hub::Exception("~Node exception: "
+//					"Generic socket::shutdown error");
+		//TODO: Maybe handle this error
 	}
 
 	tcpSocket->close();
@@ -51,7 +52,7 @@ void Hub::Node::SendPacket(const Packet& p) const {
 
 	auto cbSend = [](const boost::system::error_code& error, size_t nSent) {
 			//TODO: Check error code
-			cout << "Sent " << nSent << " bytes" << endl;
+			//cout << "Sent " << nSent << " bytes" << endl;
 		};
 
 	tcpSocket->async_send(boost::asio::buffer(binaryMessage), cbSend);

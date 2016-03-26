@@ -68,7 +68,7 @@ void Hub::NodeServer::AcceptHandler(Node *newNode, const boost::system::error_co
 	Start();
 }
 
-bool Hub::NodeServer::IsNodeConnected(uint64_t id) {
+bool Hub::NodeServer::IsNodeConnected(uint32_t id) {
 	//TODO: Replace with std::find
 	for(auto &node : connectedNodes) {
 		if(node->GetID() == id) {
@@ -79,7 +79,7 @@ bool Hub::NodeServer::IsNodeConnected(uint64_t id) {
 	return false;
 }
 
-Hub::Node* Hub::NodeServer::GetNode(uint64_t id) {
+Hub::Node* Hub::NodeServer::GetNode(uint32_t id) {
 	//TODO: replace with std::find
 	for(auto &node : connectedNodes) {
 		if(node->GetID() == id) {

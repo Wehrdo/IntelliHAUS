@@ -17,6 +17,8 @@ using namespace Hub;
 
 #define NODEID		3
 
+#define ACTUATOR_ID	4
+
 using boost::asio::ip::tcp;
 
 using namespace Hub;
@@ -72,11 +74,15 @@ int main() {
 
 	Server server(ioService, SERVER_URL);
 
+	cout << "Server created" << endl;
+
 	NodeServer nodeServer([&ioService, &server](Packet p){
 		ioService.post([&server, p](){
 			PacketCallback(p, server);
 			});
 		});
+
+	cout << "NodeServer created" << endl;
 
 /*	NodeServer nodeServer([&server](Packet p) {
 		PacketCallback(p, server);
@@ -88,6 +94,8 @@ int main() {
 		return -1;
 	}
 
+	cout << "Server connected" << endl;
+
 	try {
 		server.Authenticate(USERNAME, PASSWORD);
 	}
@@ -96,9 +104,13 @@ int main() {
 		return -1;
 	}
 
+	cout << "Server authenticated" << endl;
+
 	this_thread::sleep_for(chrono::seconds(2));
 
 	nodeServer.Start();
+
+	cout << "NodeServer started" << endl;
 
 	thread hubThread([&ioService]() {
 		while(1) {
@@ -109,18 +121,26 @@ int main() {
 		}
 	});
 
+	cout << "Hub thread started" << endl;
+
 	while(1) {
-		Packet p = Packet::FromInt(4, 0x00FF0000);
+		uint32_t color;
+		cout << "Color: ";
+		cin >> hex >> color;
 
-		cout << "Sending packet" << endl;
+		if(nodeServer.IsNodeConnected(ACTUATOR_ID)) {
+			Packet p = Packet::FromInt(ACTUATOR_ID, color);
 
-		try {
-			nodeServer.SendPacket(p);
-		} catch(Exception &e) {
-			cout << "SendPacket exception: " << e.what() << endl;
+			//cout << "Sending packet" << endl;
+
+			try {
+				nodeServer.SendPacket(p);
+			} catch(Exception &e) {
+				cout << "SendPacket exception: " << e.what() << endl;
+			}
 		}
-
-		this_thread::sleep_for(chrono::seconds(1));
+		else
+			cout << "Error: Node " << ACTUATOR_ID << " not connected" << endl;
 	}
 
 	server.Disconnect();
