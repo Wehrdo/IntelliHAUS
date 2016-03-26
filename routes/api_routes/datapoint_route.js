@@ -4,6 +4,7 @@
 var express = require('express');
 var router = express.Router();
 var models = require('../../models/index');
+var ruleEvaluation = require('../../rule_evaluation');
 
 // Getting datapoint with integer ID
 router.get('/:id(\\d+)', function(req, res) {
@@ -67,6 +68,8 @@ router.post('/', function(req, res) {
                 res.status(201).json({
                     success: true
                 });
+                // Evaluate associated rules
+                ruleEvaluation.evaluate(node.Datastream);
             })
             .catch(function(error) {
                 res.status(500).json({

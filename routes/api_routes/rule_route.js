@@ -7,6 +7,7 @@ var express = require('express');
 var router = express.Router();
 var models = require('../../models/index');
 var ruleUtils = require('./rule_utils');
+var ruleEvaluation = require('../../rule_evaluation');
 
 // Returns a generic error 400 catch handler for the database creation chain
 var catchHandler = function(res) {
@@ -32,13 +33,15 @@ router.post('/',
         // After creation, set associations to datastreams
         newRule.setDatastreams(req.used_ds_ids).catch(catchHandler(res))
         .then(function() {
-        // Then set nodes
+        // Relate the nodes that the rule affects
         newRule.setNodes(req.used_node_ids).catch(catchHandler(res))
         .then(function() {
             res.status(201).json({
                 success: true,
                 id: newRule.id
             });
+            // After creation of rule, evaluate it
+            ruleEvaluation.evalRule(newRule.id);
         }).catch(catchHandler(res))
         })
         });
