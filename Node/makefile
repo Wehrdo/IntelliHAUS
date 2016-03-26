@@ -10,8 +10,8 @@ VPATH=source
 
 all: Node
 
-Node: Node.o Communicator.o Packet.o Exception.o
-	$(LD) $(CFLAGS) Exception.o Packet.o Communicator.o Node.o -lboost_system -lboost_thread -lpthread -o Node
+Node: Node.o Communicator.o Packet.o Exception.o LightStrip.o SPI.o Color.o
+	$(LD) $(CFLAGS) Color.o SPI.o LightStrip.o Exception.o Packet.o Communicator.o Node.o -lboost_system -lboost_thread -lpthread -lbcm2835 -o Node
 
 Node.o: $(srcdir)/Node.cpp $(srcdir)/Node.hpp
 	$(CC) $(CFLAGS) -c $(srcdir)/Node.cpp
@@ -24,3 +24,12 @@ Packet.o: $(srcdir)/Packet.cpp $(srcdir)/Packet.hpp
 
 Exception.o: $(srcdir)/Exception.cpp $(srcdir)/Exception.hpp
 	$(CC) $(CFLAGS) -c $(srcdir)/Exception.cpp
+
+LightStrip.o: $(srcdir)/LightStrip.cpp $(srcdir)/LightStrip.hpp
+	$(CC) $(CFLAGS) -c $(srcdir)/LightStrip.cpp
+
+SPI.o: $(srcdir)/SPI.c $(srcdir)/SPI.h
+	$(CC) $(CFLAGS) -c $(srcdir)/SPI.c
+
+Color.o: $(srcdir)/Color.cpp $(srcdir)/Color.hpp
+	$(CC) $(CFLAGS) -c $(srcdir)/Color.cpp

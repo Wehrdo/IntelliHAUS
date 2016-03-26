@@ -3,27 +3,34 @@
 #define NODEID		4
 #define DELAY		1000
 
+#define LED_COUNT	49
+
 using namespace std;
 using namespace Node;
 
-void cbPacket(const Packet& p);
+void cbPacket(const Packet& p, LightStrip& strip);
+
+void SetColor(LightStrip& strip, uint32_t color);
 
 int main() {
-	unsigned int nodeID = 0;
+	boost::asio::io_service ioService;
 
-	cout << "Node ID: ";
-	cin >> nodeID;
+	LightStrip strip(LED_COUNT);
 
-	Communicator comm(nodeID, "intellihub.ece.iastate.edu", cbPacket);
+	strip.Display();
+
+	Communicator comm(NODEID, "intellihub.ece.iastate.edu",
+			[&strip](const Packet& p){cbPacket(p, strip);});
 
 	this_thread::sleep_for(chrono::seconds(2));
 
 	comm.Connect();
 
-	for(int32_t i = 0; ; ++i) {
-		comm.SendFloat(i);
+	while(1) {
+		ioService.run();
+		ioService.reset();
 
-		this_thread::sleep_for(chrono::milliseconds(DELAY));
+		this_thread::sleep_for(chrono::milliseconds(10));
 	}
 
 	comm.Disconnect();
@@ -31,18 +38,20 @@ int main() {
 	return 0;
 }
 
-void cbPacket(const Packet& p) {
+void cbPacket(const Packet& p, LightStrip& strip) {
 
 	switch(p.GetMsgType()) {
-	case Packet::TYPE_INT:
-		cout << "Received int: " << p.GetDataAsInt() << endl;
-	break;
+	case Packet::TYPE_INT: {
+		Color c(p.GetDataAsInt());
 
-	case Packet::TYPE_FLOAT:
-		cout << "Received float: " << p.GetDataAsFloat() << endl;
+		cout << "Received color: " << c.ToString() << endl;
+
+		strip.SetAll(Color(p.GetDataAsInt()));
+		strip.Display();
+	}
 	break;
 
 	default:
-		cout << "Received non int/float packet" << endl;
+		cout << "Received malformed packet" << endl;
 	}
 }
