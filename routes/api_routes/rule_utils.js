@@ -154,7 +154,7 @@ exports.logicValidate = function(req, res, next) {
             var decisionType = keys[i];
             var check_range;
             if (decisionType === "TimeDecision") {
-                check_range = [0, 86400];
+                check_range = [0, 1440];
             }
             else if (decisionType === "DataDecision") {
                 check_range = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
@@ -318,18 +318,28 @@ var inst =
                 }
             },
             {
-                "value": [600, 86400],
+                "value": [600, 1440],
                 "action": {
                     "DataDecision": {
                         "datastreamId": 1,
                         "branches": [
                             {
                                 "value": ["NEGATIVE_INFINITY", 30],
-                                "action": null
+                                "action": {
+                                    "NodeInput": {
+                                        "nodeId": 1,
+                                        "data": [30]
+                                    }
+                                }
                             },
                             {
                                 "value": [30, "POSITIVE_INFINITY"],
-                                "action": null
+                                "action": {
+                                    "NodeInput": {
+                                        "nodeId": 1,
+                                        "data": [40]
+                                    }
+                                }
                             }
                         ]
                     }

@@ -17,6 +17,26 @@
       ],
       "additionalProperties": false
     },
+    "decision": {
+      "type": "object",
+      "properties": {
+        "DataDecision": {
+          "$ref": "#/definitions/dataDecision"
+        },
+        "EventDecision": {
+          "$ref": "#/definitions/eventDecision"
+        },
+        "TimeDecision": {
+          "$ref": "#/definitions/timeDecision"
+        },
+        "DayDecision": {
+          "$ref": "#/definitions/dayDecision"
+        }
+      },
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": false
+    },
     "action": {
       "oneOf": [
         {
@@ -27,16 +47,14 @@
           "properties": {
             "NodeInput": {
               "$ref": "#/definitions/nodeInput"
-            },
-            "DataDecision": {
-              "$ref": "#/definitions/dataDecision"
-            },
-            "EventDecision": {
-              "$ref": "#/definitions/eventDecision"
             }
           },
           "minProperties": 1,
-          "maxProperties": 1
+          "maxProperties": 1,
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/definitions/decision"
         }
       ]
     },
@@ -150,21 +168,5 @@
       ]
     }
   },
-  "type": "object",
-  "properties": {
-    "DataDecision": {
-      "$ref": "#/definitions/dataDecision"
-    },
-    "EventDecision": {
-      "$ref": "#/definitions/eventDecision"
-    },
-    "TimeDecision": {
-      "$ref": "#/definitions/timeDecision"
-    },
-    "DayDecision": {
-      "$ref": "#/definitions/dayDecision"
-    }
-  },
-  "minProperties": 1,
-  "maxProperties": 1
+  "$ref": "#/definitions/decision"
 }

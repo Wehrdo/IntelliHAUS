@@ -8,10 +8,21 @@ var available = [];
 var eval_q = [];
 
 var proc_map = {};
+// If we are in debug mode
+var DEBUG = typeof v8debug === 'object';
 
 // Create worker processes
 for (i = 0; i < 2; i++) {
-    var eval_proc = fork(path.join(__dirname, 'rule_evaluator.js'));
+    // Change port for child processes if we are debugging, so they can also be debugged
+    if (DEBUG) {
+        exec_args = ['--debug=' + (22851 + i)]
+    }
+    else {
+        exec_args = []
+    }
+    var eval_proc = fork(path.join(__dirname, 'rule_evaluator.js'), [], {
+        execArgv: exec_args
+    });
     // Map PID to child process
     proc_map[eval_proc.pid] = eval_proc;
 
@@ -21,7 +32,7 @@ for (i = 0; i < 2; i++) {
             console.log(proc.pid + " completed");
         }
         else if (message == 'ready') {
-            console.log(proc.pid + " ready");
+            console.log('Process ' + proc.pid + " ready");
         }
         // Return process to available
         available.push(proc.pid);
