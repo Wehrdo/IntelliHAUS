@@ -1,11 +1,52 @@
 var path = require('path');
 var models = require('../models/index');
 var fork = require('child_process').fork;
+var EventEmitter = require('events').EventEmitter;
+
+/*
+
+ Long Polling handling
+
+ */
+var updatesBus = new EventEmitter();
+updatesBus.setMaxListeners(1);
+
+// All the updates that failed to send
+var updates_backlog = [];
+
+// Number of milliseconds to keep an update for
+var BACKLOG_MAX_AGE = 60 * 60000;
+// Runs through all the failed updates to send them again
+function tryBacklogs() {
+    var now = new Date();
+    var i = updates_backlog.length - 1;
+    while (i >= 0) {
+        var update = updates_backlog[i];
+        var success = updatesBus.emit(update.homeId, update.update_info);
+        if (success || ((now - update.time) > BACKLOG_MAX_AGE)) {
+            updates_backlog.splice(i, 1);
+        }
+        i -= 1;
+    }
+}
+
+// Try re-emitting backlogs every 10 seconds
+setInterval(tryBacklogs, 10000);
+
+exports.updatesBus = updatesBus;
+
+
+/*
+
+Rule Evaluation handling
+
+ */
 
 // Which workers are free
 var available = [];
 // Queue of rules to evaluate
 var eval_q = [];
+
 
 var proc_map = {};
 // If we are in debug mode
@@ -15,23 +56,46 @@ var DEBUG = typeof v8debug === 'object';
 for (i = 0; i < 2; i++) {
     // Change port for child processes if we are debugging, so they can also be debugged
     if (DEBUG) {
-        exec_args = ['--debug=' + (22851 + i)]
+        var exec_args = ['--debug=' + (22851 + i)]
     }
     else {
-        exec_args = []
+        var exec_args = []
     }
     var eval_proc = fork(path.join(__dirname, 'rule_evaluator.js'), [], {
         execArgv: exec_args
     });
+
+
     // Map PID to child process
     proc_map[eval_proc.pid] = eval_proc;
 
     // Create message callback, binding this process to the callback
     eval_proc.on('message', function(proc, message) {
-        if (message == 'success') {
-            console.log(proc.pid + " completed");
+        // Rule evaluated successfully
+        if (message.status == 'success') {
+            // If rule requires data to be sent out
+            if (message.actuate) {
+                // Notify long-polling listener about new data
+                var update_info = {
+                    nodeId: message.nodeId,
+                    data: message.data
+                };
+                var hasListeners = updatesBus.emit(message.homeId.toString(), update_info);
+                // There were no listeners for this home; store in backlog
+                if (!hasListeners) {
+                    console.log("Storing node " + message.nodeId + " update in backlog");
+                    updates_backlog.push({
+                        time: new Date(),
+                        homeId: message.homeId.toString(),
+                        update_info: update_info
+                    });
+                }
+            }
         }
-        else if (message == 'ready') {
+        else if (message.status == 'failure') {
+            console.log('error evaluating rule: ' + message.error);
+        }
+        else if (message.status == 'ready') {
             console.log('Process ' + proc.pid + " ready");
         }
         // Return process to available
@@ -76,7 +140,6 @@ function evaluate(datastream) {
         });
     })
 }
-
 
 exports.evaluate = evaluate;
 exports.evalRule = evalRule;

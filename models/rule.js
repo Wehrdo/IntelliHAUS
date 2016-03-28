@@ -10,11 +10,17 @@ module.exports = function(sequelize, DataTypes) {
         },
         rule: {
             type: DataTypes.JSONB
+        },
+        public: {
+            type: DataTypes.BOOLEAN
         }
     }, {
         classMethods: {
             // A rule can affect one node
             associate: function(models) {
+                // A user owns a rule
+                Rule.belongsTo(models.User);
+                
                 // A rule could actuate multiple different nodes
                 Rule.hasMany(models.Node);
 

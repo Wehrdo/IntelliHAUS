@@ -6,11 +6,13 @@ var models = require('../models/index');
 function evalAction(action) {
     if (action === null) {
         // Null actions mean don't do anything
-        console.log("Rule evaluated to null");
-        process.send('success');
+        process.send({
+            status: 'success',
+            actuate: false
+        });
         return;
     }
-    
+
     var action_type = Object.keys(action)[0];
     if (action_type === 'TimeDecision') {
         var now = new Date();
@@ -49,8 +51,28 @@ function evalAction(action) {
         evalBranchRange(action[action_type], now.getDay());
     }
     else if (action_type === 'NodeInput') {
-        console.log("Sending " + action[action_type].data + " to node " + action[action_type].nodeId);
-        process.send('success');
+        var nodeId = action[action_type].nodeId;
+        // Find the node, so we know what home it belongs to
+        models.Node.findById(nodeId, {
+            attributes: ["id", "HomeId"]
+        })
+            .then(function(node) {
+                if (node) {
+                    process.send({
+                        status: 'success',
+                        actuate: true,
+                        data: action[action_type].data,
+                        nodeId: node.id,
+                        homeId: node.HomeId
+                    });
+                }
+                else {
+                    process.send({
+                        status: 'failure',
+                        error: "Couldn't find node " + action[action_type].nodeId
+                    })
+                }
+            });
     }
 }
 
@@ -86,7 +108,6 @@ function evalBranchRange(decision, curVal) {
             evalAction(branch.action);
         }
     }
-    console.log("no branches matched");
 }
 
 function evalEventBranches(decision, curVal) {
@@ -105,8 +126,7 @@ process.on('message', function(message) {
         .then(function(db_rule) {
             evalAction(db_rule.rule);
         });
-    console.log('worker going to process rule ' + message.ruleId);
 });
 
 // Notify manager that we are ready to work
-process.send('ready');
+process.send({status: 'ready'});

@@ -20,6 +20,8 @@ config.db_options = {
     'timezone': 'America/Chicago'
 };
 
-config.pg_conn_URL = 'postgres://postgres:postgres@localhost:5432/intellihaus';
+// Set long-poll timeout to be 30 seconds
+// See RFC 6202 Section 5.5 about timeouts
+config.long_poll_timeout = 30 * 1000;
 
 module.exports = config;

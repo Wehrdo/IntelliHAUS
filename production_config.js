@@ -21,4 +21,8 @@ config.db_options = {
     'host': '127.0.0.1'
 };
 
+// Set long-poll timeout to be 30 seconds
+// See RFC 6202 Section 5.5 about timeouts
+config.long_poll_timeout = 30 * 1000;
+
 module.exports = config;
