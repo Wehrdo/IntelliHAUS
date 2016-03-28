@@ -12,14 +12,19 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.JSONB
         },
         public: {
-            type: DataTypes.BOOLEAN
+            type: DataTypes.BOOLEAN,
+            allowNull: false
         }
     }, {
         classMethods: {
             // A rule can affect one node
             associate: function(models) {
                 // A user owns a rule
-                Rule.belongsTo(models.User);
+                Rule.belongsTo(models.User, {
+                    onDelete: "CASCADE",
+                    foreignKey: {
+                        allowNull: false
+                }});
                 
                 // A rule could actuate multiple different nodes
                 Rule.hasMany(models.Node);

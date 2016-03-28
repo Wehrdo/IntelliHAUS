@@ -15,16 +15,20 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING
         },
         inputTypes: {
-            type: DataTypes.ARRAY(DataTypes.STRING)
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            allowNull: false
         },
         inputNames: {
-            type: DataTypes.ARRAY(DataTypes.STRING)
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            allowNull: false
         },
         outputType: {
-            type: iotypes
+            type: iotypes,
+            allowNull: false
         },
         outputName: {
-            type: DataTypes.STRING
+            type: DataTypes.STRING,
+            allowNull: false
         }
     }, {
         classMethods: {

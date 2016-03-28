@@ -29,8 +29,10 @@ router.post('/',
     ruleUtils.idValidate,
     function (req, res) {
         models.Rule.create({
+            UserId: req.user.id,
             name: (req.body.name || "My Rule"),
-            rule: req.body.rule
+            rule: req.body.rule,
+            public: (req.body.public || false)
         })
         .then(function(newRule) {
         // After creation, set associations to datastreams
