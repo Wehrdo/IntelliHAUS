@@ -58,6 +58,7 @@ router.get('/updates', middleware.getHome, function(req, res) {
         ruleEvaluation.updatesBus.removeAllListeners(req.home.id.toString());
         // Respond with no new updates
         res.status(200).json({
+            success: true,
             updates: []
         });
     });
@@ -69,6 +70,7 @@ router.get('/updates', middleware.getHome, function(req, res) {
             // Clear any listeners on this home before sending response
             ruleEvaluation.updatesBus.removeAllListeners(req.home.id.toString());
             resp.status(200).json({
+                success: true,
                 updates: backlog
             });
         };
