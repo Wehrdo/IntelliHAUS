@@ -21,7 +21,6 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 // A user owns a rule
                 Rule.belongsTo(models.User, {
-                    onDelete: "CASCADE",
                     foreignKey: {
                         allowNull: false
                 }});
@@ -33,6 +32,8 @@ module.exports = function(sequelize, DataTypes) {
                 Rule.belongsToMany(models.Datastream, {
                     through: 'RuleDatastream'
                 });
+                
+                Rule.hasMany(models.RuleTime, {onDelete: "CASCADE"});
 
             }
 

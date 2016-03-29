@@ -1,46 +1,10 @@
 var path = require('path');
 var models = require('../models/index');
 var fork = require('child_process').fork;
-var EventEmitter = require('events').EventEmitter;
+var timeEvaluation = require('./time_evaluation');
+var longPolling = require('./long_polling');
 
-/*
-
- Long Polling handling
-
- */
-var updatesBus = new EventEmitter();
-updatesBus.setMaxListeners(1);
-
-// All the updates that failed to send
-var updates_backlog = [];
-
-// Number of milliseconds to keep an update for
-var BACKLOG_MAX_AGE = 60 * 60000;
-// Runs through all the failed updates to send them again
-function tryBacklogs() {
-    var now = new Date();
-    var i = updates_backlog.length - 1;
-    while (i >= 0) {
-        var update = updates_backlog[i];
-        var success = updatesBus.emit(update.homeId, update.update_info);
-        if (success || ((now - update.time) > BACKLOG_MAX_AGE)) {
-            updates_backlog.splice(i, 1);
-        }
-        i -= 1;
-    }
-}
-
-// Try re-emitting backlogs every 10 seconds
-setInterval(tryBacklogs, 10000);
-
-exports.updatesBus = updatesBus;
-
-
-/*
-
-Rule Evaluation handling
-
- */
+exports.updatesBus = longPolling.updatesBus;
 
 // Which workers are free
 var available = [];
@@ -80,11 +44,11 @@ for (i = 0; i < 2; i++) {
                     nodeId: message.nodeId,
                     data: message.data
                 };
-                var hasListeners = updatesBus.emit(message.homeId.toString(), update_info);
+                var hasListeners = longPolling.updatesBus.emit(message.homeId.toString(), update_info);
                 // There were no listeners for this home; store in backlog
                 if (!hasListeners) {
                     console.log("Storing node " + message.nodeId + " update in backlog");
-                    updates_backlog.push({
+                    longPolling.updates_backlog.push({
                         time: new Date(),
                         homeId: message.homeId.toString(),
                         update_info: update_info
@@ -140,6 +104,9 @@ function evaluate(datastream) {
         });
     })
 }
+
+// check for new rules that need to be evaluated every minute
+setInterval(timeEvaluation.checkNow, 60000, evalRule);
 
 exports.evaluate = evaluate;
 exports.evalRule = evalRule;

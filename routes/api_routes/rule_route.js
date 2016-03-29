@@ -17,8 +17,9 @@ var catchHandler = function(res) {
     return function(error) {
         res.status(400).json({
             success: false,
-            error: error
-        })
+            error: error.toString()
+        });
+        throw error;
     }
 };
 
@@ -36,20 +37,36 @@ router.post('/',
         })
         .then(function(newRule) {
         // After creation, set associations to datastreams
-        newRule.setDatastreams(req.used_ds_ids).catch(catchHandler(res))
+        newRule.setDatastreams(req.used_ds_ids)
         .then(function() {
         // Relate the nodes that the rule affects
-        newRule.setNodes(req.used_node_ids).catch(catchHandler(res))
+        newRule.setNodes(req.used_node_ids)
         .then(function() {
-            res.status(201).json({
-                success: true,
-                id: newRule.id
-            });
+        // Add rule's eval times
+        var ruleId = newRule.id;
+        var records = req.eval_times.map(function (time) {
+            return {
+                time: time,
+                RuleId: ruleId
+            }
+        });
+        models.RuleTime.bulkCreate(records, {validate: true})
+        .then(function(newTimes) {
+            if (newTimes && newTimes.length) {
+                res.status(201).json({
+                    success: true,
+                    id: newRule.id
+                });
+            }
+            else {
+                catchHandler(res)("Eval times not created");
+            }
             // After creation of rule, evaluate it
             ruleEvaluation.evalRule(newRule.id);
         }).catch(catchHandler(res))
-        })
-        });
+        }).catch(catchHandler(res))
+        }).catch(catchHandler(res))
+        }).catch(catchHandler(res));
     });
 
 router.get('/updates', middleware.getHome, function(req, res) {

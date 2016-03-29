@@ -84,32 +84,34 @@ exports.schemaValidate = function(req, res, next) {
     }
 };
 
+
+// Returns the value of the bottom of the branch value range
+var getRangeStart = function(branch) {
+    // Can be NEGATIVE_INFINITY, or POSITIVE_INFINITY
+    // JSON doesn't allow passing of +- Inf, but JS number allows it
+    if (typeof branch.value[0] === "string") {
+        return Number[branch.value[0]];
+    }
+    else {
+        return branch.value[0];
+    }
+};
+// Returns the value of the top of the branch value range
+var getRangeEnd = function(branch) {
+    // Can be NEGATIVE_INFINITY, or POSITIVE_INFINITY
+    // JSON doesn't allow passing of +- Inf, but JS number allows it
+    if (typeof branch.value[1] === "string") {
+        return Number[branch.value[1]];
+    }
+    else {
+        return branch.value[1];
+    }
+};
+
 /*
 Returns true if the array of branches completely covers the given range
  */
 function validateBranchCoverage(branches, range) {
-    // Returns the value of the bottom of the branch value range
-    var getRangeStart = function(branch) {
-        // Can be NEGATIVE_INFINITY, or POSITIVE_INFINITY
-        // JSON doesn't allow passing of +- Inf, but JS number allows it
-        if (typeof branch.value[0] === "string") {
-            return Number[branch.value[0]];
-        }
-        else {
-            return branch.value[0];
-        }
-    };
-    // Returns the value of the top of the branch value range
-    var getRangeEnd = function(branch) {
-        // Can be NEGATIVE_INFINITY, or POSITIVE_INFINITY
-        // JSON doesn't allow passing of +- Inf, but JS number allows it
-        if (typeof branch.value[1] === "string") {
-            return Number[branch.value[1]];
-        }
-        else {
-            return branch.value[1];
-        }
-    };
     // Sort branches by the start of their ranges
     branches.sort(function(branch1, branch2) {
         if (getRangeStart(branch1) > getRangeStart(branch2)) {
@@ -147,6 +149,8 @@ exports.logicValidate = function(req, res, next) {
     q.add(rule);
     var valid = true;
 
+    var eval_times = [];
+
     // Look through all the decisions and make sure their branches cover the necessary cases
     while (!q.empty() && valid) {
         rule = q.get();
@@ -155,6 +159,10 @@ exports.logicValidate = function(req, res, next) {
             var check_range;
             if (decisionType === "TimeDecision") {
                 check_range = [0, 1440];
+                // Find all times that need to be evaluated for this rule
+                rule[decisionType].branches.forEach(function(branch) {
+                    eval_times.push(getRangeStart(branch));
+                })
             }
             else if (decisionType === "DataDecision") {
                 check_range = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
@@ -184,6 +192,11 @@ exports.logicValidate = function(req, res, next) {
             }
         }
     }
+
+    // Remove duplicate times and store them in request
+    req.eval_times = eval_times.filter(function(item, pos, self) {
+        return self.indexOf(item) == pos;
+    });
 
     if (valid) {
         next();
