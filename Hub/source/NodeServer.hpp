@@ -18,6 +18,8 @@ namespace Hub
 class NodeServer
 {
 public:
+	NodeServer() : tcpAcceptor(ioService) {}
+
 	NodeServer(function<void(Hub::Packet)> cbPacket);
 
 	void Start();
@@ -25,6 +27,8 @@ public:
 	int Stop();
 
 	int SendPacket(const Packet& p);
+
+	int SendActuation(uint32_t nodeID, const vector<float>& values);
 
 	bool IsNodeConnected(uint32_t id);
 private:

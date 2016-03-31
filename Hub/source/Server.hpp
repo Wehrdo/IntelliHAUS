@@ -2,6 +2,8 @@
 #define SERVER_HPP
 
 #include <sstream>
+#include <vector>
+#include <functional>
 #include <boost/asio.hpp>
 #include "Exception.hpp"
 #include "HTTP.hpp"
@@ -21,7 +23,12 @@ public:
 		BINARY
 	};
 
-	Server(int homeID, string url);
+	struct ServerUpdate {
+		uint32_t nodeID;
+		vector<float> values;
+	};
+
+	Server(int homeID, string url, function<void(const vector<ServerUpdate>&)> cbUpdate);
 	~Server();
 
 	int Connect();
@@ -55,6 +62,8 @@ public:
 private:
 	void LongPoll();
 	void cbLongPoll(const Hub::HTTP::Message& msg);
+
+	function<void(const vector<ServerUpdate>&)> cbUpdate;
 
 	Hub::HTTP http;
 	int homeID;

@@ -25,11 +25,13 @@ using namespace Hub;
 
 #include <cerrno>
 
+void UpdateCallback(NodeServer& nodeServer, const vector<Server::ServerUpdate>& updates);
+
 void PacketCallback(Hub::Packet p, Server &server) {
 	string message;
 	uint32_t nodeID = p.GetNodeID();
 
-	cout << "Entering packet callback..." << endl;
+//	cout << "Entering packet callback..." << endl;
 
 	switch(p.GetMsgType()) {
 		case Packet::TYPE_ID:
@@ -63,17 +65,22 @@ void PacketCallback(Hub::Packet p, Server &server) {
 
 int main() {
 	boost::asio::io_service ioService;
+	shared_ptr<NodeServer> nodeServer;
 
-	Server server(HOMEID, SERVER_URL);
+	Server server(HOMEID, SERVER_URL, [&ioService, &nodeServer](const vector<Server::ServerUpdate>& updates) {
+					ioService.post([&nodeServer, updates]() {
+						UpdateCallback(*nodeServer, updates);
+					});
+				});
 
 	cout << "Server created" << endl;
 
-	NodeServer nodeServer([&ioService, &server](Packet p){
-		cout << "NodeServer Callback" << endl;
+	nodeServer.reset(new NodeServer([&ioService, &server](Packet p){
+//		cout << "NodeServer Callback" << endl;
 		ioService.post([&server, p](){
 			PacketCallback(p, server);
 			});
-		});
+		}));
 
 	cout << "NodeServer created" << endl;
 
@@ -99,7 +106,7 @@ int main() {
 
 	this_thread::sleep_for(chrono::seconds(2));
 
-	nodeServer.Start();
+	nodeServer->Start();
 
 	cout << "NodeServer started" << endl;
 
@@ -141,4 +148,18 @@ int main() {
 	server.Disconnect();
 
 	return 0;
+}
+
+void UpdateCallback(NodeServer& nodeServer, const vector<Server::ServerUpdate>& updates) {
+	for(auto &update : updates) {
+		try {
+			nodeServer.SendActuation(update.nodeID, update.values);
+		}
+		catch(exception &e) {
+			cout << "UpdateCallback exception: " << e.what() << endl;
+
+			//TODO: handle the error cleanly
+			//queue the actuation for retry
+		}
+	}
 }

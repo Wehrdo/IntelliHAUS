@@ -1,9 +1,10 @@
 #include "Server.hpp"
 
 
-Hub::Server::Server(int homeID, string url)
+Hub::Server::Server(int homeID, string url, function<void(const vector<ServerUpdate>&)> cbUpdate)
 			: http(url) {
 	this->homeID = homeID;
+	this->cbUpdate = cbUpdate;
 }
 
 Hub::Server::~Server() {
@@ -294,27 +295,38 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 
 	HTTP::Message msg(header, streamRequest.str());
 
-	auto msgResp = http.PostBlocking("/api/datapoint", msg);
+	auto cbLambda = [](const HTTP::Message& msgResp) {
+		Json::Value jsonResp;
+		stringstream streamResp(msgResp.GetBody());
 
-	Json::Value jsonResp;
-	stringstream streamResp(msgResp.GetBody());
+		streamResp >> jsonResp;
 
-	streamResp >> jsonResp;
+		bool success;
 
-	bool success;
+		try {
+			success = jsonResp.get("success", "false").asBool();
+		}
+		catch(exception &e) {
+			cout << "SendDatapoint exception caught: " << e.what() << endl;
+			return -1;
+		}
+		catch(...) {
+			cout << "SendDatapoint non std::exception"
+				"exception caught." << endl;
+		}
 
-	try {
-		success = jsonResp.get("success", "false").asBool();
-	}
-	catch(exception &e) {
-		cout << "SendDatapoint exception caught: " << e.what() << endl;
-		return -1;
-	}
+		if(!success) {
+			cout << "SendDatapoint exception: " <<
+				jsonResp.get("error", "No error specified")
+					.asString();
 
-	if(!success) {
-		throw Exception("SendDatapoint exception: " +
-			jsonResp.get("error", "No error specified").asString());
-	}
+			//TODO: Check error, retry
+		}
+		else
+			cout << "SendDatapoint complete." << endl;
+	};
+
+	http.Post("/api/datapoint", msg, cbLambda);
 
 	return 0;
 }
@@ -355,13 +367,28 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 	Json::Value updates = jsonResp["updates"];
 
 	int updateCount = 0;
+	vector<ServerUpdate> serverUpdates;
 
 	for(auto &update : updates) {
-		//TODO: Process updates
 		updateCount++;
+
+		ServerUpdate serverUpdate;
+
+		serverUpdate.nodeID = update.get("nodeId", "0").asInt();
+
+		Json::Value values = jsonResp["data"];
+
+		for(auto &value : values) {
+			float f;
+			serverUpdate.values.push_back(f = value.asFloat());
+			cout << "Float: " << f << endl;
+		}
 	}
 
 	cout << "Long Poll response: " << updateCount << " updates." << endl;
+
+	if(updateCount > 0)
+		cbUpdate(serverUpdates);
 
 	LongPoll();
 }

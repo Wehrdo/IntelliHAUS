@@ -310,7 +310,7 @@ void Hub::HTTP::ProcessSingleChar(char ch) {
 	static int nlCount = 0;	//newline count
 	static int bodyLength = 0;
 
-	cout << ch;
+//	cout << ch;
 
 /*	if(ch == '\0') {
 		try {

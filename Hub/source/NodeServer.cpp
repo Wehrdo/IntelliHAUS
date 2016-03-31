@@ -42,6 +42,30 @@ int Hub::NodeServer::SendPacket(const Packet& p) {
 	return 0;
 }
 
+int Hub::NodeServer::SendActuation(uint32_t nodeID, const vector<float>& values) {
+	Node* node = GetNode(nodeID);
+
+	if(node == nullptr)
+		throw Exception("SendActuation exception: node not found");
+
+	vector<unsigned char> data;
+
+	data.push_back(values.size());
+
+	for(auto &v : values) {
+		uint32_t bits = *(uint32_t*)(&v);
+
+		data.push_back( (bits >> 24) & 0xFF);
+		data.push_back( (bits >> 16) & 0xFF);
+		data.push_back( (bits >> 8) & 0xFF);
+		data.push_back( (bits) & 0xFF);
+	}
+
+	node->SendPacket(Packet(nodeID, Packet::TYPE_FLOATARRAY, data));
+
+	return values.size();
+}
+
 void Hub::NodeServer::ThreadRoutine() {
 	while(1) {
 //		cout << "Starting NodeServer async thread." << endl;

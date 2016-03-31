@@ -17,6 +17,7 @@ class Communicator;
 		static const unsigned char TYPE_ID = 0x00;
 		static const unsigned char TYPE_INT = 0x01;
 		static const unsigned char TYPE_FLOAT = 0x02;
+		static const unsigned char TYPE_FLOATARRAY = 0x03;
 
 		Packet();
 		Packet(int nodeID, int msgType,
