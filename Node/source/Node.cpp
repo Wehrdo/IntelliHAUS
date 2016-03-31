@@ -1,6 +1,5 @@
 #include "Node.hpp"
 
-#define NODEID		4
 #define DELAY		1000
 
 using namespace std;
