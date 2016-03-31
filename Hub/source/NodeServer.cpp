@@ -49,7 +49,7 @@ void Hub::NodeServer::ThreadRoutine() {
 		ioService.reset();
 //		cout << "Ending NodeServer async thread." << endl;
 
-		this_thread::sleep_for(chrono::milliseconds(100));
+		this_thread::sleep_for(chrono::milliseconds(10));
 	}
 }
 

@@ -10,6 +10,7 @@
 #include <thread>
 #include <functional>
 #include <queue>
+#include <mutex>
 
 using namespace std;
 //using namespace Hub;
@@ -47,12 +48,15 @@ public:
 
 	bool IsConnected();
 
-	Message Get(const string &path, const string &header);
-	Message Post(const string &path, const Message &postMessage);
-
-	void GetAsync(const string &path, const string &header,
+	void Get(const string &path, const string &header,
 			function<void(const Message&)> callback);
 
+	void Post(const string& path, const Message& postMessage,
+			function<void(const Message&)> callback);
+
+	Message GetBlocking(const string &path, const string& header);
+
+	Message PostBlocking(const string& path, const Message& postMessage);
 
 private:
 	static const int BUFFER_SIZE = 1;
@@ -68,7 +72,7 @@ private:
 	boost::asio::io_service ioService;
 	unique_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 	thread asyncThread;
-	queue<function<void(const Message&)>> cbQueue;
+	queue<function<void(const Message&)>> respQueue;
 };
 
 int FindInStrIC(const string& haystack, const string& needle);

@@ -21,7 +21,7 @@ public:
 		BINARY
 	};
 
-	Server(string url);
+	Server(int homeID, string url);
 	~Server();
 
 	int Connect();
@@ -53,7 +53,11 @@ public:
 	//Needs authentication
 	int SendDatapoint(int nodeID, float data);
 private:
+	void LongPoll();
+	void cbLongPoll(const Hub::HTTP::Message& msg);
+
 	Hub::HTTP http;
+	int homeID;
 	string accessToken;
 };
 
