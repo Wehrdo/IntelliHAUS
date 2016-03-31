@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-#define NODEID		4
+#define NODEID		1
 #define DELAY		1000
 
 #define LED_COUNT	49
