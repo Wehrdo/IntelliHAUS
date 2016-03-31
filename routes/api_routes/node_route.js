@@ -5,6 +5,7 @@
 var express = require('express');
 var router = express.Router();
 var models = require('../../models/index');
+var longPolling = require('../../rule_evaluation/long_polling');
 var middleware = require('./../customMiddleware');
 
 router.get('/', [middleware.getHome], function(req, res) {
@@ -17,6 +18,20 @@ router.get('/', [middleware.getHome], function(req, res) {
         })
     });
 });
+
+router.get('/:id(\\d+)',
+    function(req, res, next) {
+        req.body.nodeid = req.params.id;
+        next();
+    },
+    middleware.getNode,
+    function(req, res) {
+            res.json({
+                success: true,
+                node: req.node
+            });
+        }
+);
 
 var genNames = function(n) {
     var arr = [];
@@ -75,6 +90,7 @@ router.post('/', middleware.getHome, function(req, res, next) {
     }
 });
 
+// Save updates about a node
 router.put('/',
     middleware.getNode,
     function(req, res) {
@@ -94,4 +110,30 @@ router.put('/',
                 })
             });
     });
+
+// Handle a POST to /send for a Node. This is for sending data to an actuator node
+router.post('/send', middleware.getNode, function(req, res) {
+    var convertedData = req.body.data.map(function(str_val) {return Number(str_val)});
+    if (convertedData.filter(isNaN).length !== 0) {
+        res.status(400).json({
+            success: false,
+            error: "NaN in data, or could not convert data propertly"
+        });
+    }
+    else if (req.body.data.length === req.node.inputTypes.length) {
+        longPolling.sendUpdate(req.node.HomeId.toString(), {
+            nodeId: req.node.id,
+            data: convertedData
+        });
+        res.status(200).json({
+            success: true
+        })
+    }
+    else {
+        res.status(400).json({
+            success: false,
+            error: "Invalid number of data elements"
+        })
+    }
+});
 module.exports = router;

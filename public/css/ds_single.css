@@ -10,6 +10,12 @@
     min-width: 150px;
 }
 
+.info-settings-fixed {
+    padding: 10px;
+    min-width: 150px;
+    max-width: 500px;
+}
+
 .settings, .info {
     padding: 10px;
 }

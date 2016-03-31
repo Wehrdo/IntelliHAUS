@@ -6,28 +6,16 @@
 
 function NodesViewModel(){
     var self = this;
-    self.home = ko.observableArray();
     self.node = ko.observableArray();
 
     //get homes from server
     $.getJSON("api/home/", function(data){
-        console.log(data);
-        self.home(data.homes);
-    });
-
-    //get all nodes for each home
-    self.listNodes = function(homeid){
-        console.log(homeid);
-        $.getJSON("api/node/?homeid="+homeid, function(data){
-            console.log(data);
+        var first_home = data.homes[0];
+        $.getJSON("api/node/?homeid="+first_home.id, function(data){
             self.node(data.nodes);
         })
-    };
-
-
+    });
 }
-
-
 
 
 window.addEventListener('load', function() {

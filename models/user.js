@@ -29,6 +29,7 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 User.hasMany(models.Home);
                 User.hasMany(models.Node);
+                User.hasMany(models.Rule);
             }
         }
     });

@@ -4,8 +4,6 @@ var fork = require('child_process').fork;
 var timeEvaluation = require('./time_evaluation');
 var longPolling = require('./long_polling');
 
-exports.updatesBus = longPolling.updatesBus;
-
 // Which workers are free
 var available = [];
 // Queue of rules to evaluate
@@ -39,21 +37,12 @@ for (i = 0; i < 2; i++) {
         if (message.status == 'success') {
             // If rule requires data to be sent out
             if (message.actuate) {
-                // Notify long-polling listener about new data
+                // Notify long-polling manager about new data
                 var update_info = {
                     nodeId: message.nodeId,
                     data: message.data
                 };
-                var hasListeners = longPolling.updatesBus.emit(message.homeId.toString(), update_info);
-                // There were no listeners for this home; store in backlog
-                if (!hasListeners) {
-                    console.log("Storing node " + message.nodeId + " update in backlog");
-                    longPolling.updates_backlog.push({
-                        time: new Date(),
-                        homeId: message.homeId.toString(),
-                        update_info: update_info
-                    });
-                }
+                longPolling.sendUpdate(message.homeId.toString(), update_info);
             }
         }
         else if (message.status == 'failure') {

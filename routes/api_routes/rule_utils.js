@@ -263,6 +263,7 @@ exports.idValidate = function(req, res, next) {
                 where = models.sequelize.and(
                         {'id': rule[decisionType].nodeId},
                         {'UserId': req.user.id},
+                        {'RuleId': null}, // Isn't already controlled by a rule
                         // This verifies that the data given for a node input is the same number of elements as expected
                         models.sequelize.where(models.sequelize.fn('array_length', models.sequelize.col('inputTypes'), 1), rule[decisionType].data.length)
                 );

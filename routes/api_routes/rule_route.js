@@ -9,6 +9,7 @@ var models = require('../../models/index');
 var middleware = require('./../customMiddleware');
 var ruleUtils = require('./rule_utils');
 var ruleEvaluation = require('../../rule_evaluation');
+var longPolling = require('../../rule_evaluation/long_polling');
 var env       = process.env.NODE_ENV || "dev";
 var config = require("../../" + env + "_config");
 
@@ -52,7 +53,7 @@ router.post('/',
         });
         models.RuleTime.bulkCreate(records, {validate: true})
         .then(function(newTimes) {
-            if (newTimes && newTimes.length) {
+            if (newTimes && (newTimes.length === req.eval_times.length)) {
                 res.status(201).json({
                     success: true,
                     id: newRule.id
@@ -69,10 +70,27 @@ router.post('/',
         }).catch(catchHandler(res));
     });
 
+router.get('/', function(req, res) {
+    req.user.getRules({
+        attributes: ['id', 'name', 'public', 'createdAt', 'updatedAt']
+    }).then(function(rules) {
+        res.status(200).json({
+            success: true,
+            rules: rules
+        })
+    }).catch(function(error) {
+        res.status(500).json({
+            success: false,
+            error: error
+        })
+    })
+});
+
+// Create a long-polling request for updates about a node
 router.get('/updates', middleware.getHome, function(req, res) {
     // Only keep long-poll connection for a set amount of time
     res.setTimeout(config.long_poll_timeout, function() {
-        ruleEvaluation.updatesBus.removeAllListeners(req.home.id.toString());
+        longPolling.invalidateListener(req.home.id.toString());
         // Respond with no new updates
         res.status(200).json({
             success: true,
@@ -82,26 +100,28 @@ router.get('/updates', middleware.getHome, function(req, res) {
     
     var addUpdateListener = function(resp) {
         var timer = null;
-        var backlog = [];
+        // A collection of the updates to send
+        var will_send = [];
         var send = function() {
             // Clear any listeners on this home before sending response
-            ruleEvaluation.updatesBus.removeAllListeners(req.home.id.toString());
+            longPolling.invalidateListener(req.home.id.toString());
             resp.status(200).json({
                 success: true,
-                updates: backlog
+                updates: will_send
             });
+            timer = null;
         };
-        ruleEvaluation.updatesBus.on(req.home.id.toString(), function(node_update) {
-            backlog.push(node_update);
+        longPolling.registerListener(req.home.id.toString(), function(node_update) {
+            will_send.push(node_update);
             // A datastream update typically causes several rules to be evaluated, so wait a little
             // bit to let all the rules finish evaluation before sending out the update
             if (timer === null) {
-                timer = setTimeout(send, 1000);
+                timer = setTimeout(send, 100);
             }
         })
     };
 
-    //addUpdateListener(res);
+    addUpdateListener(res);
 });
 
 module.exports = router;

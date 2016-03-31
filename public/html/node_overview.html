@@ -13,17 +13,17 @@
 <body>
 <div id="navbar"></div>
 
-<h3>Choose Home:</h3>
-<div>
-    <table>
-        <tbody data-bind="foreach: home" class="list-group">
-            <tr class ="list-group-item">
-                <td align ="left"><span data-bind="text: $data.name"></span></td>
-                <td align="right"><a ref="#" data-bind="click: $root.listNodes($data.id)">List Nodes</a></td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+<!--<h3>Choose Home:</h3>-->
+<!--<div>-->
+    <!--<table>-->
+        <!--<tbody data-bind="foreach: home" class="list-group">-->
+            <!--<tr class ="list-group-item">-->
+                <!--<td align ="left"><span data-bind="text: $data.name"></span></td>-->
+                <!--<td align="right"><a ref="#" data-bind="click: $root.listNodes($data.id)">List Nodes</a></td>-->
+            <!--</tr>-->
+        <!--</tbody>-->
+    <!--</table>-->
+<!--</div>-->
 
 <h2><strong>List of Nodes</strong></h2>
 <div data-bind="foreach: node" class="list-group">
