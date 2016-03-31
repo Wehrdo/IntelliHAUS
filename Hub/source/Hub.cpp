@@ -60,17 +60,27 @@ void PacketCallback(Hub::Packet p, Server &server) {
 }
 
 int main() {
-	boost::asio::io_service ioService;
+	HTTP http("intellihaus.ece.iastate.edu");
 
-	//Create thread for ioService tasks
-	/*thread([&ioService]() {
-		while(1) {
-			ioService.run();
-			ioService.reset();
+	http.Connect();
 
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-	});*/
+	auto cb = [](const HTTP::Message& msg){
+                                cout << "Received response. " << endl;
+
+                                return 0;
+                        };
+
+	while(1) {
+		http.GetAsync("/", "Connection: keep-alive\r\n", cb);
+		this_thread::sleep_for(chrono::milliseconds(100));
+		http.GetAsync("/", "Connection: keep-alive\r\n", cb);
+
+		cout << "Sent requests" << endl;
+
+		this_thread::sleep_for(chrono::seconds(1));
+	}
+
+/*	boost::asio::io_service ioService;
 
 	Server server(ioService, SERVER_URL);
 
@@ -83,10 +93,6 @@ int main() {
 		});
 
 	cout << "NodeServer created" << endl;
-
-/*	NodeServer nodeServer([&server](Packet p) {
-		PacketCallback(p, server);
-		});*/
 
 	int retVal = server.Connect();
 	if(retVal < 0) {
@@ -144,6 +150,6 @@ int main() {
 	}
 
 	server.Disconnect();
-
+*/
 	return 0;
 }

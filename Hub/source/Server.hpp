@@ -2,6 +2,7 @@
 #define SERVER_HPP
 
 #include <sstream>
+#include <boost/asio.hpp>
 #include "Exception.hpp"
 #include "HTTP.hpp"
 #include "json/json/json.h"
@@ -20,7 +21,7 @@ public:
 		BINARY
 	};
 
-	Server(boost::asio::io_service& ioService, string url);
+	Server(string url);
 	~Server();
 
 	int Connect();
@@ -51,9 +52,6 @@ public:
 
 	//Needs authentication
 	int SendDatapoint(int nodeID, float data);
-
-
-
 private:
 	Hub::HTTP http;
 	string accessToken;

@@ -32,17 +32,25 @@ string Hub::HTTP::Message::ToString() const {
 }
 
 
-Hub::HTTP::HTTP(boost::asio::io_service& ioService, string hostName)
-		: hostName(hostName) {
-	this->ioService = &ioService;
+Hub::HTTP::HTTP(string hostName)
+		: hostName(hostName),
+		asyncThread([this](){ThreadRoutine();}) {
+}
 
+void Hub::HTTP::ThreadRoutine() {
+	while(1) {
+		ioService.run();
+		ioService.reset();
+
+		this_thread::sleep_for(chrono::milliseconds(10));
+	}
 }
 
 int Hub::HTTP::Connect() {
 	boost::system::error_code error;
 
 	//Initialize DNS resolver
-	boost::asio::ip::tcp::resolver resolver(*ioService);
+	boost::asio::ip::tcp::resolver resolver(ioService);
 
 	//Initialize resolver query
 	boost::asio::ip::tcp::resolver::query query(hostName, "http");
@@ -51,16 +59,18 @@ int Hub::HTTP::Connect() {
 	boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
 	//Create a socket
-	tcpSocket.reset(new boost::asio::ip::tcp::socket(*ioService));
+	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));
 
-	try {
+//	try {
 		//Connect to the HTTP server by iteratively trying all endpoints
 		boost::asio::connect(*tcpSocket, endpoint_iterator);
-	}
-	catch(exception &e) {
-		return -1;
+//	}
+//	catch(exception &e) {
+//		return -1;
 		//TODO: Return meaningfull error code
-	}
+//	}
+
+//	StartListening();
 
 	return 0;
 }
@@ -79,6 +89,11 @@ int Hub::HTTP::Disconnect() {
 
 	tcpSocket->close();
 
+	while(!cbQueue.empty()) {
+		//TODO: send the callback functions an error
+		cbQueue.pop();
+	}
+
 	return 0;
 }
 
@@ -86,12 +101,44 @@ Hub::HTTP::~HTTP() {
 
 }
 
+void Hub::HTTP::StartListening() {
+	tcpSocket->async_receive(boost::asio::buffer(buffer, BUFFER_SIZE), 0,
+			[this](const boost::system::error_code& error,
+				size_t bytesTransferred) {
+					cbReceive(error, bytesTransferred);
+			});
+}
+
+void Hub::HTTP::cbReceive(const boost::system::error_code& error, size_t bytesTransferred) {
+	for(int i = 0; i < bytesTransferred; i++) {
+		//cout << "Received char: " << buffer[i] << endl;
+//		cout << buffer[i];
+		ProcessSingleChar(buffer[i]);
+	}
+
+	if(error) {
+		if(error == boost::asio::error::eof)
+			ProcessSingleChar('\0');
+//		else {
+			cout << "Receive error: " << error.message() << endl;
+//		}
+	}
+
+	if(cbQueue.size() != 0)
+		StartListening();
+}
+
+HTTP::Message HTTP::Get(const string& path, const string& header) {
+	return HTTP::Message();
+}
+
 /* @param path: string containing path for request
  * @param header: HTTP header (not containing hostname)
  * with each line terminating in single '\r\n' (including last line)
  * @returns: HTTP::Header containing the response from the server
 */
-Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
+void HTTP::GetAsync(const string &path, const string &header,
+			function<void(const Message&)> callback) {
 	boost::asio::streambuf request, response;
 	boost::system::error_code error;
 
@@ -105,6 +152,12 @@ Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 	requestStream << header << "\r\n";
 
 	boost::asio::write(*tcpSocket, request);
+
+	cbQueue.push(callback);
+
+	StartListening();
+}
+/*
 
 	boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
 
@@ -129,7 +182,7 @@ Hub::HTTP::Message Hub::HTTP::Get(const string &path, const string &header) {
 
 	return Message(responseHeader, outStream.str());
 }
-
+*/
 /* @param path: string containing path for request
  * @param postMessage: HTTP::Message containing the HTTP header and POST body
  * @returns: HTTP::Message containing the response from the server
@@ -181,6 +234,7 @@ Hub::HTTP::Message Hub::HTTP::Post(const string& path, const Hub::HTTP::Message&
 	return Message(responseHeader, outStream.str());
 }
 
+
 int Hub::HTTP::ParseBodyLength(const string& header) {
 	const string token = "Content-Length: ";
 
@@ -195,6 +249,68 @@ int Hub::HTTP::ParseBodyLength(const string& header) {
 	return retVal;
 }
 
+void Hub::HTTP::ProcessSingleChar(char ch) {
+	static enum {
+		STATE_HEADER,
+		STATE_BODY
+	} state;
+	static char lastChar = '\0';
+	static Message currentMsg;
+	static int nlCount;	//newline count
+	static int bodyLength = 0;
+
+	if(ch == '\0') {
+		try {
+			auto cb = cbQueue.front();
+			cb(currentMsg);
+			cbQueue.pop();
+		}
+		catch(exception &e) {
+			cout << "Error popping callback routine in ProcessSingleChar: " << e.what() << endl;
+		}
+
+		state = STATE_HEADER;
+		lastChar = '\0';
+		currentMsg = Message();
+		nlCount = 0;
+
+		return;
+	}
+
+	if(state == STATE_HEADER) {
+		currentMsg.header += ch;
+		if(ch == '\n') {
+			if(lastChar == '\r') {
+				nlCount++;
+
+				if(nlCount == 2) {
+					bodyLength = ParseBodyLength(currentMsg.header);
+
+					state = STATE_BODY;
+					nlCount = 0;
+				}
+			}
+			else
+				nlCount = 0;
+		}
+		else if(ch != '\r') {
+			nlCount = 0;
+		}
+		lastChar = ch;
+	}
+	else {
+		currentMsg.body += ch;
+		if(currentMsg.body.length() == bodyLength) {
+			auto cb = cbQueue.front();
+			cb(currentMsg);
+			cbQueue.pop();
+
+			currentMsg = Message();
+		}
+	}
+
+	lastChar = ch;
+}
 
 int Hub::FindInStrIC(const string& haystack, const string& needle) {
 	auto it = std::search(haystack.begin(), haystack.end(),

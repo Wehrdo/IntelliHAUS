@@ -1,8 +1,8 @@
 #include "Server.hpp"
 
 
-Hub::Server::Server(boost::asio::io_service& ioService, string url)
-			: http(ioService, url) {
+Hub::Server::Server(string url)
+			: http(url) {
 
 }
 
