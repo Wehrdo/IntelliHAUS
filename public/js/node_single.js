@@ -34,8 +34,8 @@ function NodeModel(){
         console.log(newObj);
     }
 
-    self.sendData = function() {
-        var elements = $("#actuate_form")[0].elements;
+    self.sendData = function(form) {
+        var elements = form.getElementsByTagName("input");
         var data = [];
         for (var i = 0; i < elements.length; i++) {
             data.push(elements[i].value);

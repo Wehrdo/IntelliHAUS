@@ -36,17 +36,17 @@
             <span data-bind="text: info.Datastream.name"></span>
         </a>
         <h5><strong>Actuate node</strong></h5>
-        <form class="form-horizontal" id="actuate_form">
+        <form data-bind="submit: sendData" class="form-horizontal" id="actuate_form">
             <div data-bind="foreach: info.inputNames" class="form-group">
                 <label data-bind="text: $data, attr: {'for': 'actuate_' + $data()" class="col-sm-2 control-label">$</label>
                 <div class="col-sm-10">
                     <input value="0" data-bind="attr: {'id': 'actuate_' + $data()" type="text" class="form-control">
                 </div>
             </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Send Data</button>
+            </div>
         </form>
-        <div>
-            <button data-bind="click: sendData" class="btn btn-primary">Send Data</button>
-        </div>
     </div>
     <div class="info panel panel-default">
         <h5><strong>Created on:</strong></h5>
