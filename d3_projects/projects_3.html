@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+ <html>
+   <head>
+     <script type="text/javascript" src="libraries/d3.min.js"></script>
+	 <script type="text/javascript" src="onload.js"></script>
+	 <script type="text/javascript" src="functions.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<title>Rules In Progress</title>
+
+    <style>
+	.overlay {
+		fill: none;
+		pointer-events: all;
+		outline: #00FF00 dotted 2px;
+	}
+	.dot {
+		fill: lightsteelblue;
+		stroke: steelblue;
+		stroke-width: 1.5px;
+	}
+
+	.dot.dragging {
+		fill: red;
+		stroke: brown;
+	}
+	</style>
+   </head>
+   <body>
+     <p>Hello!</p>
+	 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	 <script src="js/bootstrap.min.js"></script>
+	 <script>
+
+	
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+var drag = d3.behavior.drag()  
+	.on('dragstart', dragstarted)
+	.on('drag', dragged)
+	.on('dragend', dragended);
+var zoom = d3.behavior.zoom()
+    .scaleExtent([1, 1])
+    .on("zoom", zoomed);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+	.style("outline","#000000 solid 2px")
+	.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+    .call(zoom)
+	.append("g");
+var rect = svg.append("rect")
+	.attr("class","overlay")
+    .attr("width", width)
+    .attr("height", height);
+
+
+var circle = svg.selectAll(".dot")  
+	.data([{ x: (width / 2), y: (height / 2), r: 20 }])
+	.enter()
+	.append("circle")
+	.attr("class", "dot")
+	.attr("cx", function(d) { return d.x; })
+	.attr("cy", function(d) { return d.y; })
+	.attr("r", function(d) { return d.r; })
+	.call(drag)
+
+function dragstarted(d) {
+  d3.event.sourceEvent.stopPropagation();
+  d3.select(this).classed("dragging", true);
+}
+
+function dragged(d) {
+  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+}
+
+function dragended(d) {
+  d3.select(this).classed("dragging", false);
+}
+function zoomed() {
+  svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+	
+
+
+
+
+</script>
+   </body>
+ </html>
