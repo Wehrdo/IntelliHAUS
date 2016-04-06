@@ -24,9 +24,9 @@ function createBranches(n, node) {
 	var branches=parseInt(document.getElementById(n).children[1].firstElementChild.value);
 	if(branches==0)
 		return;
-	var level=node.level;
+	var level=d3.select(node).property("level");
 	var index=node.index;
-	var oldBranches=node.branches|0;
+	var oldBranches=d3.select(node).property("branches")|0;
 	//levelStacks[level.toString()]=levelStacks[level.toString()]|0+i;
 	var cIndex=0;
 	var k=0;
@@ -53,21 +53,27 @@ function createBranches(n, node) {
 	//change branches
 	node.branches=n;
 	if(!nodes[arr[level+1]])
-		nodes[arr[level+1]]=[];
-	var width=nodes[arr[level+1]].length+branches-oldBranches;
-	for(k=0;k<n;k++)
 	{
-		nodes[arr[level+1]].splice(cIndex , oldBranches ,
+		nodes[arr[level+1]]=[{}];
+		
+	}
+	var width=nodes[arr[level+1]].length+branches-oldBranches;
+	alert(width);
+	for(k=0;k<branches;k++)
+	{
+		nodes[level+1].splice(cIndex , oldBranches ,
 		{ "level" : level+1 ,
 		"siblings" : width-1 ,
-		"index" : cIndex+n-k-1 ,
+		"index" : cIndex+branches-k-1 ,
 		"type" : null ,
 		"childIndex" : null ,
 		"branches" : 0 ,
 		"height" : 1 ,
 		"parentNode" : node ,
-		"className" : "dot empty",
-		"name" : null
+		"className" : "dot empty" ,
+		"name" : null ,
+		"nodeId" : null ,
+		"userId" : null
 		});
 	}
 	for(k=0;k<width;k++)
@@ -86,8 +92,11 @@ function createBranches(n, node) {
 	
 	
 }
+function drawBranches() {
+	d3.select("svg").selectAll().remove();
+}
 function propogateHeightChanges(node, size) {
-	node.height+=size;
+	node.height+=size-1;
 	if(node.parentNode)
 		propogateHeightChanges(node.parentNode, size);
 }
