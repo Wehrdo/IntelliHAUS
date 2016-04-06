@@ -31,8 +31,6 @@ void PacketCallback(Hub::Packet p, Server &server) {
 	string message;
 	uint32_t nodeID = p.GetNodeID();
 
-//	cout << "Entering packet callback..." << endl;
-
 	switch(p.GetMsgType()) {
 		case Packet::TYPE_ID:
 			message = "Identification received from Node " +
@@ -67,7 +65,9 @@ int main() {
 	boost::asio::io_service ioService;
 	shared_ptr<NodeServer> nodeServer;
 
-	Server server(HOMEID, SERVER_URL, [&ioService, &nodeServer](const vector<Server::ServerUpdate>& updates) {
+	Server server(HOMEID, SERVER_URL,
+		[&ioService, &nodeServer](const vector<Server::ServerUpdate>& updates) {
+					cout << "Immediately received " << updates.size() << endl;
 					ioService.post([&nodeServer, updates]() {
 						UpdateCallback(*nodeServer, updates);
 					});
@@ -76,7 +76,6 @@ int main() {
 	cout << "Server created" << endl;
 
 	nodeServer.reset(new NodeServer([&ioService, &server](Packet p){
-//		cout << "NodeServer Callback" << endl;
 		ioService.post([&server, p](){
 			PacketCallback(p, server);
 			});
@@ -106,39 +105,17 @@ int main() {
 
 	this_thread::sleep_for(chrono::seconds(2));
 
-	nodeServer->Start();
+	try {
+		nodeServer->Start();
+	}
+	catch(...) {
+		cout << "Unspecified error occurred." << endl;
+		return -1;
+	}
 
 	cout << "NodeServer started" << endl;
 
-/*	thread hubThread([&ioService]() {
-		while(1) {
-			ioService.run();
-			ioService.reset();
-
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-	});
-*/
-	cout << "Hub thread started" << endl;
-
 	while(1) {
-/*
-		uint32_t color;
-		cout << "Color: ";
-		cin >> hex >> color;
-
-		if(nodeServer.IsNodeConnected(ACTUATOR_ID)) {
-			Packet p = Packet::FromInt(ACTUATOR_ID, color);
-
-			try {
-				nodeServer.SendPacket(p);
-			} catch(Exception &e) {
-				cout << "SendPacket exception: " << e.what() << endl;
-			}
-		}
-		else
-			cout << "Error: Node " << ACTUATOR_ID << " not connected" << endl;
-*/
 		ioService.run();
 		ioService.reset();
 
@@ -151,8 +128,11 @@ int main() {
 }
 
 void UpdateCallback(NodeServer& nodeServer, const vector<Server::ServerUpdate>& updates) {
+	cout << "Received " << updates.size() << " updates" << endl;
+
 	for(auto &update : updates) {
 		try {
+			cout << "Sending actuation to node " << update.nodeID << endl;
 			nodeServer.SendActuation(update.nodeID, update.values);
 		}
 		catch(exception &e) {

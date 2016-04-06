@@ -5,6 +5,21 @@ Hub::Server::Server(int homeID, string url, function<void(const vector<ServerUpd
 			: http(url) {
 	this->homeID = homeID;
 	this->cbUpdate = cbUpdate;
+
+	isConnected = false;
+
+	try {
+		Connect();
+	}
+	catch(Exception &e) {
+		if(e.GetErrorCode() == Error_Code::SERVER_ERROR_BAD_LOGIN) {
+			throw e;
+		}
+	}
+	catch(exception &e) {
+		//TODO: Retry
+	}
+
 }
 
 Hub::Server::~Server() {
@@ -15,8 +30,11 @@ int Hub::Server::Connect() {
 	int connected = http.Connect();
 
 	if(connected < 0) {
-		throw Exception("Error connecting to server.");
+		throw Exception(Error_Code::SERVER_ERROR_CONNECTING,
+				"Error connecting to server.");
 	}
+
+	isConnected = true;
 }
 
 void Hub::Server::Disconnect() {
@@ -28,10 +46,15 @@ int Hub::Server::Authenticate(const string& username, const string& password) {
 				string("{\"username\": \"") + username + "\",\r\n"
 				"\"password\": \"" + password + "\"}");
 
-	int retVal = http.Connect();
+//	int retVal = http.Connect();
 
-	if(retVal < 0)
-		return -1;
+//	if(retVal < 0)
+//		return -1;
+
+	if(!isConnected) {
+		throw Exception(Error_Code::SERVER_NOT_CONNECTED,
+				"Server::Authenticate error: not connected");
+	}
 
 	auto authResp = http.PostBlocking("/authenticate", authMsg);
 
@@ -51,7 +74,8 @@ int Hub::Server::Authenticate(const string& username, const string& password) {
 	}
 
 	if(!success) {
-		throw Exception("Authenticate exception: " +
+		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
+				"Authenticate exception: " +
 			jsonResp.get("error", "Unspecified error").asString());
 	}
 
@@ -101,7 +125,8 @@ int Hub::Server::CreateUser(const string& username, const string& password,
 	}
 
 	if(!success) {
-		throw Exception("Create User exception: " +
+		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
+			"Create User exception: " +
 			jsonResp.get("error", "Unspecified error").asString());
 	}
 
@@ -110,7 +135,8 @@ int Hub::Server::CreateUser(const string& username, const string& password,
 
 int Hub::Server::CreateHome(const string& homeName) {
 	if(accessToken.length() == 0) {
-		throw new Exception("Create Home exception: "
+		throw Exception(Error_Code::SERVER_ERROR_NOT_AUTHENTICATED,
+					"Create Home exception: "
 					"authentication needed");
 	}
 
@@ -142,7 +168,8 @@ int Hub::Server::CreateHome(const string& homeName) {
 
 int Hub::Server::GetHomeID(const string& homeName) {
 	if(accessToken.length() == 0) {
-		throw new Exception("GetHomeID exception: "
+		throw Exception(Error_Code::SERVER_ERROR_NOT_AUTHENTICATED,
+					"GetHomeID exception: "
 					"authentication needed");
 	}
 
@@ -159,14 +186,16 @@ int Hub::Server::GetHomeID(const string& homeName) {
 	bool success = jsonResp.get("success", false).asBool();
 
 	if(!success) {
-		throw Exception("GetHomeID exception: " +
+		throw Exception(Error_Code::SERVER_ERROR_NOT_AUTHENTICATED,
+				"GetHomeID exception: " +
 				jsonResp.get("error", "unspecified error").asString());
 	}
 
 	Json::Value jsonHomes = jsonResp["homes"];
 
 	if(!jsonHomes.isArray()) {
-		throw Exception("GetHomeID exception: "
+		throw Exception(Error_Code::SERVER_ERROR_INVALID_JSON_RESPONSE,
+				"GetHomeID exception: "
 				"JSON homes array not given");
 	}
 
@@ -221,7 +250,8 @@ int Hub::Server::CreateDatastream(const string& name, Datatype datatype) {
 	bool success = jsonResp.get("success", "false").asBool();
 
 	if(!success) {
-		throw Exception("CreateDatastream exception: " +
+		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
+			"CreateDatastream exception: " +
 			jsonResp.get("error", "No error specified").asString());
 	}
 
@@ -273,7 +303,8 @@ int Hub::Server::CreateNode(int homeID, const string& name,
 //	cout << msgResp.ToString() << endl;
 
 	if(!success) {
-		throw Exception("CreateNode exception: " +
+		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
+			"CreateNode exception: " +
 			jsonResp.get("error", "No error specified").asString());
 	}
 
@@ -346,6 +377,7 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 	Json::Value jsonResp;
 
 	stringstream streamResp(msg.GetBody());
+	stringstream testStream;
 
 	streamResp >> jsonResp;
 
@@ -372,17 +404,21 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 	for(auto &update : updates) {
 		updateCount++;
 
+		cout << "Json response:" << endl << update << endl;
+
 		ServerUpdate serverUpdate;
 
 		serverUpdate.nodeID = update.get("nodeId", "0").asInt();
 
-		Json::Value values = jsonResp["data"];
+		Json::Value values = update["data"];
 
 		for(auto &value : values) {
 			float f;
 			serverUpdate.values.push_back(f = value.asFloat());
 			cout << "Float: " << f << endl;
 		}
+
+		serverUpdates.push_back(serverUpdate);
 	}
 
 	cout << "Long Poll response: " << updateCount << " updates." << endl;

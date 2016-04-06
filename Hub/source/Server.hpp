@@ -28,38 +28,18 @@ public:
 		vector<float> values;
 	};
 
-	Server(int homeID, string url, function<void(const vector<ServerUpdate>&)> cbUpdate);
+	Server(int homeID, const string& url, const string& username, const string& password, function<void(const vector<ServerUpdate>&)> cbUpdate);
 	~Server();
-
-	int Connect();
-	void Disconnect();
 
 	bool IsConnected();
 
-	//Interface for server REST API
-
-	int Authenticate(const string& username, const string& password);
-
-	int CreateUser(const string& username, const string& password,
-			const string& firstName, const string& lastName,
-			const string& email);
-
-	//Needs authentication
-	int CreateHome(const string& homeName);
-
-	//Needs authentication
-	int CreateDatastream(const string& name, Datatype datatype);
-
-	//Needs authentication
-	int CreateNode(int homeID, const string& name, Datatype datatype,
-			const string& outputName, int datastreamID);
-
-	//Needs authentication
-	int GetHomeID(const string& homeName);
-
-	//Needs authentication
 	int SendDatapoint(int nodeID, float data);
 private:
+	void Connect();
+	void Disconnect();
+
+	void Authenticate(const string& username, const string& password);
+
 	void LongPoll();
 	void cbLongPoll(const Hub::HTTP::Message& msg);
 
@@ -68,6 +48,7 @@ private:
 	Hub::HTTP http;
 	int homeID;
 	string accessToken;
+	bool isConnected;
 };
 
 };

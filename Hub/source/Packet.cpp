@@ -42,7 +42,8 @@ const vector<unsigned char>&  Hub::Packet::GetData() const {
 
 int32_t Hub::Packet::GetDataAsInt() const {
 	if(msgType != TYPE_INT)
-		throw Exception("Packet::GetDataAsInt: "
+		throw Exception(Error_Code::PACKET_WRONG_TYPE,
+				"Packet::GetDataAsInt: "
 				"Packet is not of type 'TYPE_INT'");
 
 	uint32_t retVal = data[0] << 24;
@@ -55,7 +56,8 @@ int32_t Hub::Packet::GetDataAsInt() const {
 
 float Hub::Packet::GetDataAsFloat() const {
 	if(msgType != TYPE_FLOAT)
-		throw Exception("Packet::GetDataAsFloat: "
+		throw Exception(Error_Code::PACKET_WRONG_TYPE,
+				"Packet::GetDataAsFloat: "
 				"Packet is not of type 'TYPE_FLOAT'");
 
 	uint32_t bits = data[0] << 24;

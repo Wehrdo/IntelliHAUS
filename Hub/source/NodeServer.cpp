@@ -35,7 +35,8 @@ int Hub::NodeServer::SendPacket(const Packet& p) {
 	Node* node = GetNode(p.GetNodeID());
 
 	if(node == nullptr)
-		throw Exception("SendPacket exception: node not found");
+		throw Exception(Error_Code::NODE_NOT_FOUND,
+				"SendPacket exception: node not found");
 
 	node->SendPacket(p);
 
@@ -46,7 +47,8 @@ int Hub::NodeServer::SendActuation(uint32_t nodeID, const vector<float>& values)
 	Node* node = GetNode(nodeID);
 
 	if(node == nullptr)
-		throw Exception("SendActuation exception: node not found");
+		throw Exception(Error_Code::NODE_NOT_FOUND,
+			"SendActuation exception: node not found");
 
 	vector<unsigned char> data;
 

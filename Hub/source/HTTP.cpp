@@ -70,6 +70,8 @@ int Hub::HTTP::Connect() {
 		//TODO: Return meaningfull error code
 //	}
 
+	isConnected = true;
+
 	StartListening();
 
 	return 0;
@@ -77,6 +79,8 @@ int Hub::HTTP::Connect() {
 
 int Hub::HTTP::Disconnect() {
 	boost::system::error_code error;
+
+	isConnected = false;
 
 	//Disables sending and receiving to enable gracefull socket closure
 	tcpSocket->shutdown(boost::asio::ip::tcp::socket::shutdown_send, error);
@@ -98,7 +102,8 @@ int Hub::HTTP::Disconnect() {
 }
 
 Hub::HTTP::~HTTP() {
-
+	if(isConnected)
+		Disconnect();
 }
 
 void Hub::HTTP::StartListening() {
@@ -119,11 +124,7 @@ void Hub::HTTP::cbReceive(const boost::system::error_code& error, size_t bytesTr
 	}
 
 	if(error) {
-//		if(error == boost::asio::error::eof)
-			//ProcessSingleChar('\0');
-//		else {
-			cout << "Receive error: " << error.message() << endl;
-//		}
+		
 	}
 
 	StartListening();

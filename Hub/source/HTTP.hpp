@@ -62,6 +62,7 @@ private:
 	static const int BUFFER_SIZE = 1;
 	char buffer[1];
 
+	void Reconnect();
 	void StartListening();
 	int ParseBodyLength(const string& header);
 	void ThreadRoutine();
@@ -73,6 +74,7 @@ private:
 	unique_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 	thread asyncThread;
 	queue<function<void(const Message&)>> respQueue;
+	bool isConnected;
 };
 
 int FindInStrIC(const string& haystack, const string& needle);
