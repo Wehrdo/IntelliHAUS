@@ -19,8 +19,14 @@ int main() {
 
 	comm.Connect();
 
-	for(int32_t i = 0; ; ++i) {
-		comm.SendFloat(i);
+	for(;;) {
+		float f = 0.f;
+
+		cout << "Datapoint: ";
+		cin >> f;
+		cout << endl;
+
+		comm.SendFloat(f);
 
 		this_thread::sleep_for(chrono::milliseconds(DELAY));
 	}
