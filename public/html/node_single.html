@@ -31,10 +31,12 @@
             <label for="ds_name">Name:</label>
             <input id="ds_name" data-bind="value: info.name, valueUpdate: 'afterkeyup'" type="text" class="form-control">
         </div>
-        <h5><strong>Data goes to</strong></h5>
-        <a data-bind="attr: {href: '/datastream/' + info.Datastream.id()}">
-            <span data-bind="text: info.Datastream.name"></span>
-        </a>
+        <div data-bind="if: info.Datastream.name()">
+            <h5><strong>Data goes to</strong></h5>
+            <a data-bind="attr: {href: '/datastream/' + info.Datastream.id()}">
+                <span data-bind="text: info.Datastream.name()"></span>
+            </a>
+        </div>
         <h5><strong>Actuate node</strong></h5>
         <form data-bind="submit: sendData" class="form-horizontal" id="actuate_form">
             <div data-bind="foreach: info.inputNames" class="form-group">

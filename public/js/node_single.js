@@ -19,8 +19,9 @@ function NodeModel(){
         name: null,
         inputNames: [],
         outputName: null,
+        DatastreamId: null,
         Datastream: {
-            name: "null",
+            name: null,
             id: -1
         },
         createdAt: "1700-01-01"
@@ -30,8 +31,57 @@ function NodeModel(){
         return new Date(self.info.createdAt()).toDateString();
     });
 
+    // Function that saves the changes
+    function putData() {
+        saveTimer = null;
+        $.ajax({
+            url: '/api/node',
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                nodeid: nodeId,
+                name: self.info.name(),
+                DatastreamId: self.info.DatastreamId(),
+                inputNames: self.info.inputNames(),
+                outputName: self.info.outputName()
+            }),
+            success: function(data) {
+                // On success, remove 'unsaved changes' box and replace it with a saved box
+                $('#unsaved-alert')[0].style.display = 'none';
+                var errorAlert = $('#failsave-alert')[0].style.display = 'none';
+                var savedAlert = $('#saved-alert');
+                savedAlert.fadeIn(150);
+                // after 1s, begin fading out the 'saved changes' box
+                setTimeout(function() {
+                    savedAlert.fadeOut(1500);
+                }, 1000)
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // In error, show error warning
+                var errorAlert = $('#failsave-alert')[0];
+                errorAlert.style.display = '';
+                errorAlert.innerHTML = '<strong>Error: </string>' + jqXHR.responseJSON.error.toString();
+            }
+        })
+    }
+
+    // time to wait after changes have been made to save
+    var saveDelay = 1200;
+    var saveTimer = null;
+    // called whenever a change that can be saved is detected on the page
     function optionsChanged(newObj) {
-        console.log(newObj);
+        // If already planning to save, just reset timer
+        if (saveTimer) {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(putData, saveDelay);
+        }
+        else {
+            // Need to make a timer, so we don't save on every keystroke
+            saveTimer = setTimeout(putData, saveDelay);
+            $('#saved-alert')[0].style.display = 'none';
+            $('#unsaved-alert').fadeIn(150);
+        }
     }
 
     self.sendData = function(form) {

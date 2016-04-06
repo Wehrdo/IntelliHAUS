@@ -23,12 +23,10 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false
         },
         outputType: {
-            type: iotypes,
-            allowNull: false
+            type: iotypes
         },
         outputName: {
-            type: DataTypes.STRING,
-            allowNull: false
+            type: DataTypes.STRING
         }
     }, {
         classMethods: {

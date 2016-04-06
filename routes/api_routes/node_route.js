@@ -62,14 +62,16 @@ router.post('/', middleware.getHome, function(req, res, next) {
         var name = (req.body.name || "Your Node");
         var inputTypes = (req.body.inputtypes || []);
         var inputNames = (req.body.inputnames || genNames(inputTypes.length));
-        var outputType = (req.body.outputtype || "");
-        var outputName = (req.body.outputname || "Output");
+        var outputName = null;
+        if (req.body.outputtype) {
+            outputName = (req.body.outputname || "Output");
+        }
 
         models.Node.create({
             name: name,
             inputTypes: inputTypes,
             inputNames: inputNames,
-            outputType: outputType,
+            outputType: req.body.outputtype,
             outputName: outputName,
             DatastreamId: req.body.datastreamid,
             HomeId: req.home.id,
@@ -94,6 +96,13 @@ router.post('/', middleware.getHome, function(req, res, next) {
 router.put('/',
     middleware.getNode,
     function(req, res) {
+        if (req.body.inputNames.length != req.node.inputTypes.length) {
+            res.status(400).json({
+                success: false,
+                error: "Invalid number of input names"
+            });
+            return;
+        }
         req.node.update(
             req.body,
             {fields: ['name', 'inputNames', 'outputName', 'DatastreamId']}
