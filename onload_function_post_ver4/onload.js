@@ -35,9 +35,11 @@ nodes={
 		"childIndex" : null ,
 		"branches" : 0 ,
 		"height" : 1 ,
-		"parentNode" : null ,
-		"className" : "empty" , 
-		"name" : null}] ,
+		"parentNode" : null,
+		"className" : "empty",
+		"name" : null ,
+		"nodeId" : null ,
+		"userId" : null}] ,
 	"1" : null
 	};
 var root = svg.selectAll(".dot")  
@@ -48,11 +50,12 @@ var root = svg.selectAll(".dot")
 	.attr("cx", function(d) { return d.x; })
 	.attr("cy", function(d) { return d.y; })
 	.attr("r", function(d) { return d.r; })
-	.attr("onclick", "currentNode=this;svg.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);assessNode(currentNode);")
+	.attr("onclick", "svg.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);assessNode(currentNode);")
 	.property("nodedata",nodes["0"][0])
 	.call(drag);
 
 rootNode=nodes["0"][0];
-currentNode=nodes["0"][0];
+currentNode=rootNode;
+
 
 
