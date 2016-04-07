@@ -86,6 +86,33 @@ router.get('/', function(req, res) {
     })
 });
 
+// Get a single rule by ID
+router.get('/:id(\\d+)', function(req, res) {
+    models.Rule.findOne({
+        where: {
+            id: req.params.id,
+            UserId: req.user.id
+        }
+    }).then(function(rule) {
+        if (rule) {
+            res.json({
+                success: true,
+                rule: rule
+            })
+        } else {
+            res.status(400).json({
+                success: false,
+                error: "Found no matching rules"
+            })
+        }
+    }).catch(function(error) {
+        res.status(400).json({
+            success: false,
+            error: error
+        })
+    })
+});
+
 // Create a long-polling request for updates about a node
 router.get('/updates', middleware.getHome, function(req, res) {
     // Only keep long-poll connection for a set amount of time
