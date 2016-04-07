@@ -15,6 +15,7 @@ function NodeModel(){
     var splitURL = window.location.href.split('/');
     var nodeId = splitURL[splitURL.length-1].replace(/\D/g,'');
 
+    // Info about the node
     self.info = ko.mapping.fromJS({
         name: null,
         inputNames: [],
@@ -26,6 +27,9 @@ function NodeModel(){
         },
         createdAt: "1700-01-01"
     });
+    // The datastreams that belong to the user
+    self.datastreams = ko.observableArray(['loading...']);
+
     // computed KO object for a pretty-printed version of the date
     self.createdAtPretty = ko.computed(function() {
         return new Date(self.info.createdAt()).toDateString();
@@ -69,8 +73,14 @@ function NodeModel(){
     // time to wait after changes have been made to save
     var saveDelay = 1200;
     var saveTimer = null;
+    var left_to_load = 2;
     // called whenever a change that can be saved is detected on the page
     function optionsChanged(newObj) {
+        // If there is still data to load, don't save yet.
+        // Loading new data can cause subscription updates
+        if (left_to_load != 0) {
+            return;
+        }
         // If already planning to save, just reset timer
         if (saveTimer) {
             clearTimeout(saveTimer);
@@ -110,11 +120,21 @@ function NodeModel(){
     $.getJSON('/api/node/' + nodeId, function(data) {
         ko.mapping.fromJS(data.node, self.info);
         // Subscribe to each property that can be changed and saved to the server
-        ['name', 'outputName', 'inputNames'].forEach(
+        ['name', 'outputName', 'inputNames', 'DatastreamId'].forEach(
             function(watchedProp) {
                 self.info[watchedProp].subscribe(optionsChanged);
             }
-        )
+        );
+        left_to_load--;
+    });
+
+    $.getJSON('/api/datastream', function(data) {
+        if (data.success) {
+            self.datastreams(data.datastreams);
+            left_to_load--;
+        } else {
+            console.log("Failed to load datastream: " + data.error);
+        }
     });
 }
 

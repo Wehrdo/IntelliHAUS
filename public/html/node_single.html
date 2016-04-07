@@ -32,10 +32,9 @@
             <input id="ds_name" data-bind="value: info.name, valueUpdate: 'afterkeyup'" type="text" class="form-control">
         </div>
         <div data-bind="if: info.Datastream.name()">
-            <h5><strong>Data goes to</strong></h5>
-            <a data-bind="attr: {href: '/datastream/' + info.Datastream.id()}">
-                <span data-bind="text: info.Datastream.name()"></span>
-            </a>
+            <h5><strong>Output data goes to:</strong></h5>
+            <select data-bind="options: datastreams, optionsText: 'name', optionsValue: 'id', value: info.DatastreamId, valueAllowUnset: true"
+                class="form-control"></select>
         </div>
         <h5><strong>Actuate node</strong></h5>
         <form data-bind="submit: sendData" class="form-horizontal" id="actuate_form">
