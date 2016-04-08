@@ -1,0 +1,16 @@
+<div class="overview" id="new-node" style="display:block">
+	<h1>Choose a Node:</h1>
+	<table id="decision-options">
+		<tr>
+			<th>Name</th>
+			<th>Branch#</th>
+			<th></th>
+		</tr>
+		<tr id="timerow">
+			<td>Time</td>
+			<td><input type="number" min="0" max="50" value="3"></input></td>
+			<td><button type="button" value="OK" onclick="addBranch('timerow',currentNode);drawBranches();">OK</input></td>
+		</tr>
+	</table>
+	<input type="button" id="change-2" onclick="swapDisplay()" value="Swap"></input>
+</div>
