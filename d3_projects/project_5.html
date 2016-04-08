@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+ <html>
+   <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<script type="text/javascript" src="libraries/d3.min.js"></script>
+	<script type="text/javascript" src="libraries/jquery-2.2.2.min.js"></script>
+	<script type="text/javascript" src="functions.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<title>Rules In Progress</title>
+
+    <style>
+	.container {
+		width: 20%;
+		height: 700px;
+		float: left;
+		outline: #000000 solid 1px;
+		background-color: #eeeeee;
+		padding: 0px;
+		top: 0px;
+	}
+	.hidden {
+		display:none;
+	}
+	.full {
+		fill: green;
+	}
+	.result {
+		fill: orange;
+	}
+	.overlay {
+		fill: none;
+		pointer-events: all;
+		outline: #00FF00 dotted 2px;
+	}
+	.dot {
+		fill: lightsteelblue;
+		stroke: steelblue;
+		stroke-width: 1.5px;
+	}
+
+	.dot.dragging {
+		fill: lightskyblue;
+		stroke: steelblue;
+	}
+	.dot.active {
+		fill: gold;
+		stroke: goldenrod;
+	}
+	.dot.empty {
+		fill: lightgrey;
+		stroke: steelblue;
+	}
+<!-- 	.dot.active.dragging {
+		fill: goldenrod;
+		stroke: darkgoldenrod;
+	} -->
+	</style>
+	</head>
+	<body>
+	<script type="text/javascript" src="onload.js"></script>
+	<div class="container" id="container" style="display:block">
+		<div class="overview" id="decision-display" style="display:block">
+			<h1>Default</h1>
+		</div>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+
+</body>
+</html>
