@@ -11,4 +11,7 @@ router.use('/datastream', datastream);
 var node = require('./node_route');
 router.use('/node', node);
 
+var rule = require('./rule_route');
+router.use('/rule', rule    );
+
 module.exports = router;
