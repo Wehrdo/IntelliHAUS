@@ -17,7 +17,7 @@
 <div id="navbar"></div>
 
 <div id="all-sidebars">
-    <div class="sidebar-container">
+    <div class="sidebar-container" data-bind="if: curType()===''">
         <div class="panel panel-default">
             <h5><strong>Select Type</strong></h5>
             <select id="type-select"
@@ -34,6 +34,55 @@
                     <option value="nodeInput">Actuate Node</option>
                 </optgroup>
             </select>
+        </div>
+    </div>
+
+    <div class="sidebar-container" data-bind="visible: curType()==='time'">
+        <div class="panel panel-default">
+            <h5>Time Decision</h5>
+        </div>
+    </div>
+
+    <div class="sidebar-container" data-bind="visible: curType()==='day'">
+        <div class="panel panel-default">
+            <h5>Day Decision</h5>
+        </div>
+    </div>
+
+    <div class="sidebar-container" data-bind="visible: curType()==='data'">
+        <div class="panel panel-default">
+            <h5>Data Decision</h5>
+            <h5>Choose Datastream</h5>
+            <select
+                    data-bind="options: continuousDatastreams, optionsText: 'name'"
+                    class="form-control"></select>
+        </div>
+    </div>
+
+    <div class="sidebar-container" data-bind="visible: curType()==='event'">
+        <div class="panel panel-default">
+            <h5>Event Decision</h5>
+        </div>
+    </div>
+
+    <div class="sidebar-container" data-bind="visible: curType()==='nodeInput'">
+        <div class="panel panel-default">
+            <h4>Actuate Node</h4>
+            <h5><strong>Choose which node</strong></h5>
+            <select
+                data-bind="options: nodes, optionsText: 'name', optionsValue: 'id', value: selectedNode, valueAllowUnset: true"
+                class="form-control"></select>
+
+            <h5><strong>Decide Data</strong></h5>
+            <form class="form-horizontal" id="actuate_form" data-bind="if: selectedNode() != -1">
+                <div data-bind="foreach: getActiveNode().inputNames" class="form-group">
+                    <label data-bind="text: $data, attr: {'for': 'actuate_' + $data()" class="col-sm-2 control-label">$</label>
+                    <div class="col-sm-10">
+                        <input value="0" data-bind="attr: {'id': 'actuate_' + $data()" type="text" class="form-control">
+                    </div>
+                </div>
+            </form>
+
         </div>
     </div>
 </div>

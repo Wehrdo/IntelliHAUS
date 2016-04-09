@@ -15,6 +15,10 @@ function RuleContainer() {
     this.setUserDatastreams = function(given_ds) {
         datastreams = given_ds;
     };
+    
+    this.getDatastreams = function() {
+        return datastreams;
+    };
 
     /*
     Private methods
@@ -35,28 +39,4 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(data.error);
         }
     });
-
-
-    $.getJSON('/api/home', function(data) {
-        if (data.success) {
-            $.getJSON('/api/node?homeid=' + data.homes[0].id, function(data) {
-                if (data.success) {
-                    ruleContainer.setUserNodes(data.nodes);
-                } else {
-                    console.log("Error getting nodes: " + data.error);
-                }
-            });
-        } else {
-            console.log("Error getting homes: " + data.error);
-        }
-    });
-
-
-    $.getJSON('/api/datastream', function(data) {
-        if (data.success) {
-            ruleContainer.setUserDatastreams(data.datastsreams);
-        } else {
-            console.log("Error getting datastreams: " + data.error);
-        }
-    })
 });
