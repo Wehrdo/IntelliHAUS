@@ -3,22 +3,9 @@
  */
 
 function RuleContainer() {
-    var nodes = null;
-    var datastreams = null;
     /*
     Public methods
      */
-    this.setUserNodes = function(given_nodes) {
-        nodes = given_nodes;
-    };
-
-    this.setUserDatastreams = function(given_ds) {
-        datastreams = given_ds;
-    };
-    
-    this.getDatastreams = function() {
-        return datastreams;
-    };
 
     /*
     Private methods
