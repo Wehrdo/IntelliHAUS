@@ -25,47 +25,113 @@
                     data-bind="value: curType">
                 <option value="" disabled selected>Choose one</option>
                 <optgroup label="Decisions">
-                    <option value="time">Time</option>
-                    <option value="day">Day</option>
-                    <option value="data">Datastream</option>
-                    <option value="event">Event</option>
+                    <option value="TimeDecision">Time</option>
+                    <option value="DayDecision">Day</option>
+                    <option value="DataDecision">Datastream</option>
+                    <option value="EventDecision">Event</option>
                 </optgroup>
                 <optgroup label="Actions">
-                    <option value="nodeInput">Actuate Node</option>
+                    <option value="NodeInput">Actuate Node</option>
                 </optgroup>
             </select>
         </div>
     </div>
 
-    <div class="sidebar-container" data-bind="visible: curType()==='time'">
+    <div class="sidebar-container" data-bind="visible: curType()==='TimeDecision'">
         <div class="panel panel-default">
-            <h5>Time Decision</h5>
+            <h4>Time Decision</h4>
+            <h5>Branches</h5>
+            <div data-bind="foreach: branches" class="form-group">
+                <div class="row branch-row">
+                    <div class="branch-delete">
+                        <button data-bind="click: $root.deleteBranch.bind($data, $index())"
+                                type="button" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-remove-circle"></span>
+                        </button>
+                    </div>
+                    <div class="branch-row">
+                        <div class="input-group">
+                            <span class="input-group-addon">Start</span>
+                            <input type="time"
+                                   data-bind="value: $root.toDateString($data[0])"
+                                   placeholder="Range start"
+                                   class="form-control">
+                        </div>
+                    </div>
+                    <div class="branch-row">
+                        <div class="input-group">
+                            <span class="input-group-addon">End</span>
+                            <input type="time"
+                                   data-bind="value: $root.toDateString($data[1])"
+                                   placeholder="Range end"
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button data-bind="click: addBranch" type="button" class="btn btn-block btn-primary">New branch</button>
         </div>
     </div>
 
-    <div class="sidebar-container" data-bind="visible: curType()==='day'">
+    <div class="sidebar-container" data-bind="visible: curType()==='DayDecision'">
         <div class="panel panel-default">
-            <h5>Day Decision</h5>
+            <h4>Day Decision</h4>
+            <h5>Branches</h5>
         </div>
     </div>
 
-    <div class="sidebar-container" data-bind="visible: curType()==='data'">
+    <div class="sidebar-container" data-bind="visible: curType()==='DataDecision'">
         <div class="panel panel-default">
-            <h5>Data Decision</h5>
+            <h4>Data Decision</h4>
             <h5>Choose Datastream</h5>
             <select
-                    data-bind="options: continuousDatastreams, optionsText: 'name'"
+                    data-bind="options: continuousDatastreams,
+                                optionsText: 'name',
+                                optionsValue: 'id',
+                                value: selectedDatastream,
+                                valueAllowUnset: true"
                     class="form-control"></select>
+
+            <h5>Branches</h5>
+            <div data-bind="foreach: branches" class="form-group">
+                <div class="row branch-row">
+                    <div class="branch-delete">
+                        <button data-bind="click: $root.deleteBranch.bind($data, $index())"
+                                type="button" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-remove-circle"></span>
+                        </button>
+                    </div>
+                    <div class="branch-row">
+                        <div class="input-group">
+                            <span class="input-group-addon">Start</span>
+                            <input type="text"
+                                   data-bind="value: $data[0]"
+                                   placeholder="Range start"
+                                   class="form-control">
+                        </div>
+                    </div>
+                    <div class="branch-row">
+                        <div class="input-group">
+                            <span class="input-group-addon">End</span>
+                            <input type="text"
+                                   data-bind="value: $data[1]"
+                                   placeholder="Range end"
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button data-bind="click: addBranch" type="button" class="btn btn-block btn-primary">New branch</button>
         </div>
     </div>
 
-    <div class="sidebar-container" data-bind="visible: curType()==='event'">
+    <div class="sidebar-container" data-bind="visible: curType()==='EventDecision'">
         <div class="panel panel-default">
             <h5>Event Decision</h5>
         </div>
     </div>
 
-    <div class="sidebar-container" data-bind="visible: curType()==='nodeInput'">
+    <div class="sidebar-container" data-bind="visible: curType()==='NodeInput'">
         <div class="panel panel-default">
             <h4>Actuate Node</h4>
             <h5><strong>Choose which node</strong></h5>

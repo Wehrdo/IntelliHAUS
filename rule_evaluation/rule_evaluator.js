@@ -103,7 +103,6 @@ var getRangeEnd = function(branch) {
 function evalBranchRange(decision, curVal) {
     for (var i = 0; i < decision.branches.length; i++) {
         var branch = decision.branches[i];
-        var branch_range = branch.value;
         if (curVal >= getRangeStart(branch) && curVal < getRangeEnd(branch)) {
             evalAction(branch.action);
         }

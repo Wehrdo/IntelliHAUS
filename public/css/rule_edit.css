@@ -3,3 +3,27 @@
     min-width: 150px;
     max-width: 500px;
 }
+
+.panel {
+    padding: 5px;
+}
+
+.branch-row {
+    display: flex;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-bottom: 3px;
+}
+
+.branch-delete {
+    flex-grow: 1;
+}
+
+.branch-range {
+    flex-grow: 4;
+}
+
+.range-input {
+    max-width: 100%;
+}
