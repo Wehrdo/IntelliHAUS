@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Rules</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <script src="/js/d3/d3.js" charset="utf-8"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script src="/js/rule_overview.js"></script>
+</head>
+<body>
+<div id="navbar"></div>
+
+<h2><strong>List of Rules</strong></h2>
+<div data-bind="foreach: rules" class="list-group">
+    <a data-bind="attr: {href: '/rule/' + $data.id}" class="list-group-item">
+        <span data-bind="text: $data.name"></span>
+    </a>
+</div>
+</body>
+</html>

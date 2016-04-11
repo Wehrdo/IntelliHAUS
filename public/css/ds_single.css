@@ -54,3 +54,13 @@
 .alert {
     padding: 5px;
 }
+
+
+/*Overview page*/
+.create-box {
+    padding: 10px;
+}
+
+.create-box .input-group {
+    margin: 5px;
+}

@@ -9,9 +9,9 @@ function NodesViewModel(){
     self.node = ko.observableArray();
 
     //get homes from server
-    $.getJSON("api/home/", function(data){
+    $.getJSON("/api/home/", function(data){
         var first_home = data.homes[0];
-        $.getJSON("api/node/?homeid="+first_home.id, function(data){
+        $.getJSON("/api/node/?homeid="+first_home.id, function(data){
             self.node(data.nodes);
         })
     });

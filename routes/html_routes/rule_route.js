@@ -9,7 +9,7 @@ var path = require('path');
 var publicRoot = path.join(__dirname, '../../public');
 
 router.get('/', function(req, res) {
-    res.send("Rule overview");
+    res.sendFile('html/rule_overview.html', {root: publicRoot});
 });
 
 router.get('/:id(\\d+)', function(req, res) {

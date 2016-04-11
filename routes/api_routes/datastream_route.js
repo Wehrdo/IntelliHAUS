@@ -106,7 +106,7 @@ Create a new datastream
  */
 router.post('/', function (req, res) {
     var datatype = req.body.datatype;
-    var name = (req.body.name || "Your Home");
+    var name = (req.body.name || "Your Datastream");
     var isPublic = (req.body.public || false);
 
     var newDatastream = models.Datastream.build({

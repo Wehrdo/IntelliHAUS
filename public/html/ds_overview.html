@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 
     <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/ds_single.css">
     <script src="/js/d3/d3.js" charset="utf-8"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <script src="/js/knockout/knockout-3.4.0.js"></script>
@@ -21,5 +22,24 @@
         <span data-bind="text: $data.name"></span>
     </a>
 </div>
+
+<div class="panel panel-default create-box">
+    <h5><strong>Create New Datastream</strong></h5>
+    <div class="input-group">
+        <input id="new_ds_name" type="text" class="form-control" placeholder="Name">
+    </div>
+    <div class="input-group">
+        <span class="input-group-addon">Type</span>
+        <select id="new_ds_type" class="form-control" style="width: auto">
+            <option value="continuous">Continuous</option>
+            <option value="discrete">Event</option>
+        </select>
+    </div>
+
+    <button data-bind="click: createNewDatastream" type="button" class="btn btn-success">
+        <span class="glyphicon glyphicon-plus"></span>Create
+    </button>
+</div>
+
 </body>
 </html>
