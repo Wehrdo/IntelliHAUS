@@ -41,7 +41,7 @@
         <div class="panel panel-default">
             <h4>Time Decision</h4>
             <h5>Branches</h5>
-            <div data-bind="foreach: branches" class="form-group">
+            <div data-bind="foreach: ranges" class="form-group">
                 <div class="row branch-row">
                     <div class="branch-delete">
                         <button data-bind="click: $root.deleteBranch.bind($data, $index())"
@@ -77,6 +77,37 @@
         <div class="panel panel-default">
             <h4>Day Decision</h4>
             <h5>Branches</h5>
+            <div data-bind="foreach: ranges" class="form-group">
+                <div class="row branch-row">
+                    <div class="branch-delete">
+                        <button data-bind="click: $root.deleteBranch.bind($data, $index())"
+                                type="button" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-remove-circle"></span>
+                        </button>
+                    </div>
+                    <div class="branch-row">
+                        <div class="input-group">
+                            <span class="input-group-addon">Start</span>
+                            <select class="form-control"
+                                    data-bind="options: $root.days,
+                                               optionsText: 'name',
+                                               optionsValue: 'id',
+                                               value: $data[0]"></select>
+                        </div>
+                    </div>
+                    <div class="branch-row">
+                        <div class="input-group">
+                            <span class="input-group-addon">End</span>
+                            <select class="form-control"
+                                    data-bind="options: $root.days,
+                                               optionsText: $root.inclusiveEndDay,
+                                               optionsValue: 'id',
+                                               value: $data[1]"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button data-bind="click: addBranch" type="button" class="btn btn-block btn-primary">New branch</button>
         </div>
     </div>
 
@@ -93,7 +124,7 @@
                     class="form-control"></select>
 
             <h5>Branches</h5>
-            <div data-bind="foreach: branches" class="form-group">
+            <div data-bind="foreach: ranges" class="form-group">
                 <div class="row branch-row">
                     <div class="branch-delete">
                         <button data-bind="click: $root.deleteBranch.bind($data, $index())"
@@ -105,7 +136,7 @@
                         <div class="input-group">
                             <span class="input-group-addon">Start</span>
                             <input type="text"
-                                   data-bind="value: $data[0]"
+                                   data-bind="textInput: $data[0], event: {keyup: $root.branchesChanged}"
                                    placeholder="Range start"
                                    class="form-control">
                         </div>
@@ -114,7 +145,7 @@
                         <div class="input-group">
                             <span class="input-group-addon">End</span>
                             <input type="text"
-                                   data-bind="value: $data[1]"
+                                   data-bind="textInput: $data[1], event: {keyup: $root.branchesChanged}"
                                    placeholder="Range end"
                                    class="form-control">
                         </div>
@@ -144,7 +175,10 @@
                 <div data-bind="foreach: getActiveNode().inputNames" class="form-group">
                     <label data-bind="text: $data, attr: {'for': 'actuate_' + $data()" class="col-sm-2 control-label">$</label>
                     <div class="col-sm-10">
-                        <input value="0" data-bind="attr: {'id': 'actuate_' + $data()" type="text" class="form-control">
+                        <input type="text"
+                               data-bind="textInput: $root.data[$index()], attr: {'id': 'actuate_' + $data()"
+                               class="form-control"
+                               placeholder="Enter Data">
                     </div>
                 </div>
             </form>

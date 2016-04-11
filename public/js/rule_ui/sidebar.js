@@ -10,11 +10,12 @@ function SidebarModel() {
     self.dotClicked = function(dot) {
         var dotData = {
             id: 3,
-            type: "DayDecision",
+            type: "DataDecision",
             parent: 2,
             branches: [4, 6, 7],
-            ranges: [["NEGATIVE_INFINITY", 30], [30, 50], [50, "POSITIVE_INFINITY"]],
+            ranges: [[0, 2], [2, 4], [4, 0]],
             nodeId: 1,
+            data: [35],
             datastreamId: 2
         };
         self.curType(dotData.type);
@@ -24,7 +25,20 @@ function SidebarModel() {
         if (dotData.hasOwnProperty('datastreamId')) {
             self.selectedDatastream(dotData.datastreamId);
         }
-        self.branches(dotData.ranges);
+        if (dotData.hasOwnProperty('branches')) {
+            self.ranges(dotData.ranges);
+            self.branches = dotData.branches;
+        }
+        if (dotData.hasOwnProperty('data')) {
+            self.data = dotData.data.map(function(singleInput) {
+                return ko.observable(singleInput);
+            });
+        }
+        console.log(self.data);
+    };
+
+    self.branchesChanged = function() {
+        console.log("Branches changed");
     };
 
     /*
@@ -52,29 +66,47 @@ function SidebarModel() {
     });
 
     self.selectedDatastream = ko.observable(-1);
-    
+    // All nodes that belong to a user
     self.nodes = ko.observableArray([]);
+    // Currently selected node for NodeInput
     self.selectedNode = ko.observable(-1);
+    // Returns the node with the currently selected ID
     self.getActiveNode = ko.computed(function() {
-        var nodes = self.nodes();
-        for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].id == self.selectedNode()) {
-                return nodes[i];
-            }
+        var matches = self.nodes().filter(function(node) {
+            return node.id == self.selectedNode();
+        });
+        if (matches.length != 0) {
+            return matches[0];
+        } else {
+            // fallback to node with no inputs
+            return {inputNames: []};
         }
-        // fallback of node with no inputs
-        return {inputNames: []};
     });
 
-    self.branches = ko.observableArray([[0, 30], [30, 80]]);
+
+    // Array to hold the data that is sent to the node
+    self.data = [];
+
+    // The branches from this node
+    self.branches = [];
+    // The ranges for each corresponding branch
+    self.ranges = ko.observableArray();
+
+    // Add a new branch
     self.addBranch = function() {
-        self.branches.push([undefined, undefined]);
+        self.ranges.push([undefined, undefined]);
+        self.branches.push(0);
+        // TODO: Call ruleContainer.addBranch().
+        // TODO: The branches array might get updated already
     };
-    self.branches.subscribe(function() {
-        console.log(self.branches());
-    });
+    // Subscribe to changes of the range array
+    // TODO: Get notified when the range value changes
+    self.ranges.subscribe(self.branchesChanged);
 
+    // Remove a branch
     self.deleteBranch = function(index) {
+        self.ranges.splice(index, 1);
+        // TODO: Notify ruleContainer
         self.branches.splice(index, 1);
     };
 
@@ -85,8 +117,23 @@ function SidebarModel() {
         return ('00' + hours).substr(-2) + ':' + ('00' + minutes).substr(-2);
     };
 
-    self.dotClicked();
+    // Array of days of the week for a DayDecision
+    self.days = [{name: 'Sunday', id: 0},
+                {name: 'Monday', id: 1},
+                {name: 'Tuesday', id: 2},
+                {name: 'Wednesday', id: 3},
+                {name: 'Thursday', id: 4},
+                {name: 'Friday', id: 5},
+                {name: 'Saturday', id: 6}];
 
+    // Returns the name of the day if the range were inclusive
+    // Users would expect the day to be inclusive
+    self.inclusiveEndDay = function(item) {
+        var dayToShow = (((item.id-1)%7)+7)%7;
+        return self.days[dayToShow].name;
+    };
+
+    self.dotClicked();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
