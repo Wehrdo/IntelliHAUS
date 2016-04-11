@@ -8,13 +8,13 @@ VPATH=source
 
 
 
-all: Node
+all: Temp
 
-Node: Node.o Communicator.o Packet.o Exception.o
-	$(LD) $(CFLAGS) Exception.o Packet.o Communicator.o Node.o -lboost_system -lboost_thread -lpthread -o Node
+Temp: Temp.o Communicator.o Packet.o Exception.o
+	$(LD) $(CFLAGS) Exception.o Packet.o Communicator.o Temp.o -lboost_system -lboost_thread -lpthread -o Temp
 
-Node.o: $(srcdir)/Node.cpp $(srcdir)/Node.hpp
-	$(CC) $(CFLAGS) -c $(srcdir)/Node.cpp
+Temp.o: $(srcdir)/Temp.cpp $(srcdir)/Temp.hpp
+	$(CC) $(CFLAGS) -c $(srcdir)/Temp.cpp
 
 Communicator.o: $(srcdir)/Communicator.cpp $(srcdir)/Communicator.hpp
 	$(CC) $(CFLAGS) -c $(srcdir)/Communicator.cpp
