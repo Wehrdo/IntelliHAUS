@@ -136,7 +136,7 @@
                         <div class="input-group">
                             <span class="input-group-addon">Start</span>
                             <input type="text"
-                                   data-bind="textInput: $data[0], event: {keyup: $root.branchesChanged}"
+                                   data-bind="textInput: $data.start, event: {keyup: $root.branchesChanged}"
                                    placeholder="Range start"
                                    class="form-control">
                         </div>
@@ -145,7 +145,7 @@
                         <div class="input-group">
                             <span class="input-group-addon">End</span>
                             <input type="text"
-                                   data-bind="textInput: $data[1], event: {keyup: $root.branchesChanged}"
+                                   data-bind="textInput: $data.end, event: {keyup: $root.branchesChanged}"
                                    placeholder="Range end"
                                    class="form-control">
                         </div>

@@ -4,41 +4,41 @@
 
 function SidebarModel() {
     var self = this;
+    // Currently selected dot ID
+    var curDot = null;
     /*
     Public methods
      */
-    self.dotClicked = function(dot) {
-        var dotData = {
-            id: 3,
-            type: "DataDecision",
-            parent: 2,
-            branches: [4, 6, 7],
-            ranges: [[0, 2], [2, 4], [4, 0]],
-            nodeId: 1,
-            data: [35],
-            datastreamId: 2
-        };
+    self.dotClicked = function(dotId) {
+        curDot = dotId;
+        var dotData = ruleContainer.getDot(dotId);
         self.curType(dotData.type);
-        if (dotData.hasOwnProperty('nodeId')) {
+        if (dotData.type === 'NodeInput') {
             self.selectedNode(dotData.nodeId);
-        }
-        if (dotData.hasOwnProperty('datastreamId')) {
-            self.selectedDatastream(dotData.datastreamId);
-        }
-        if (dotData.hasOwnProperty('branches')) {
-            self.ranges(dotData.ranges);
-            self.branches = dotData.branches;
-        }
-        if (dotData.hasOwnProperty('data')) {
             self.data = dotData.data.map(function(singleInput) {
                 return ko.observable(singleInput);
             });
         }
-        console.log(self.data);
+        if (dotData.type === 'DataDecision') {
+            self.selectedDatastream(dotData.datastreamId);
+        }
+        // Convert ranges array to array of objects.
+        // Knockout doesn't like arrays of mixed types
+        self.ranges(dotData.ranges.map(function(range) {
+            return {
+                start: range[0],
+                end: range[1]
+            }
+        }));
+        self.branches = dotData.branches;
     };
 
     self.branchesChanged = function() {
-        console.log("Branches changed");
+        // Convert the array of range objects back to array of arrays
+        var ranges_array = self.ranges().map(function(rangeObj) {
+            return [rangeObj.start, rangeObj.end];
+        });
+        ruleContainer.updateRanges(curDot, ranges_array);
     };
 
     /*
@@ -94,8 +94,9 @@ function SidebarModel() {
 
     // Add a new branch
     self.addBranch = function() {
+        ruleContainer.addBranch(curDot, [undefined, undefined]);
         self.ranges.push([undefined, undefined]);
-        self.branches.push(0);
+        // self.branches.push(0);
         // TODO: Call ruleContainer.addBranch().
         // TODO: The branches array might get updated already
     };
@@ -132,8 +133,6 @@ function SidebarModel() {
         var dayToShow = (((item.id-1)%7)+7)%7;
         return self.days[dayToShow].name;
     };
-
-    self.dotClicked();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
