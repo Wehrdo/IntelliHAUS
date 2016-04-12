@@ -6,80 +6,60 @@ function RuleContainer() {
     /*
     Public methods
      */
-function assignIds(jsonObj, id) {
-	id++;
-	if(globalId<id)
-		globalId=id;
-	if(jsonObj.nodeInput)
-	{
-		jsonObj.nodeInput.dotId=id;
-	}
-	else if(jsonObj.decision)
-	{
-		var temp;
-		for(var key in jsonObj.decision)
-			temp=jsonObj.decision[key].branches;
-		if(!temp)
-			jsonObj.decision.dotId=id;
-		var i=0;
-		for(i=0;i<temp.length;i++)
-			jsonObj.decision.dotId=assignIds(temp[i],id).decision.dotId;
-	}
-	return jsonObj;
-}
 
 
-
-function translateData(jsonObj, pid) {
-	if(pid==null)
-		jsonObj=assignIds(jsonObj,0);
+if(!id)id=0;
+//use pid=null for root node
+//setting id=0 starts effectual id count at 1
+function translate(tree, pid){
 	var newObj={};
-	var temp1,
-		temp2,
-		branchTemp,
-		dotId,
-		type,
-		parentId=pid,
-		branches,
-		ranges,
-		nodeId,
-		data,
-		dataStreamId;
-		branches=[];
-		ranges=[];
+	var temp={};
+	var branchPush={};
+	var rangePush;
+	id++;
+	var dotId=id,
+		type=Object.keys(tree)[0],
+		branches=[],
+		ranges=[],
+		nodeId=null,
+		data=null,
+		datastreamId=null,
 		parentId=pid;
-	if(temp1=constructedObj.decision)
+	if(type=='NodeInput')
 	{
-		data=null;
-		nodeId=null;
-		dotId=temp1.dotId;
-		for(var key in temp1)
-			temp2=temp1[type=key];
-		branchTemp=temp2.branches;
-		dataStreamId=(temp1.dataStreamId)? temp1.dataStreamId : null;
-		if(branchTemp)
-			for(var key in branchTemp.action)
-			{
-				var nameless=translateData(branchTemp.action[key], dotId);
-				for(var key2 in nameless)
-				{
-					newObj[key2]=nameless[key2];
-					branches.push(parseInt(key2));
-					var i=0;
-					if(typeof branchTemp.value == 'number')
-						ranges.push([branchTemp.value,null]);
-					else
-						ranges.push(branchTemp.value);
-				}
-			}
+		data=tree[type].data;
+		nodeId=tree[type].nodeId;
 	}
-	else if(temp1=constructedObj.nodeInput)
+	else
 	{
-		dotId=temp1.dotId;
-		type="nodeInput";
-		nodeId=temp1.nodeId;
-		data=temp1.data;
-		dataStreamId=null;
+		parentId=pid;
+		if(tree[type].datastreamId)
+			datastreamId=tree[type].datastreamId;
+		if(tree[type].branches.length)
+		{
+			var i;
+			for(i=0;i<tree[type].branches.length;i++)
+			{
+				branchPush=translate(tree[type].branches[i].action, dotId);
+				for(var key in branchPush)
+					temp[key]=branchPush[key];
+				rangePush=tree[type].branches[i].value;
+				if(!rangePush.length)
+					rangePush=[rangePush, null];
+				branches.push(Object.keys(branchPush)[0]);
+				ranges.push(rangePush);
+			}
+		}
+		else
+		{
+			branchPush=translate(tree[type].branches.action, dotId);
+			rangePush=tree[type].branches.value;
+			if(!rangePush.length)
+				rangePush=[rangePush, null];
+			branches.push(Object.keys(branchPush)[0]);
+			ranges.push(rangePush);
+		}
+			tree[type].branches[key]
 	}
 	newObj[dotId.toString()]={
 		"dotId" : dotId,
@@ -89,7 +69,11 @@ function translateData(jsonObj, pid) {
 		"ranges" : ranges,
 		"nodeId" : nodeId,
 		"data" : data,
-		"dataStreamId" : dataStreamId};
+		"dataStreamId" : datastreamId};
+	for(var key in temp)
+	{
+		newObj[key]=temp[key];
+	}
 	return newObj;
 }
     /*
