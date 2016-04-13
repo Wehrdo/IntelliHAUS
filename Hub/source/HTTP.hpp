@@ -43,9 +43,6 @@ public:
 	HTTP(string hostName);
 	~HTTP();
 
-	int Connect();
-	int Disconnect();
-
 	bool IsConnected();
 
 	void Get(const string &path, const string &header,
@@ -59,8 +56,11 @@ public:
 	Message PostBlocking(const string& path, const Message& postMessage);
 
 private:
-	static const int BUFFER_SIZE = 1;
-	char buffer[1];
+	static const int BUFFER_SIZE = 128;
+	char buffer[128];
+
+	int Connect();
+	int Disconnect();
 
 	void Reconnect();
 	void StartListening();

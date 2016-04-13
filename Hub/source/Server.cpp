@@ -1,62 +1,54 @@
 #include "Server.hpp"
 
 
-Hub::Server::Server(int homeID, string url, function<void(const vector<ServerUpdate>&)> cbUpdate)
-			: http(url) {
+Hub::Server::Server(int homeID, string url, const string& username,
+			const string& password,
+			function<void(const vector<ServerUpdate>&)> cbUpdate)
+			: http(url), userName(username), password(password) {
 	this->homeID = homeID;
 	this->cbUpdate = cbUpdate;
 
-	isConnected = false;
-
-	try {
-		Connect();
-	}
-	catch(Exception &e) {
-		if(e.GetErrorCode() == Error_Code::SERVER_ERROR_BAD_LOGIN) {
-			throw e;
-		}
-	}
-	catch(exception &e) {
-		//TODO: Retry
-	}
-
+	Connect(cbConnect);
 }
 
 Hub::Server::~Server() {
 
 }
 
-int Hub::Server::Connect() {
-	int connected = http.Connect();
+void Hub::Server::ThreadRoutine() {
+	while(1) {
+		ioService.run();
+		ioService.reset();
 
-	if(connected < 0) {
-		throw Exception(Error_Code::SERVER_ERROR_CONNECTING,
-				"Error connecting to server.");
+		this_thread::wait_for(chrono::milliseconds(10));
 	}
-
-	isConnected = true;
 }
 
-void Hub::Server::Disconnect() {
-	http.Disconnect();
+void cbConnect() {
+	ioService.post([this](){
+		Authenticate([this](const Exception& e) {
+			cbAuthenticate(e);
+		}
+	});
 }
 
-int Hub::Server::Authenticate(const string& username, const string& password) {
+int Hub::Server::Authenticate(function<void(const Exception& e)> cb) {
 	HTTP::Message authMsg("Connection: keep-alive\r\nContent-Type: application/json\r\n",
 				string("{\"username\": \"") + username + "\",\r\n"
 				"\"password\": \"" + password + "\"}");
 
-//	int retVal = http.Connect();
-
-//	if(retVal < 0)
-//		return -1;
-
 	if(!isConnected) {
-		throw Exception(Error_Code::SERVER_NOT_CONNECTED,
-				"Server::Authenticate error: not connected");
+		cb(Exception(Error_Code::SERVER_NOT_CONNECTED,
+				"Server::Authenticate error: not connected"));
+
+		return;
 	}
 
-	auto authResp = http.PostBlocking("/authenticate", authMsg);
+	auto authResp = http.Post("/authenticate", authMsg,
+				[this](const Message& msg) {
+					cbAuthenticate(msg);
+				});
+}
 
 	Json::Value jsonResp;
 	stringstream jsonStream(authResp.GetBody());
@@ -67,6 +59,11 @@ int Hub::Server::Authenticate(const string& username, const string& password) {
 
 	try {
 		success = jsonResp.get("success", false).asBool();
+	}
+	catch(Exception &e) {
+		cb(e);
+
+		return;
 	}
 	catch(exception &e) {
 		cout << "Authenticate exception caught: " << e.what() << endl;
@@ -372,7 +369,6 @@ void Hub::Server::LongPoll() {
 }
 
 void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
-//	cout << "Long Poll response:" << endl << msg.GetHeader() << msg.GetBody() << endl;
 
 	Json::Value jsonResp;
 
@@ -403,8 +399,6 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 
 	for(auto &update : updates) {
 		updateCount++;
-
-		cout << "Json response:" << endl << update << endl;
 
 		ServerUpdate serverUpdate;
 

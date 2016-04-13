@@ -11,3 +11,7 @@ const char* Hub::Exception::what() const noexcept {
 int Hub::Exception::GetErrorCode() {
 	return code;
 }
+
+Hub::Exception::operatorbool() {
+	return code != Error_code::NO_ERROR;
+}

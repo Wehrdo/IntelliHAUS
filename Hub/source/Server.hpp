@@ -28,7 +28,8 @@ public:
 		vector<float> values;
 	};
 
-	Server(int homeID, const string& url, const string& username, const string& password, function<void(const vector<ServerUpdate>&)> cbUpdate);
+	Server(int homeID, const string& url, const string& username,
+		const string& password, function<void(const vector<ServerUpdate>&)> cbUpdate);
 	~Server();
 
 	bool IsConnected();
@@ -38,16 +39,22 @@ private:
 	void Connect();
 	void Disconnect();
 
-	void Authenticate(const string& username, const string& password);
+	void Authenticate();
 
 	void LongPoll();
 	void cbLongPoll(const Hub::HTTP::Message& msg);
 
+	void ThreadRoutine();
+
 	function<void(const vector<ServerUpdate>&)> cbUpdate;
+
+	boost::asio::io_service ioService;
+
+	thread asyncThread;
 
 	Hub::HTTP http;
 	int homeID;
-	string accessToken;
+	string accessToken, username, password;
 	bool isConnected;
 };
 

@@ -17,6 +17,8 @@ public:
 
 	int GetErrorCode();
 
+	operator bool();
+
 private:
 	string msg;
 	int code;

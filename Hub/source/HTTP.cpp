@@ -35,6 +35,8 @@ string Hub::HTTP::Message::ToString() const {
 Hub::HTTP::HTTP(string hostName)
 		: hostName(hostName),
 		asyncThread([this](){ThreadRoutine();}) {
+
+		Connect();
 }
 
 void Hub::HTTP::ThreadRoutine() {
@@ -61,20 +63,33 @@ int Hub::HTTP::Connect() {
 	//Create a socket
 	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));
 
-//	try {
-		//Connect to the HTTP server by iteratively trying all endpoints
-		boost::asio::connect(*tcpSocket, endpoint_iterator);
-//	}
-//	catch(exception &e) {
-//		return -1;
-		//TODO: Return meaningfull error code
-//	}
+	//boost::asio::connect(*tcpSocket, endpoint_iterator);
+	tcpSocket->async_connect(*endpointIterator,
+				[this](const boost::system::error_code& error){
+					cbConnect(error);
+				});
 
-	isConnected = true;
+//	isConnected = true;
 
-	StartListening();
+//	StartListening();
 
 	return 0;
+}
+
+void Hub::HTTP::cbConnect(const boost::system::error_code& error) {
+	if(error) {
+		cout << "Async connect error: " << error.message() << endl;
+
+		//try again
+		Connect();
+	}
+	else {
+		isConnected = true;
+
+		cout << "Async connected." << endl;
+
+		StartListening();
+	}
 }
 
 int Hub::HTTP::Disconnect() {
@@ -108,11 +123,19 @@ Hub::HTTP::~HTTP() {
 
 void Hub::HTTP::StartListening() {
 //	cout << "listening" << endl;
-	tcpSocket->async_receive(boost::asio::buffer(buffer, BUFFER_SIZE), 0,
+/*	tcpSocket->async_receive(boost::asio::buffer(buffer, BUFFER_SIZE), 0,
 			[this](const boost::system::error_code& error,
 				size_t bytesTransferred) {
 					cbReceive(error, bytesTransferred);
-			});
+			});*/
+
+	boost::asio::async_read(*tcpSocket,
+				boost::asio::buffer(buffer, BUFFER_SIZE),
+				boost::asio::transfer_at_least(1),
+				[this](const boost::system::error_code& error,
+				size_t bytesTransferred) {
+					cbReceive(error, bytesTransferred);
+				});
 }
 
 void Hub::HTTP::cbReceive(const boost::system::error_code& error, size_t bytesTransferred) {
@@ -124,10 +147,15 @@ void Hub::HTTP::cbReceive(const boost::system::error_code& error, size_t bytesTr
 	}
 
 	if(error) {
-		
-	}
+		Disconnect();
 
-	StartListening();
+		cout << "Disconnected from server" << endl;
+
+		//Try to reconnect
+		Connect();
+	}
+	else
+		StartListening();
 }
 
 /* @param path: string containing path for request
@@ -137,7 +165,8 @@ void Hub::HTTP::cbReceive(const boost::system::error_code& error, size_t bytesTr
 */
 void HTTP::Get(const string &path, const string &header,
 			function<void(const Message&)> callback) {
-//	cout << "Get request" << endl;
+	if(!isConnected)
+		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
 
 	boost::asio::streambuf request, response;
 	boost::system::error_code error;
@@ -158,36 +187,9 @@ void HTTP::Get(const string &path, const string &header,
 	ioService.post([this, callback]() {
 		respQueue.push(callback);
 	});
-
-//	if(queueSize == 0)
-//		StartListening();
 }
-/*
 
-	boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
 
-	string temp, responseHeader;
-
-	while(getline(responseStream, temp) && temp != "\r")
-		responseHeader += temp + "\r\n";
-
-	int length = ParseBodyLength(responseHeader);
-
-	int lengthNeeded = length - response.size();
-
-	if(response.size() > 0)
-		outStream << &response;
-
-	boost::asio::read(*tcpSocket, response, boost::asio::transfer_exactly(lengthNeeded), error);
-
-	outStream << &response;
-
-	if(error != boost::asio::error::eof && error != boost::system::errc::success)
-		throw boost::system::system_error(error);
-
-	return Message(responseHeader, outStream.str());
-}
-*/
 /* @param path: string containing path for request
  * @param postMessage: HTTP::Message containing the HTTP header and POST body
  * @returns: HTTP::Message containing the response from the server
@@ -195,7 +197,8 @@ void HTTP::Get(const string &path, const string &header,
 */
 void Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessage,
 					function<void(const Message&)> callback) {
-//	cout << "Starting post" << endl;
+	if(!isConnected)
+		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
 
 	boost::asio::streambuf request, response;
 	boost::system::error_code error;
@@ -219,42 +222,13 @@ void Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessage,
 	ioService.post([this, callback](){
 		respQueue.push(callback);
 	});
-
-//	if(queueSize == 0)
-//		StartListening();
 }
 
-/*
-	try {
-		boost::asio::read_until(*tcpSocket, response, "\r\n\r\n");
-	}
-	catch(exception &e) {
-		cout << "Exception: " << e.what() << endl;
-		cout << "Data read so far: " << endl << &response << endl;
-	}
-	string temp, responseHeader;
-
-	while(getline(responseStream, temp) && temp != "\r")
-		responseHeader += temp + "\r\n";
-
-	int lengthRemaining = ParseBodyLength(responseHeader) - response.size();
-
-	if(response.size() > 0)
-		outStream << &response;
-
-	try {
-		while(boost::asio::read(*tcpSocket, response, boost::asio::transfer_exactly(lengthRemaining), error))
-			outStream << &response;
-	}
-	catch(exception &e) {
-		cout << "Exception: " << e.what() << endl;
-	}
-
-	return Message(responseHeader, outStream.str());
-}
-*/
 
 Hub::HTTP::Message Hub::HTTP::GetBlocking(const string& path, const string& header) {
+	if(!isConnected)
+		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
+
 	Message msg;
 	mutex blockMutex;
 
@@ -271,6 +245,9 @@ Hub::HTTP::Message Hub::HTTP::GetBlocking(const string& path, const string& head
 }
 
 Hub::HTTP::Message Hub::HTTP::PostBlocking(const string& path, const Hub::HTTP::Message& postMessage) {
+	if(!isConnected)
+		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
+
 	Message msg;
 	mutex blockMutex;
 
@@ -308,29 +285,9 @@ void Hub::HTTP::ProcessSingleChar(char ch) {
 	} state = STATE_HEADER;
 	static char lastChar = '\0';
 	static Message currentMsg = Message();
-	static int nlCount = 0;	//newline count
+	static int nlCount = 0;
 	static int bodyLength = 0;
 
-//	cout << ch;
-
-/*	if(ch == '\0') {
-		try {
-			auto cb = respQueue.front();
-			cb(currentMsg);
-			respQueue.pop();
-		}
-		catch(exception &e) {
-			cout << "Error popping callback routine in ProcessSingleChar: " << e.what() << endl;
-		}
-
-		state = STATE_HEADER;
-		lastChar = '\0';
-		currentMsg = Message();
-		nlCount = 0;
-
-		return;
-	}
-*/
 	if(state == STATE_HEADER) {
 		currentMsg.header += ch;
 		if(ch == '\n') {
