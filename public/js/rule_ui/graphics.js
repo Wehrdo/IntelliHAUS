@@ -10,10 +10,7 @@ function RuleGraphics() {
     var leafNodes={};
     var index=1;
     if(!id)var id=0;
-    var x;
     var radius=20;
-    currentNode=null;
-    //levelStacks={"0":[1] , "1":[0]};
     var margin = {top: 20, right: 20, bottom: 30, left: 40};
     var width = 960 - margin.left - margin.right;
     var height = 710 - margin.top - margin.bottom;
@@ -26,57 +23,6 @@ function RuleGraphics() {
         .on("zoom", zoomed);
     var svg;
     	
-    	
-    var o=
-    {
-        "TimeDecision": {
-            "branches": [
-                {
-                    "value": [0, 600],
-                    "action": {
-                        "NodeInput": {
-                            "nodeId": 1,
-                            "data": [50]
-                        }
-                    }
-                },
-                {
-                    "value": [600, 1440],
-                    "action": {
-                        "DataDecision": {
-                            "datastreamId": 1,
-                            "branches": [
-                                {
-                                    "value": ["NEGATIVE_INFINITY", 30],
-                                    "action": {
-                                        "NodeInput": {
-                                            "nodeId": 1,
-                                            "data": [30]
-                                        }
-                                    }
-                                },
-                                {
-                                    "value": [30, "POSITIVE_INFINITY"],
-                                    "action": {
-                                        "NodeInput": {
-                                            "nodeId": 1,
-                                            "data": [40]
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        }
-    };
-    var nodes=translate(o, null);
-    var heights=setHeights(nodes, 1);
-    getLeafNodes(nodes, 1);
-    var depths=setDepths(nodes, 1, 0);
-    var positions=calculatePositions(depths, 1);
-    	
     var positionData=[{
     	"id":null,
     	"x":null,
@@ -88,18 +34,90 @@ function RuleGraphics() {
     	"x2":null,
     	"y2":null
     }];
-    posData(positions);
-    linData(positions);
-    drawNodes(positionData, lineData);
     
     this.updateTree = function() {
+		var nodeData=WHATEVER_THE_DATA_IS_CALLED;
+		var nodes=translate(nodeData, null);
+		prepareLeafNodes(nodes, 1);
+		var depths=setDepths(nodes, 1, 0);
+		var positions=calculatePositions(depths, 1);
 
+		posData(positions);
+		linData(positions);
+		drawNodes(positionData, lineData);
     };
 
     
     /*
     Private methods
      */
+	function translate(tree, pid){
+		var newObj={};
+		var temp={};
+		var branchPush={};
+		var rangePush;
+		id++;
+		var dotId=id,
+			type=Object.keys(tree)[0],
+			branches=[],
+			ranges=[],
+			nodeId=null,
+			data=null,
+			datastreamId=null,
+			parentId=pid;
+		if(type=='NodeInput')
+		{
+			data=tree[type].data;
+			nodeId=tree[type].nodeId;
+		}
+		else
+		{
+			if(tree[type].datastreamId)
+				datastreamId=tree[type].datastreamId;
+			if(tree[type].branches.length)
+			{
+				var i;
+				for(i=0;i<tree[type].branches.length;i++)
+				{
+					branchPush=translate(tree[type].branches[i].action, dotId);
+					for(var key in branchPush)
+						temp[key]=branchPush[key];
+					rangePush=tree[type].branches[i].value;
+					if(!rangePush.length)
+						rangePush=[rangePush, null];
+					branches.push(Object.keys(branchPush)[0]);
+					ranges.push(rangePush);
+				}
+			}
+			else if(tree[type].branches.action)
+			{
+				branchPush=translate(tree[type].branches.action, dotId);
+				rangePush=tree[type].branches.value;
+				if(!rangePush.length)
+					rangePush=[rangePush, null];
+				branches.push(Object.keys(branchPush)[0]);
+				ranges.push(rangePush);
+			}
+			else
+			{
+
+			}
+		}
+		newObj[dotId.toString()]={
+			"dotId" : dotId,
+			"type" : type,
+			"parent" : parentId,
+			"branches" : branches,
+			"ranges" : ranges,
+			"nodeId" : nodeId,
+			"data" : data,
+			"dataStreamId" : datastreamId};
+		for(var key in temp)
+		{
+			newObj[key]=temp[key];
+		}
+		return newObj;
+	}
      function dragstarted(d) {
       //d3.event.sourceEvent.stopPropagation();
       d3.select(this).classed("dragging", true);
@@ -151,7 +169,7 @@ function RuleGraphics() {
     	nodeData[dotId.toString()].height=height;
     	return nodeData;
     }
-    
+
     
     
     
