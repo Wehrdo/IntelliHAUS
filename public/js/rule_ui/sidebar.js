@@ -20,6 +20,7 @@ function SidebarModel() {
             });
         }
         if (dotData.type === 'DataDecision') {
+            console.log(dotData.datastreamId);
             self.selectedDatastream(dotData.datastreamId);
         }
         // Convert ranges array to array of objects.

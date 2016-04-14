@@ -36,7 +36,7 @@ function RuleGraphics() {
     }];
     
     this.updateTree = function() {
-		var nodes=WHATEVER_THE_DATA_IS_CALLED;
+		var nodes=ruleContainer.getRule();
 		//nodes=translate(nodes, null);
 		prepareLeafNodes(nodes, 1);
 		var depths=setDepths(nodes, 1, 0);
@@ -111,7 +111,7 @@ function RuleGraphics() {
 			"ranges" : ranges,
 			"nodeId" : nodeId,
 			"data" : data,
-			"dataStreamId" : datastreamId};
+			"datastreamId" : datastreamId};
 		for(var key in temp)
 		{
 			newObj[key]=temp[key];
@@ -283,7 +283,7 @@ function RuleGraphics() {
     	
     function drawNodes(p, l) {
     	d3.select("svg").remove();
-    	svg = d3.select("body")
+    	svg = d3.select(".rule-drawing")
     		.append("svg")
     		.attr("width", "80%")
     		.attr("height", window.innerHeight)
@@ -310,7 +310,7 @@ function RuleGraphics() {
     		.attr("cx", function(d) { return d.x; })
     		.attr("cy", function(d) { return d.y; })
     		.attr("r", radius)
-    		.attr("onclick", function(d) { return "svg.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);sidebar.dotClicked(" + d.id + ");");
+    		.attr("onclick", function(d) { return "d3.select('svg').selectAll('.active').classed('active',false);d3.select(this).classed('active',true);sidebar.dotClicked(" + d.id + ");"});
     }
 }
 
