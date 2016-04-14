@@ -27,7 +27,7 @@ function RuleGraphics() {
     	"id":null,
     	"x":null,
     	"y":null,
-    	"children":null}];
+    	"type":null}];
     var lineData=[{
     	"x1":null,
     	"y1":null,
@@ -36,8 +36,8 @@ function RuleGraphics() {
     }];
     
     this.updateTree = function() {
-		var nodeData=WHATEVER_THE_DATA_IS_CALLED;
-		var nodes=translate(nodeData, null);
+		var nodes=WHATEVER_THE_DATA_IS_CALLED;
+		//nodes=translate(nodes, null);
 		prepareLeafNodes(nodes, 1);
 		var depths=setDepths(nodes, 1, 0);
 		var positions=calculatePositions(depths, 1);
@@ -306,11 +306,11 @@ function RuleGraphics() {
     		.data(p)
     		.enter()
     		.append("circle")
-    		.attr("class", "dot decision")
+    		.attr("class", function(d) { return "dot "+((d.type=="NodeInput")?"result":"decision"); })
     		.attr("cx", function(d) { return d.x; })
     		.attr("cy", function(d) { return d.y; })
     		.attr("r", radius)
-    		.attr("onclick", "svg.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);");
+    		.attr("onclick", function(d) { return "svg.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);sidebar.dotClicked(" + d.id + ");");
     }
 }
 
