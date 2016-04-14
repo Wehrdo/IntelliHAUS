@@ -14,13 +14,12 @@ function SidebarModel() {
         var dotData = ruleContainer.getDot(dotId);
         self.curType(dotData.type);
         if (dotData.type === 'NodeInput') {
-            self.selectedNode(dotData.nodeId);
             self.data = dotData.data.map(function(singleInput) {
                 return ko.observable(singleInput);
             });
+            self.selectedNode(dotData.nodeId);
         }
         if (dotData.type === 'DataDecision') {
-            console.log(dotData.datastreamId);
             self.selectedDatastream(dotData.datastreamId);
         }
         // Convert ranges array to array of objects.
