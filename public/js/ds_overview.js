@@ -4,6 +4,8 @@
 
 function DatastreamOverviewModel() {
     var self = this;
+    // Box to show errors to the user
+    var errorBox = document.getElementById('errorBox');
 
     self.dsList = ko.observableArray();
 
@@ -46,6 +48,29 @@ function DatastreamOverviewModel() {
             }
         });
     };
+
+
+    self.deleteDatastream = function(ds_idx) {
+        var to_delete = self.dsList()[ds_idx];
+        
+        // Make call to server
+        $.ajax({
+            url: '/api/datastream/' + to_delete.id,
+            type: 'DELETE',
+            statusCode: {
+                200: function(resp) {
+                    if (resp.success) {
+                        self.dsList.splice(ds_idx, 1);
+                    }
+                    errorBox.classList.add('hidden');
+                },
+                400: function(resp) {
+                    errorBox.classList.remove('hidden');
+                    errorBox.innerHTML = $.parseJSON(resp.responseText).error;
+                }
+            }
+        })
+    }
 }
 
 

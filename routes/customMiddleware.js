@@ -79,7 +79,7 @@ exports.getHome = function(req, res, next) {
                 error: "Could not find home with ID " + homeId
             })
         }
-    })
+    });
 };
 
 /*

@@ -17,10 +17,21 @@
 <div id="navbar"></div>
 
 <h2>Your Datastreams</h2>
+
+<div id="errorBox" class="alert alert-danger hidden"></div>
+
 <div data-bind="foreach: dsList" class="list-group">
-    <a data-bind="attr: {href: '/datastream/' + $data.id}" class="list-group-item">
-        <span data-bind="text: $data.name"></span>
-    </a>
+    <div class="row">
+        <div class="input-group">
+            <a data-bind="attr: {href: '/datastream/' + $data.id}" class="list-group-item">
+                <span data-bind="text: $data.name"></span>
+            </a>
+            <div class="input-group-btn">
+                <button data-bind="click: $root.deleteDatastream.bind($data, $index())"
+                        type="button" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="panel panel-default create-box">
@@ -37,7 +48,7 @@
     </div>
 
     <button data-bind="click: createNewDatastream" type="button" class="btn btn-success">
-        <span class="glyphicon glyphicon-plus"></span>Create
+        <span class="glyphicon glyphicon-plus"></span> Create
     </button>
 </div>
 

@@ -12,43 +12,7 @@
 
 <body>
 <div id="navbar"></div>
-<!--Tabs-->
-<div id="tabs-view">
-    <ul class="tabs" data-bind="foreach: tabs">
-        <li data-bind="text: $data,
-				   click: $root.goToTab"></li>
-    </ul>
-</div>
-
-<div id="rules-view">
-    <!--Recent Rules Table-->
-    <table id="table1">
-        <thead>
-        <tr>
-            <th id = table1_title, colspan="3">Recent Rules</th>
-        </tr>
-        </thead>
-        <tr align="center">
-            <td>Node</td>
-            <td>State</td>
-            <td>Time</td>
-        </tr>
-        <tbody>
-        <tr data-bind="foreach: rulesTable">
-            <td data-bind="text: name"></td>
-            <td data-bind="text: state"></td>
-            <td data-bind="text: time"></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<!--Pinned Datastreams-->
-<h2>Pinned Datastreams</h2>
-<div id="pinned-ds">
-    <ul data-bind="foreach: datastreams">
-        <li data-bind="text: $data.name"></li>
-    </ul>
-</div>
+<h1>Welcome Home!</h1>
+<h4>Click in the top to get started</h4>
 </body>
 </html>

@@ -52,19 +52,45 @@ function evalAction(action) {
     }
     else if (action_type === 'NodeInput') {
         var nodeId = action[action_type].nodeId;
+        var data_to_send = action[action_type].data;
         // Find the node, so we know what home it belongs to
         models.Node.findById(nodeId, {
-            attributes: ["id", "HomeId"]
+            attributes: ['id', 'HomeId', 'lastData']
         })
             .then(function(node) {
                 if (node) {
-                    process.send({
-                        status: 'success',
-                        actuate: true,
-                        data: action[action_type].data,
-                        nodeId: node.id,
-                        homeId: node.HomeId
-                    });
+                    // Check if the new data is the same as the old data
+                    if (node.lastData.length == data_to_send.length &&
+                        node.lastData.every(function (val, idx) {
+                            return val == data_to_send[idx];
+                        })) {
+                        // Same data as before, so don't send it out
+                        process.send({
+                            status: 'success',
+                            actuate: false
+                        });
+                    }
+                    else {
+                        // New data, need to save it
+                        node.update(
+                            {lastData: data_to_send},
+                            {fields: ['lastData']}
+                        ).then(function() {
+                            process.send({
+                                status: 'success',
+                                actuate: true,
+                                data: data_to_send,
+                                nodeId: node.id,
+                                homeId: node.HomeId
+                            });
+                        }).catch(function(error) {
+                            // TODO: Should we report failure and not send data if unable to save lastData?
+                            process.send({
+                                status: 'failure',
+                                error: 'Failed to save lastData: ' + error
+                            });
+                        });
+                    }
                 }
                 else {
                     process.send({

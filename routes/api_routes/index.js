@@ -22,4 +22,7 @@ router.use('/datastream', datastream_rt);
 var rule_rt = require('./rule_route');
 router.use('/rule', rule_rt);
 
+var updates_rt = require('./updates_route');
+router.use('/updates', updates_rt);
+
 module.exports = router;

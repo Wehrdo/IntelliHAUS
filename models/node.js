@@ -22,6 +22,9 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.ARRAY(DataTypes.STRING),
             allowNull: false
         },
+        lastData: {
+            type: DataTypes.ARRAY(DataTypes.FLOAT)
+        },
         outputType: {
             type: iotypes
         },

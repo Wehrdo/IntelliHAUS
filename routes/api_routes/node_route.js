@@ -134,6 +134,13 @@ router.post('/send', middleware.getNode, function(req, res) {
             nodeId: req.node.id,
             data: convertedData
         });
+        // Save this data as the latest
+        req.node.update(
+            {lastData: convertedData},
+            {fields: ['lastData']}
+        ).catch(function(error) {
+            console.log("Failed to save lastData: " + error);
+        });
         res.status(200).json({
             success: true
         })

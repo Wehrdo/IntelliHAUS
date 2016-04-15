@@ -131,6 +131,7 @@ router.post('/', function (req, res) {
         });
 });
 
+// Update datastream
 router.put('/',
     middleware.getDatastream,
     function(req, res) {
@@ -150,5 +151,45 @@ router.put('/',
                 })
             });
 });
+
+// Delete datastream
+router.delete('/:id(\\d+)',
+    function(req, res, next) {
+        req.body.datastreamid = req.params.id;
+        next();
+    },
+    middleware.getDatastream,
+    function(req, res) {
+        req.datastream.getNodes().then(function(nodes) {
+            if (nodes && nodes.length != 0) {
+                res.status(400).json({
+                    success: false,
+                    error: "Unable to delete datastream with associated nodes"
+                });
+            } else {
+                req.datastream.getRules().then(function(rules) {
+                    if (rules && rules.length != 0) {
+                        res.status(400).json({
+                            success: false,
+                            error: "Unable to delete datastream with associated rules"
+                        });
+                    } else {
+                        // No nodes or datastreams
+                        req.datastream.destroy().then(function() {
+                            res.status(200).json({
+                                success: true
+                            });
+                        }).catch(function(error) {
+                            res.status(400).json({
+                                success: false,
+                                error: error
+                            });
+                        })
+                    }
+                });
+            }
+        });
+    }
+);
 
 module.exports = router;
