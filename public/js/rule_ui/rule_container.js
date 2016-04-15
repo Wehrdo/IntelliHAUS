@@ -64,14 +64,16 @@ function RuleContainer() {
         var rangePush;
         id++;
         var dotId = id,
-            type = Object.keys(tree)[0],
+            type = (tree)?Object.keys(tree)[0]:"EmptyDecision",
             branches = [],
             ranges = [],
             nodeId = null,
             data = null,
             datastreamId = null,
             parentId = pid;
-        if (type == 'NodeInput') {
+        if (type == 'EmptyDecision')
+        {}
+        else if (type == 'NodeInput') {
             data = tree[type].data;
             nodeId = tree[type].nodeId;
         }

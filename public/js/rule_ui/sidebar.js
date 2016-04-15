@@ -13,10 +13,17 @@ function SidebarModel() {
         curDot = dotId;
         var dotData = ruleContainer.getDot(dotId);
         self.curType(dotData.type);
+        // Update self.data for NodeInput
         if (dotData.type === 'NodeInput') {
-            self.data = dotData.data.map(function(singleInput) {
-                return ko.observable(singleInput);
-            });
+            for (var i = 0; i < dotData.data.length; i++) {
+                // If an observable already exists in that location, update it
+                if (self.data[i]) {
+                    self.data[i](dotData.data[i]);
+                } else {
+                    // Otherwise add a new observable
+                    self.data[i] = ko.observable(dotData.data[i]);
+                }
+            }
             self.selectedNode(dotData.nodeId);
         }
         if (dotData.type === 'DataDecision') {

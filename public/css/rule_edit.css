@@ -36,3 +36,54 @@
 .rule-drawing {
     flex-grow: 3;
 }
+
+
+/*For graphics*/
+
+.container {
+    width: 20%;
+    height: 700px;
+    float: left;
+    outline: #000000 solid 1px;
+    background-color: #eeeeee;
+    padding: 0px;
+    top: 0px;
+}
+.hidden {
+    display:none;
+}
+.full {
+    fill: green;
+}
+.result {
+    fill: orange;
+}
+.overlay {
+    fill: none;
+    pointer-events: all;
+    outline: #00FF00 dotted 2px;
+}
+.dot {
+    fill: lightsteelblue;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+.dot.result {
+    fill: orange;
+}
+.dot.dragging {
+    fill: lightskyblue;
+    stroke: steelblue;
+}
+.dot.active {
+    fill: gold;
+    stroke: goldenrod;
+}
+.dot.empty {
+    fill: lightgrey;
+    stroke: steelblue;
+}
+<!-- 	.dot.active.dragging {
+            fill: goldenrod;
+            stroke: darkgoldenrod;
+        } -->
