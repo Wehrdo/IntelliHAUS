@@ -109,4 +109,36 @@ router.get('/:id(\\d+)', function(req, res) {
     })
 });
 
+router.delete('/:id(\\d+)', function(req, res) {
+    models.Rule.findOne({
+        where: {
+            id: req.params.id,
+            UserId: req.user.id
+        }
+    }).then(function(rule) {
+        if (rule) {
+            rule.destroy().then(function() {
+                res.status(200).json({
+                    success: true
+                });
+            }).catch(function(error) {
+                res.status(400).json({
+                    success: false,
+                    error: error
+                });
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                error: "Found no matching rules"
+            });
+        }
+    }).catch(function(error) {
+        res.status(400).json({
+            success: false,
+            error: error
+        });
+    })
+});
+
 module.exports = router;

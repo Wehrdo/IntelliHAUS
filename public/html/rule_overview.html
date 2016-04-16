@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 
     <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/ds_single.css">
     <script src="/js/d3/d3.js" charset="utf-8"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <script src="/js/knockout/knockout-3.4.0.js"></script>
@@ -15,10 +16,33 @@
 <div id="navbar"></div>
 
 <h2><strong>List of Rules</strong></h2>
+
+<div id="errorBox" class="alert alert-danger hidden"></div>
+
 <div data-bind="foreach: rules" class="list-group">
-    <a data-bind="attr: {href: '/rule/' + $data.id}" class="list-group-item">
-        <span data-bind="text: $data.name"></span>
-    </a>
+    <div class="row">
+        <div class="input-group">
+            <a data-bind="attr: {href: '/rule/' + $data.id}" class="list-group-item">
+                <span data-bind="text: $data.name"></span>
+            </a>
+            <div class="input-group-btn">
+                <button data-bind="click: $root.deleteRule.bind($data, $index())"
+                        type="button" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="panel panel-default create-box">
+    <h5><strong>Create New Rule</strong></h5>
+    <div class="input-group">
+        <input id="new_rule_name" type="text" class="form-control" placeholder="Name">
+    </div>
+
+    <button data-bind="click: createNewRule" type="button" class="btn btn-success">
+        <span class="glyphicon glyphicon-plus"></span> Create
+    </button>
+</div>
+
 </body>
 </html>

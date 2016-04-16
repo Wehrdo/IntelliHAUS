@@ -291,28 +291,34 @@ exports.idValidate = function(req, res, next) {
     var all_success = true;
 
     // Query for all the IDs
-    to_check.forEach(function(query) {
-        models[query.model].findOne({
-            where: query.where
-        }).then(function(result) {
-            nDone += 1;
-            if (!result) {
-                // Requested query was not found
-                all_success = false;
-            }
-            // If it's the last query
-            if (nDone == to_check.length) {
-                if (all_success) {
-                    next();
-                } else {
-                    res.json({
-                        success: false,
-                        error: "Invalid id"
-                    })
+    if (to_check.length != 0) {
+        to_check.forEach(function (query) {
+            models[query.model].findOne({
+                where: query.where
+            }).then(function (result) {
+                nDone += 1;
+                if (!result) {
+                    // Requested query was not found
+                    all_success = false;
                 }
-            }
-        })
-    });
+                // If it's the last query
+                if (nDone == to_check.length) {
+                    if (all_success) {
+                        next();
+                    } else {
+                        res.status(400).json({
+                            success: false,
+                            error: "Invalid id"
+                        })
+                    }
+                }
+            })
+        });
+    }
+    // If there are no IDs to check for, then we can safely say all the IDs were okay
+    else {
+        next();
+    }
 
     req.used_ds_ids = datastream_ids;
     req.used_node_ids = node_ids;
