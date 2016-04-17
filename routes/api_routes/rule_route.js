@@ -7,65 +7,88 @@ var express = require('express');
 var router = express.Router();
 var models = require('../../models/index');
 var ruleUtils = require('./rule_utils');
-var ruleEvaluation = require('../../rule_evaluation');
 
-// Returns a generic error 400 catch handler for the database creation chain
-var catchHandler = function(res) {
-    return function(error) {
-        res.status(400).json({
-            success: false,
-            error: error.toString()
-        });
-        throw error;
-    }
-};
 
 // Upload new route
 router.post('/',
     ruleUtils.schemaValidate,
     ruleUtils.logicValidate,
     ruleUtils.idValidate,
-    function (req, res) {
+    function (req, res, next) {
+        // create a new rule entry
         models.Rule.create({
             UserId: req.user.id,
             name: (req.body.name || "My Rule"),
             rule: req.body.rule,
             public: (req.body.public || false)
-        })
-        .then(function(newRule) {
-        // After creation, set associations to datastreams
-        newRule.setDatastreams(req.used_ds_ids)
-        .then(function() {
-        // Relate the nodes that the rule affects
-        newRule.setNodes(req.used_node_ids)
-        .then(function() {
-        // Add rule's eval times
-        var ruleId = newRule.id;
-        var records = req.eval_times.map(function (time) {
-            return {
-                time: time,
-                RuleId: ruleId
-            }
+        }).then(function(newRule) {
+            req.rule = newRule;
+            next();
+        }).catch(function(error) {
+            res.status(400).json({
+                success: false,
+                error: error
+            })
         });
-        models.RuleTime.bulkCreate(records, {validate: true})
-        .then(function(newTimes) {
-            if (newTimes && (newTimes.length === req.eval_times.length)) {
-                res.status(201).json({
-                    success: true,
-                    id: newRule.id
-                });
-            }
-            else {
-                catchHandler(res)("Eval times not created");
-            }
-            // After creation of rule, evaluate it
-            ruleEvaluation.evalRule(newRule.id);
-        }).catch(catchHandler(res))
-        }).catch(catchHandler(res))
-        }).catch(catchHandler(res))
-        }).catch(catchHandler(res));
-    });
+    },
+    // Set associations after creating it
+    ruleUtils.setAssociations,
+    function(req, res) {
+        res.status(201).json({
+            success: true,
+            id: req.rule.id
+        })
+    }
+);
 
+router.put('/:id(\\d+)',
+    function(req, res, next) {
+        // Find the rule for this ID that belongs to the user
+        models.Rule.findOne({
+            where: {
+                id: req.params.id,
+                UserId: req.user.id
+            }
+        }).then(function(matchingRule) {
+            if (matchingRule) {
+                // If a rule was found, store it in the request and continue
+                req.rule = matchingRule;
+                next();
+            } else {
+                // If none found, respond with error
+                ruleUtils.catchHandler(res)("Unable to find matching rule");
+            }
+        }).catch(ruleUtils.catchHandler(res));
+    },
+    ruleUtils.schemaValidate,
+    ruleUtils.logicValidate,
+    ruleUtils.idValidate,
+    function(req, res, next) {
+        // Update the corresponding rule
+        req.rule.update(
+            req.body.rule,
+            {fields: ['name', 'rule']}
+        ).then(function() {
+            // Rule updated, delete RuleTime entries
+            models.RuleTime.destroy({
+                where: {
+                    RuleId: req.rule.id
+                }
+            }).then(function() {
+                // Rule ready to update associations
+                next();
+            }).catch(ruleUtils.catchHandler(res));
+        }).catch(ruleUtils.catchHandler(res));
+    },
+    ruleUtils.setAssociations,
+    function(req, res) {
+        res.status(200).json({
+            success: true
+        })
+    }
+);
+
+// Get all the meta-data for rules owned by a user
 router.get('/', function(req, res) {
     req.user.getRules({
         attributes: ['id', 'name', 'public', 'createdAt', 'updatedAt']
@@ -109,6 +132,7 @@ router.get('/:id(\\d+)', function(req, res) {
     })
 });
 
+// Delete a rule and its associations
 router.delete('/:id(\\d+)', function(req, res) {
     models.Rule.findOne({
         where: {

@@ -4,12 +4,6 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-    var iotypes = DataTypes.ENUM(
-        'continuous',
-        'discrete',
-        'binary'
-    );
-
     var Datapoint = sequelize.define("Datapoint", {
         continuousData: {
             type: DataTypes.FLOAT
@@ -21,7 +15,8 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.BLOB
         },
         time: {
-            type: DataTypes.DATE
+            type: DataTypes.DATE,
+            allowNull: false
         }
     }, {
         classMethods: {
@@ -33,7 +28,8 @@ module.exports = function(sequelize, DataTypes) {
                     }
                 });
             }
-        }
+        },
+        timestamps: false
     });
 
     return Datapoint;

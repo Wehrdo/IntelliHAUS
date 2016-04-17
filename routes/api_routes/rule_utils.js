@@ -5,6 +5,7 @@
 var validator = new (require('jsonschema').Validator)();
 var ruleSchema = require('./rule.schema.json');
 var models = require('../../models/index');
+var ruleEvaluation = require('../../rule_evaluation');
 
 /*
 Reusable high-performance Queue object
@@ -263,7 +264,10 @@ exports.idValidate = function(req, res, next) {
                 where = models.sequelize.and(
                         {'id': rule[decisionType].nodeId},
                         {'UserId': req.user.id},
-                        {'RuleId': null}, // Isn't already controlled by a rule
+                        {'RuleId': {$or: [ // Node is either not controlled by a rule, or is controlled by current rule
+                            null,
+                            req.rule ? req.rule.id : null // req.rule.id will throw an exception of req.rule is not define
+                        ]}},
                         // This verifies that the data given for a node input is the same number of elements as expected
                         models.sequelize.where(models.sequelize.fn('array_length', models.sequelize.col('inputTypes'), 1), rule[decisionType].data.length)
                 );
@@ -322,6 +326,53 @@ exports.idValidate = function(req, res, next) {
 
     req.used_ds_ids = datastream_ids;
     req.used_node_ids = node_ids;
+};
+
+
+// Returns a generic error 400 catch handler for the database creation chain
+var catchHandler = function(res) {
+    return function(error) {
+        res.status(400).json({
+            success: false,
+            error: error.toString()
+        });
+        throw error;
+    }
+};
+exports.catchHandler = catchHandler;
+
+// Take an existing rule as req.rule, and set all of its associations
+// Used for creating and updating rules
+exports.setAssociations = function(req, res, next) {
+    var rule = req.rule;
+    var ruleId = rule.id;
+
+    // After creation, set associations to datastreams
+    rule.setDatastreams(req.used_ds_ids)
+    .then(function() {
+        // Relate the nodes that the rule affects
+        rule.setNodes(req.used_node_ids)
+    .then(function() {
+        // Add rule's eval times
+        var records = req.eval_times.map(function (time) {
+            return {
+                time: time,
+                RuleId: ruleId
+            }
+        });
+        models.RuleTime.bulkCreate(records, {validate: true})
+    .then(function(newTimes) {
+        if (newTimes && (newTimes.length === req.eval_times.length)) {
+            next();
+        }
+        else {
+            catchHandler(res)("Eval times not created");
+        }
+        // After creation or updating of rule, evaluate it
+        ruleEvaluation.evalRule(ruleId);
+    }).catch(catchHandler(res))
+    }).catch(catchHandler(res))
+    }).catch(catchHandler(res))
 };
 
 var inst =
