@@ -24,7 +24,7 @@
                 <h5><strong>Select Type</strong></h5>
                 <select id="type-select"
                         class="form-control"
-                        data-bind="value: curType">
+                        data-bind="value: curType, event: {change: $root.setDotType}">
                     <option value="EmptyDecision" disabled selected>Choose one</option>
                     <optgroup label="Decisions">
                         <option value="TimeDecision">Time</option>

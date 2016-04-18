@@ -52,9 +52,12 @@ function SidebarModel() {
     /*
     Knockout Bindings
      */
-    self.curType = ko.observable("");
-    self.curType.subscribe(function(newVal) {
-    });
+    self.curType = ko.observable("InitialValue");
+
+    // Type was selected for an EmptyDecision
+    self.setDotType = function() {
+        ruleContainer.setDotType(curDot, self.curType());
+    };
 
     // All the datastreams of the user
     self.datastreams = ko.observableArray([]);

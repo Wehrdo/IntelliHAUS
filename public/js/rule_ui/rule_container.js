@@ -48,6 +48,14 @@ function RuleContainer() {
             "datastreamId" : null};
         dot.branches.push(newDot.dotId);
         dot.ranges.push(range);
+        treeMap[newDot.dotId] = newDot;
+        ruleGraphics.updateTree();
+    };
+
+    //
+    this.setDotType = function(dotId, newType) {
+        treeMap[dotId].type = newType;
+        ruleGraphics.updateTree();
     };
 
 
@@ -68,7 +76,7 @@ function RuleContainer() {
             branches = [],
             ranges = [],
             nodeId = null,
-            data = null,
+            data = [],
             datastreamId = null,
             parentId = pid;
         if (type == 'EmptyDecision')
