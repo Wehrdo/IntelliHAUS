@@ -14,15 +14,8 @@ function SidebarModel() {
         var dotData = ruleContainer.getDot(dotId);
         // Update self.data for NodeInput
         if (dotData.type === 'NodeInput') {
-            for (var i = 0; i < dotData.data.length; i++) {
-                // If an observable already exists in that location, update it
-                if (self.data[i]) {
-                    self.data[i](dotData.data[i]);
-                } else {
-                    // Otherwise add a new observable
-                    self.data[i] = ko.observable(dotData.data[i]);
-                }
-            }
+            // Create observables for actuator data
+            self.data(createDataKoArray(dotData.data));
             self.selectedNode(dotData.nodeId);
         }
         if (dotData.type === 'DataDecision') {
@@ -37,7 +30,6 @@ function SidebarModel() {
             }
         }));
         self.branches = dotData.branches;
-        console.log(dotData.type);
         self.curType(dotData.type);
     };
 
@@ -54,7 +46,7 @@ function SidebarModel() {
      */
     self.curType = ko.observable("InitialValue");
 
-    // Type was selected for an EmptyDecision
+    // Type was selected for a previously EmptyDecision
     self.setDotType = function() {
         ruleContainer.setDotType(curDot, self.curType());
     };
@@ -80,6 +72,14 @@ function SidebarModel() {
     self.nodes = ko.observableArray([]);
     // Currently selected node for NodeInput
     self.selectedNode = ko.observable(-1);
+    // Called when the select box was changed for a nodeInput
+    self.nodeToActuateChanged = function() {
+        var start_data = self.getActiveNode().inputNames.map(function(name) {
+            return 0;
+        });
+        self.data(createDataKoArray(start_data));
+        ruleContainer.setNodeId(curDot, self.selectedNode(), start_data);
+    };
     // Returns the node with the currently selected ID
     self.getActiveNode = ko.computed(function() {
         var matches = self.nodes().filter(function(node) {
@@ -94,8 +94,23 @@ function SidebarModel() {
     });
 
 
+    function createDataKoArray(data) {
+        return data.map(function(inData) {
+            var data_observable = ko.observable(inData);
+            data_observable.subscribe(self.dataChanged);
+            return data_observable;
+        })
+    }
+
     // Array to hold the data that is sent to the node
-    self.data = [];
+    self.data = ko.observableArray();
+
+    self.dataChanged = function() {
+        ruleContainer.setNodeData(curDot,
+            self.data().map(function(data_observable) {
+                return data_observable();
+            }));
+    };
 
     // The branches from this node
     self.branches = [];
@@ -121,7 +136,8 @@ function SidebarModel() {
     self.deleteBranch = function(index) {
         self.ranges.splice(index, 1);
         // TODO: Notify ruleContainer
-        self.branches.splice(index, 1);
+        // self.branches.splice(index, 1);
+        ruleContainer.deleteDot(self.branches[index]);
     };
 
     // Converts the minutes of a day (0 - 1440) into a date string for a time input box
@@ -131,6 +147,7 @@ function SidebarModel() {
         return ('00' + hours).substr(-2) + ':' + ('00' + minutes).substr(-2);
     };
 
+    // Converts the input box "time" into minutes, and vice-versa
     self.createTimeComputed = function(obj, prop) {
         return ko.computed({
             read: function() {

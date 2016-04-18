@@ -3,6 +3,7 @@
  */
 
 function RuleContainer() {
+    var self = this;
 	var name = null;
 	var treeMap = null;
 
@@ -14,32 +15,32 @@ function RuleContainer() {
      */
 
 	// Given a rule from the database, initialize the container for it
-	this.initRule = function(ruleInfo) {
+	self.initRule = function(ruleInfo) {
 		treeMap = translate(ruleInfo.rule, null);
 		name = ruleInfo.name;
 		console.log(treeMap);
 	};
 
     // Returns the information about a specific dot
-	this.getDot = function(dotId) {
+	self.getDot = function(dotId) {
 		return treeMap[dotId];
 	};
 
-    this.updateRanges = function(dotId, newRanges) {
+    self.updateRanges = function(dotId, newRanges) {
         treeMap[dotId].ranges = newRanges;
     };
 
-    this.getRule = function() {
+    self.getRule = function() {
         return treeMap;
     };
 
     // Adds a new branch to the given dot, with the given range
-    this.addBranch = function(dotId, range) {
+    self.addBranch = function(dotId, range) {
         var dot = treeMap[dotId];
         id++;
         var newDot = {
             "dotId" : id,
-            "type" : '',
+            "type" : 'EmptyDecision',
             "parent" : dot.dotId,
             "branches" : [],
             "ranges" : [],
@@ -52,13 +53,39 @@ function RuleContainer() {
         ruleGraphics.updateTree();
     };
 
-    //
-    this.setDotType = function(dotId, newType) {
+    // Set the type for an existing dot
+    self.setDotType = function(dotId, newType) {
         treeMap[dotId].type = newType;
         ruleGraphics.updateTree();
     };
 
+    self.deleteDot = function(dotId) {
+        var dot = treeMap[dotId];
+        // Delete all of its children before deleting this dot
+        // Do it in reverse so each child can delete itself from the branches array
+        // without disrupting the other children
+        while (dot.branches.length !== 0) {
+            self.deleteDot(dot.branches[0]);
+        }
+        // Delete the branch to this dot
+        var parent = treeMap[dot.parent];
+        parent.branches.splice(parent.branches.indexOf(dotId), 1);
+        delete treeMap[dotId];
+        ruleGraphics.updateTree();
+    };
 
+    // Set the node ID for a node actuator
+    // Also set the data attribute for this dot (Keeps the number of items consistent)
+    self.setNodeId = function(dotId, nodeId, defaultData) {
+        treeMap[dotId].nodeId = nodeId;
+        treeMap[dotId].data = defaultData;
+    };
+
+    // Update the actuator data for a NodeInput
+    self.setNodeData = function(dotId, newData) {
+        treeMap[dotId].data = newData;
+    };
+    
 	/*
 	 Private methods
 	 */

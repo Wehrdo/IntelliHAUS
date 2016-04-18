@@ -169,7 +169,7 @@
                 <h4>Actuate Node</h4>
                 <h5><strong>Choose which node</strong></h5>
                 <select
-                    data-bind="options: nodes, optionsText: 'name', optionsValue: 'id', value: selectedNode, valueAllowUnset: true"
+                    data-bind="options: nodes, optionsText: 'name', optionsValue: 'id', value: selectedNode, valueAllowUnset: true, event: {change: $root.nodeToActuateChanged}"
                     class="form-control"></select>
 
                 <h5><strong>Decide Data</strong></h5>
@@ -179,7 +179,7 @@
                             <label data-bind="text: $data, attr: {'for': 'actuate_' + $data()" class="col-sm-3 control-label">$</label>
                             <div class="col-sm-9">
                                 <input type="text"
-                                       data-bind="textInput: $root.data[$index()], attr: {'id': 'actuate_' + $data()"
+                                       data-bind="textInput: $root.data()[$index()], attr: {'id': 'actuate_' + $data()"
                                        class="form-control"
                                        placeholder="Enter Data">
                             </div>
