@@ -285,7 +285,7 @@ function RuleGraphics() {
     	d3.select("svg").remove();
     	svg = d3.select(".rule-drawing")
     		.append("svg")
-    		.attr("width", "80%")
+    		.attr("width", "95%")
     		.attr("height", window.innerHeight)
     		.style("outline","#000000 solid 2px")
     		.attr("transform", "translate(" + margin.left + "," + margin.right + ")")

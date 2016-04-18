@@ -12,7 +12,6 @@ function SidebarModel() {
     self.dotClicked = function(dotId) {
         curDot = dotId;
         var dotData = ruleContainer.getDot(dotId);
-        self.curType(dotData.type);
         // Update self.data for NodeInput
         if (dotData.type === 'NodeInput') {
             for (var i = 0; i < dotData.data.length; i++) {
@@ -38,6 +37,8 @@ function SidebarModel() {
             }
         }));
         self.branches = dotData.branches;
+        console.log(dotData.type);
+        self.curType(dotData.type);
     };
 
     self.branchesChanged = function() {
@@ -53,7 +54,6 @@ function SidebarModel() {
      */
     self.curType = ko.observable("");
     self.curType.subscribe(function(newVal) {
-        console.log(newVal);
     });
 
     // All the datastreams of the user
@@ -102,7 +102,10 @@ function SidebarModel() {
     // Add a new branch
     self.addBranch = function() {
         ruleContainer.addBranch(curDot, [undefined, undefined]);
-        self.ranges.push([undefined, undefined]);
+        self.ranges.push({
+            start: undefined,
+            end: undefined
+        });
         // self.branches.push(0);
         // TODO: Call ruleContainer.addBranch().
         // TODO: The branches array might get updated already
@@ -123,6 +126,31 @@ function SidebarModel() {
         var hours = Math.floor(minutes_raw / 60);
         var minutes = minutes_raw % 60;
         return ('00' + hours).substr(-2) + ':' + ('00' + minutes).substr(-2);
+    };
+
+    self.createTimeComputed = function(obj, prop) {
+        return ko.computed({
+            read: function() {
+                // Get the minutes from the ranges array
+                var minutes_raw = obj[prop];
+                if (minutes_raw === 1440) {
+                    minutes_raw = 0;
+                }
+                var hours = Math.floor(minutes_raw / 60);
+                var minutes = minutes_raw % 60;
+                return ('00' + hours).substr(-2) + ':' + ('00' + minutes).substr(-2);
+            },
+            write: function(value) {
+                self.branchesChanged();
+                var hours = Number.parseInt(value.substr(0, 2));
+                var minutes = Number.parseInt(value.substr(3, 2));
+                var total_minutes = hours*60 + minutes;
+                if (total_minutes === 0 && prop === 'end') {
+                    total_minutes = 1440;
+                }
+                obj[prop] = hours*60 + minutes;
+            }
+        });
     };
 
     // Array of days of the week for a DayDecision
