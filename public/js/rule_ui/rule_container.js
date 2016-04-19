@@ -39,7 +39,7 @@ function RuleContainer() {
         var dot = treeMap[dotId];
         id++;
         var newDot = {
-            "dotId" : id,
+            "dotId" : id.toString(),
             "type" : 'EmptyDecision',
             "parent" : dot.dotId,
             "branches" : [],
@@ -67,10 +67,21 @@ function RuleContainer() {
         while (dot.branches.length !== 0) {
             self.deleteDot(dot.branches[0]);
         }
-        // Delete the branch to this dot
-        var parent = treeMap[dot.parent];
-        parent.branches.splice(parent.branches.indexOf(dotId), 1);
-        delete treeMap[dotId];
+        // If dot has a parent
+        if (dot.parent) {
+            // Delete the branch to this dot
+            var parent = treeMap[dot.parent];
+            var parent_branch_idx = parent.branches.indexOf(dotId.toString());
+            parent.branches.splice(parent_branch_idx, 1);
+            parent.ranges.splice(parent_branch_idx, 1);
+            delete treeMap[dotId];
+        } else {
+            // If dot doesn't have a parent, it's the root, so don't delete it
+            dot.type = "EmptyDecision";
+            dot.datastreamId = null;
+            dot.nodeId = null;
+            dot.data = [];
+        }
         ruleGraphics.updateTree();
     };
 
@@ -84,6 +95,11 @@ function RuleContainer() {
     // Update the actuator data for a NodeInput
     self.setNodeData = function(dotId, newData) {
         treeMap[dotId].data = newData;
+    };
+    
+    // Set the ID to use for a datastream in a DataDecision
+    self.setDatastream = function(dotId, dsId) {
+        treeMap[dotId].datastreamId = dsId;
     };
     
 	/*
@@ -142,7 +158,7 @@ function RuleContainer() {
             }
         }
         newObj[dotId.toString()] = {
-            "dotId": dotId,
+            "dotId": dotId.toString(),
             "type": type,
             "parent": parentId,
             "branches": branches,

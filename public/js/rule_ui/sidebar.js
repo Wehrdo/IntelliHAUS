@@ -51,6 +51,11 @@ function SidebarModel() {
         ruleContainer.setDotType(curDot, self.curType());
     };
 
+    self.deleteDot = function() {
+        ruleContainer.deleteDot(curDot);
+        self.dotClicked(curDot);
+    };
+
     // All the datastreams of the user
     self.datastreams = ko.observableArray([]);
     // The datastreams that are continuous
@@ -68,6 +73,10 @@ function SidebarModel() {
     });
 
     self.selectedDatastream = ko.observable(-1);
+    self.datastreamChanged = function() {
+        ruleContainer.setDatastream(curDot, self.selectedDatastream());
+    };
+
     // All nodes that belong to a user
     self.nodes = ko.observableArray([]);
     // Currently selected node for NodeInput

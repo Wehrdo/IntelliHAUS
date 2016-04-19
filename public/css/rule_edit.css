@@ -6,6 +6,10 @@
     padding: 5px;
 }
 
+.delete-dot {
+    float: right;
+}
+
 .branch-row {
     display: flex;
     max-width: 100%;

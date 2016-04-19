@@ -41,7 +41,11 @@
 
         <div class="sidebar-container" data-bind="if: curType()==='TimeDecision', visible: curType()==='TimeDecision'">
             <div class="panel panel-default">
-                <h4>Time Decision</h4>
+                <h4>Time Decision
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Delete</button>
+                </h4>
                 <h5>Branches</h5>
                 <div data-bind="foreach: ranges" class="form-group">
                     <div class="row branch-row">
@@ -77,7 +81,11 @@
 
         <div class="sidebar-container" data-bind="if: curType()==='DayDecision', visible: curType()==='DayDecision'">
             <div class="panel panel-default">
-                <h4>Day Decision</h4>
+                <h4>Day Decision
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Delete</button>
+                </h4>
                 <h5>Branches</h5>
                 <div data-bind="foreach: ranges" class="form-group">
                     <div class="row branch-row">
@@ -115,14 +123,19 @@
 
         <div class="sidebar-container" data-bind="if: curType()==='DataDecision', visible: curType()==='DataDecision'">
             <div class="panel panel-default">
-                <h4>Data Decision</h4>
+                <h4>Data Decision
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Delete</button>
+                </h4>
                 <h5>Choose Datastream</h5>
                 <select
                         data-bind="options: continuousDatastreams,
                                     optionsText: 'name',
                                     optionsValue: 'id',
                                     value: selectedDatastream,
-                                    valueAllowUnset: true"
+                                    valueAllowUnset: true,
+                                    event: {change: $root.datastreamChanged}"
                         class="form-control"></select>
 
                 <h5>Branches</h5>
@@ -166,7 +179,11 @@
 
         <div class="sidebar-container" data-bind="if: curType()==='NodeInput', visible: curType()==='NodeInput'">
             <div class="panel panel-default">
-                <h4>Actuate Node</h4>
+                <h4>Actuate Node
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Delete</button>
+                </h4>
                 <h5><strong>Choose which node</strong></h5>
                 <select
                     data-bind="options: nodes, optionsText: 'name', optionsValue: 'id', value: selectedNode, valueAllowUnset: true, event: {change: $root.nodeToActuateChanged}"
