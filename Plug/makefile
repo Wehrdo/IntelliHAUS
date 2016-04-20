@@ -10,8 +10,8 @@ VPATH=source
 
 all: Node
 
-Node: Node.o Communicator.o Packet.o Exception.o
-	$(LD) $(CFLAGS) Exception.o Packet.o Communicator.o Node.o -lboost_system -lboost_thread -lpthread -o Node
+Node: Node.o Communicator.o Packet.o Exception.o Outlet.o
+	$(LD) $(CFLAGS) Outlet.o Exception.o Packet.o Communicator.o Node.o -lboost_system -lboost_thread -lpthread -lbcm2835 -o Node
 
 Node.o: $(srcdir)/Node.cpp $(srcdir)/Node.hpp
 	$(CC) $(CFLAGS) -c $(srcdir)/Node.cpp
@@ -24,3 +24,6 @@ Packet.o: $(srcdir)/Packet.cpp $(srcdir)/Packet.hpp
 
 Exception.o: $(srcdir)/Exception.cpp $(srcdir)/Exception.hpp
 	$(CC) $(CFLAGS) -c $(srcdir)/Exception.cpp
+
+Outlet.o: $(srcdir)/Outlet.cpp $(srcdir)/Outlet.hpp
+	$(CC) $(CFLAGS) -c $(srcdir)/Outlet.cpp
