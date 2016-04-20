@@ -1,0 +1,6 @@
+#JSGF V1.0;
+grammar voice_node.py;
+public <topRule> = <rule0>;
+
+
+<rule0> = (hello) | (goodbye) world;
