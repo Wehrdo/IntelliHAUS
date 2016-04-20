@@ -9,5 +9,6 @@
     <orderEntry type="library" name="jquery" level="application" />
     <orderEntry type="library" name="sequelize-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="bluebird-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="IntelliHAUS node_modules" level="project" />
   </component>
 </module>

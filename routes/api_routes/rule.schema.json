@@ -119,10 +119,13 @@
         "datastreamId": {
           "type": "integer"
         },
+        "lifetime": {
+          "type": "number"
+        },
         "branches": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/branch"
+            "$ref": "#/definitions/action"
           },
           "minItems": 1
         },
@@ -133,7 +136,8 @@
       "required": [
         "datastreamId",
         "branches",
-        "default"
+        "default",
+        "lifetime"
       ],
       "additionalProperties": false
     },

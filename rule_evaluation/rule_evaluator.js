@@ -13,9 +13,9 @@ function evalAction(action) {
         return;
     }
 
+    var now = new Date();
     var action_type = Object.keys(action)[0];
     if (action_type === 'TimeDecision') {
-        var now = new Date();
         var total_mins = now.getHours()*60 + now.getMinutes();
         evalBranchRange(action[action_type], total_mins);
     }
@@ -41,13 +41,17 @@ function evalAction(action) {
             },
             order: [['time', 'DESC']]}
         ).then(function(datapoint) {
-            if (datapoint) {
+            // How old this datapoint is, in minutes
+            var age = (now - datapoint.time) / 1000 / 60;
+            // Only evaluate if the datapoint exists, and is new enough
+            if (datapoint && age <= action[action_type].lifetime) {
                 evalEventBranches(action[action_type], datapoint.discreteData);
+            } else { // Otherwise do the default
+                evalAction(action[acttion_type].default);
             }
         })
     }
     else if (action_type === 'DayDecision') {
-        var now = new Date();
         evalBranchRange(action[action_type], now.getDay());
     }
     else if (action_type === 'NodeInput') {

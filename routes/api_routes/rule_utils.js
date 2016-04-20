@@ -174,7 +174,9 @@ exports.logicValidate = function(req, res, next) {
             else if (decisionType === "EventDecision") {
                 // Since EventDecisions have the 'default' option, we do not need to check
                 // their branch coverage
-                q.add(rule[decisionType].default)
+                q.add(rule[decisionType].default);
+                // Ensure the lifetime is positive
+                valid = valid && (rule[decisionType].lifetime > 0);
             }
             else {
                 // Not a branch, skip to the next item
