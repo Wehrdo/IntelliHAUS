@@ -125,12 +125,12 @@
         "branches": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/action"
+            "$ref": "#/definitions/branch"
           },
           "minItems": 1
         },
         "default": {
-          "$ref": "#/definitions/branch"
+          "$ref": "#/definitions/action"
         }
       },
       "required": [
