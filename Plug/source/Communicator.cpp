@@ -146,7 +146,7 @@ void Node::Communicator::ProcessSingleByte(unsigned char byte) {
 void Node::Communicator::cbReceive(const boost::system::error_code& error,
 				size_t bytesTransferred) {
 	if(error) {
-		cout << "Communicator receive error: " << error.message() << endl;
+		cout << "General async_receive error" << endl;
 	}
 	else {
 		for(int i = 0; i < bytesTransferred; i++) {
