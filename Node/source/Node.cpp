@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-#define NODEID		1
+#define NODEID		3
 #define DELAY		1000
 
 #define LED_COUNT	49
@@ -47,6 +47,24 @@ void cbPacket(const Packet& p, LightStrip& strip) {
 		cout << "Received color: " << c.ToString() << endl;
 
 		strip.SetAll(Color(p.GetDataAsInt()));
+		strip.Display();
+	}
+	break;
+
+	case Packet::TYPE_FLOATARRAY: {
+		auto values = p.GetDataAsFloatArray();
+
+		if(values.size() != 3) {
+			cout << "Receive Error: expected array size 3, "
+				<< "got " << values.size() << endl;
+			return;
+		}
+
+		Color c(values[0]*255, values[1]*255, values[2]*255);
+
+		cout << "Received color: " << c.ToString() << endl;
+
+		strip.SetAll(c);
 		strip.Display();
 	}
 	break;
