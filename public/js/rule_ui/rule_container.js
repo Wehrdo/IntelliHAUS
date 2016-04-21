@@ -6,9 +6,10 @@ function RuleContainer() {
     var self = this;
 	var name = null;
 	var treeMap = null;
-
-    var id;
-    if(!id)id=0;
+	var index = null;
+	var svg=d3.select("svg");
+	l=0;
+	if(typeof id=='undefined')id=0;
 
     /*
     Public methods
@@ -28,11 +29,60 @@ function RuleContainer() {
 
     self.updateRanges = function(dotId, newRanges) {
         treeMap[dotId].ranges = newRanges;
+		self.sortBranches(dotId);
+		var positions=prepareTreeUpdate();
+		//RuleGraphics.updateTree(positions);
+		self.checkBranches(dotId);
     };
+	//TODO: implement infinite values
+	self.sortBranches = function(dotId) {
+		var ranges = treeMap[dotId].ranges;
+		var branches = treeMap[dotId].branches;
+		var i,j,iMin;
+		for (j = 0; j < ranges.length; j++) 
+		{
+			iMin = j;
+			for(i = j+1; i < ranges.length; i++) 
+                if (ranges[i][0] < ranges[iMin][0]) 
+					iMin = i;
+			if(iMin != j) 
+			{
+				var temp=ranges[j];
+				ranges[j]=ranges[iMin];
+				ranges[iMin]=temp;
+				temp=branches[j];
+				branches[j]=branches[iMin];
+				branches[iMin]=temp;
+			}
+		}
+	}
+	self.checkBranches = function(dotId) {
+		var ranges = treeMap[dotId].ranges;
+		var branches = treeMap[dotId].branches;
+		var i;
+		if(!ranges.length)
+			return;
+		if(ranges[0][0] > ranges[0][1])
+			RuleGraphics.BranchConflict(dotId, branches[0]);
+		for(i = 0; i < ranges.length-1; i++)
+		{
+			if(ranges[i][1] > ranges[i+1][0] || ranges[i+1][0] == "NEGATIVE_INFINITY" || ranges[i][1] == "POSITIVE_INFINITY")
+			{
+				ruleGraphics.branchConflict(dotId, branches[i]);
+				ruleGraphics.branchConflict(dotId, branches[i+1]);
+			}
+			else if(ranges[i+1][0] > ranges[i+1][1])
+				ruleGraphics.branchConflict(dotId, branches[i+1]);
+		}
+	}
 
     self.getRule = function() {
         return treeMap;
     };
+	
+	self.getPositions = function() {
+		return prepareTreeUpdate();
+	}
 
     // Adds a new branch to the given dot, with the given range
     self.addBranch = function(dotId, range) {
@@ -50,39 +100,26 @@ function RuleContainer() {
         dot.branches.push(newDot.dotId);
         dot.ranges.push(range);
         treeMap[newDot.dotId] = newDot;
-        ruleGraphics.updateTree();
+		var positions=prepareTreeUpdate();
+        ruleGraphics.addDecision(positions, dotId, range);
     };
 
     // Set the type for an existing dot
     self.setDotType = function(dotId, newType) {
         treeMap[dotId].type = newType;
-        ruleGraphics.updateTree();
+        ruleGraphics.setDotType(dotId, newType);
     };
 
-    self.deleteDot = function(dotId) {
-        var dot = treeMap[dotId];
-        // Delete all of its children before deleting this dot
-        // Do it in reverse so each child can delete itself from the branches array
-        // without disrupting the other children
-        while (dot.branches.length !== 0) {
-            self.deleteDot(dot.branches[0]);
-        }
-        // If dot has a parent
-        if (dot.parent) {
-            // Delete the branch to this dot
-            var parent = treeMap[dot.parent];
-            var parent_branch_idx = parent.branches.indexOf(dotId.toString());
-            parent.branches.splice(parent_branch_idx, 1);
-            parent.ranges.splice(parent_branch_idx, 1);
-            delete treeMap[dotId];
-        } else {
-            // If dot doesn't have a parent, it's the root, so don't delete it
-            dot.type = "EmptyDecision";
-            dot.datastreamId = null;
-            dot.nodeId = null;
-            dot.data = [];
-        }
-        ruleGraphics.updateTree();
+    self.deleteDot = function(pid, branchId) {
+        var i=treeMap[pid.toString()].branches.indexOf(branchId);
+		if(i > -1)
+		{
+			treeMap[pid.toString()].branches.splice(i,1);
+			treeMap[pid.toString()].ranges.splice(i,1);
+			treeMap=removeSubtree(treeMap, pid, branchId);
+			var positions=prepareTreeUpdate();
+			ruleGraphics.updateTreeDep(positions);
+		}
     };
 
     // Set the node ID for a node actuator
@@ -172,6 +209,121 @@ function RuleContainer() {
         }
         return newObj;
     }
+	function prepareTreeUpdate() {
+		var leafNodes=prepareLeafNodes(treeMap);
+		var x="";
+		for(key in leafNodes)
+			x+=key+":"+leafNodes[key]+"\n";
+		var depths=setTreeDepth(treeMap);
+		var positions=calculatePositions(depths, "1", leafNodes);
+		return positions;
+	}
+	/* function initNode(pid) {
+		treeMap[id.toString()]={
+			"dotId" : id,
+			"type" : "EmptyDecision",
+			"parent" : pid,
+			"branches" : [],
+			"ranges" : [],
+			"nodeId" : null,
+			"data" : null,
+			"dataStreamId" : null
+		};
+	} */
+	function removeSubtree(nodeData, pid, branchId) {
+		ruleGraphics.removeTreeElements(nodeData, pid, branchId);
+		if(!nodeData[branchId].branches.length)
+		{
+			//Do nothing for now
+		}
+		else
+		{
+			for(var i = 0; i < nodeData[branchId].branches.length; i++)
+			{
+				nodeData=removeSubtree(branchId, nodeData[branchId].branches[i]);
+			}
+		}
+		delete nodeData[branchId];
+		return nodeData;
+	}
+	
+	function prepareLeafNodes(nodeData)
+	{
+    	index=1;
+		return getLeafNodes(nodeData, "1");
+	}
+	
+	function getLeafNodes(nodeData, dotId) {
+		var leafNodes = {};
+    	var branches=nodeData[dotId].branches;
+    	if(!branches.length)
+    		leafNodes[dotId]=index++;
+    	else
+    	{
+    		var i;
+    		for(i = 0; i < branches.length; i++)
+    		{
+    			var leaves=getLeafNodes(nodeData, branches[i]);
+				for(var key in leaves)
+					leafNodes[key]=leaves[key];
+    		}
+    	}
+    	return leafNodes;
+    }
+	function setDepths(nodeData, dotId, depth) {
+    	var branches=nodeData[dotId].branches;
+    	if(!branches.length)
+    	{
+    		
+    	}
+    	else
+    	{
+    		var i;
+    		for(i = 0; i < branches.length; i++)
+    		{
+    			x=setDepths(nodeData, branches[i], depth+1);
+    			nodeData[branches[i]]=x[branches[i]];
+    		}
+    	}
+    	nodeData[dotId].depth=depth;
+    	return nodeData;
+    }
+	function setTreeDepth(nodeData) {
+    	return setDepths(nodeData, 1, 0);
+    }
+	function calculatePositions(nodeData, dotId, leafNodes) {
+    	var branches=nodeData[dotId].branches;
+    	var x;
+    	var y=0;
+    	var temp={};
+    	if(!branches.length)
+    	{
+    		x=nodeData[dotId].depth*160+400;
+    		y=400+(parseInt(leafNodes[dotId])-(Object.keys(leafNodes).length|0)/2)*80;
+    	}
+    	else
+    	{
+    		var i;
+    		for(i = 0; i < branches.length; i++)
+    		{
+    			if(branches[i].y)
+    			{
+    				y+=branches[i].y;
+    			}
+    			else
+    			{
+    				temp=calculatePositions(nodeData, branches[i], leafNodes);
+    				nodeData[branches[i]]=temp[branches[i]];
+    				y+=nodeData[branches[i]].y;
+    			}
+    		}
+    		y/=branches.length;
+    		x=nodeData[dotId].depth*160+400;
+    	}
+    	nodeData[dotId].x=x;
+    	nodeData[dotId].y=y;
+    	return nodeData;
+    }
 }
 
 window.ruleContainer = new RuleContainer();
@@ -184,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
     $.getJSON('/api/rule/' + ruleId, function(data) {
         if (data.success) {
 			ruleContainer.initRule(data.rule);
-            ruleGraphics    .updateTree();
+            ruleGraphics    .createTree();
         } else {
             console.log(data.error);
         }
