@@ -324,6 +324,49 @@ function RuleContainer() {
     	nodeData[dotId].y=y;
     	return nodeData;
     }
+    function detranslate(nodeData, nid, isFirst) {
+		var forServer={};
+		
+		if(!nodeData[nid])
+		var node=nodeData[nid];
+		var type=node.type;
+		var branches=node.branches;
+		var datastreamId=node.datastreamId;
+		var nodeId=node.nodeId;
+		var data=node.data;
+		var ranges=node.ranges;
+		//var nodeDefault=node.nodeDefault;
+		//var lifetime=node.lifetime;
+		if(type=="NodeInput")
+		{
+			forServer[type]={
+				"nodeId" : nodeId,
+				"data" :data
+			}
+			return forServer;
+		}
+		else
+		{
+			delete nodeData[nid];
+			forServer.branches=[];
+			for(var key in node.branches)
+				forServer[type].branches.push({
+					"value" : node.ranges[i],
+					"action" : detranslate(nodeData, node.branches[i], 0)
+				}
+			if(type=="EventDecision")
+			{
+				forServer[type].lifetime = node.lifetime;
+				forServer[type]["default"] = node.nodeDefault;
+				forServer[type].datastreamId = node.datastreamId;
+			}
+			else if(type=="DataDecision")
+			{
+				forServer[type].datastreamId = node.datastreamId;
+			}
+			return forServer;
+		}
+	}
 }
 
 window.ruleContainer = new RuleContainer();
