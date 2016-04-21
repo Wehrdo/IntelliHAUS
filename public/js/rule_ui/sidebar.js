@@ -31,6 +31,7 @@ function SidebarModel() {
         }));
         self.branches = dotData.branches;
         self.curType(dotData.type);
+		console.log(dotId);
     };
 
     self.branchesChanged = function() {
@@ -146,7 +147,8 @@ function SidebarModel() {
         self.ranges.splice(index, 1);
         // TODO: Notify ruleContainer
         // self.branches.splice(index, 1);
-        ruleContainer.deleteDot(self.branches[index]);
+        ruleContainer.deleteDot(curDot, self.branches[index]);
+		console.log("deleting...");
     };
 
     // Converts the minutes of a day (0 - 1440) into a date string for a time input box
@@ -204,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ko.applyBindings(window.sidebar, document.getElementById("all-sidebars"));
 
 
-    $.getJSON('/api/home', function(data) {
+    /*$.getJSON('/api/home', function(data) {
         if (data.success) {
             $.getJSON('/api/node?homeid=' + data.homes[0].id, function(data) {
                 if (data.success) {
@@ -219,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.log("Error getting homes: " + data.error);
         }
-    });
+    });*/
 
 
     $.getJSON('/api/datastream', function(data) {
