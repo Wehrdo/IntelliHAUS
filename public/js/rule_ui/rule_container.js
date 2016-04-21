@@ -353,7 +353,7 @@ function RuleContainer() {
 				forServer[type].branches.push({
 					"value" : node.ranges[i],
 					"action" : detranslate(nodeData, node.branches[i], 0)
-				}
+				});
 			if(type=="EventDecision")
 			{
 				forServer[type].lifetime = node.lifetime;
