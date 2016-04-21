@@ -1,4 +1,4 @@
-#include "Node.hpp"
+#include "Light.hpp"
 
 #define NODEID		3
 #define DELAY		1000
