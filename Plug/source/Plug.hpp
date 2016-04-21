@@ -7,5 +7,7 @@
 #include <chrono>
 #include <thread>
 #include <cmath>
+#include <iostream>
+#include "LightStrip.hpp"
 
 #endif
