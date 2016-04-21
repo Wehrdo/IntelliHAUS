@@ -1,4 +1,4 @@
-#include "Node.hpp"
+#include "Plug.hpp"
 #include <bcm2835.h>
 
 #define DELAY		1000
@@ -8,7 +8,7 @@
 using namespace std;
 using namespace Node;
 
-void cbPacket(const Packet& p);
+void cbPacket(const Packet& p, Outlet &outlet);
 
 int main() {
 	boost::asio::io_service ioService;
@@ -17,15 +17,20 @@ int main() {
 
 	Outlet outlet;
 
-	Communicator comm(NODEID, "intellihub.ece.iastate.edu", cbPacket);
-
-	this_thread::sleep_for(chrono::seconds(2));
-
 	cout << "Connecting to hub..." << endl;
+
+	Communicator comm(NODEID, "intellihub.ece.iastate.edu",
+			[&outlet, &ioService](const Packet& p){
+				ioService.post([p, &outlet]() {
+					cbPacket(p, outlet);
+				});
+			});
 
 	comm.Connect();
 
-	cout << "Hub connected" << endl;
+	cout << "Connected to hub" << endl;
+
+	this_thread::sleep_for(chrono::seconds(2));
 
 	while(1) {
 		ioService.run();
@@ -39,18 +44,26 @@ int main() {
 	return 0;
 }
 
-void cbPacket(const Packet& p) {
+void cbPacket(const Packet& p, Outlet& outlet) {
+	if(p.GetMsgType() != Packet::TYPE_FLOATARRAY) {
+		cout << "Error: Packet received not of type 'Float Array'" << endl;
+		return;
+	}
 
-	switch(p.GetMsgType()) {
-	case Packet::TYPE_INT:
-		cout << "Received int: " << p.GetDataAsInt() << endl;
-	break;
+	auto values = p.GetDataAsFloatArray();
 
-	case Packet::TYPE_FLOAT:
-		cout << "Received float: " << p.GetDataAsFloat() << endl;
-	break;
+	if(values.size() != 3) {
+		cout << "Receive Error: expected array size 3, got " <<
+				values.size() << endl;
+		return;
+	}
 
-	default:
-		cout << "Received non int/float packet" << endl;
+	for(int i = 0; i < 3; i++) {
+		//round the float
+		int actuate = values[i] + 0.5f;
+
+		cout << "Setting outlet " << (i+1) << " to " << actuate << endl;
+
+		outlet.Set(i, actuate);
 	}
 }

@@ -34,6 +34,9 @@ private:
 	static const int BUFFER_SIZE = 1;
 	static const unsigned char PACKET_START_BYTE = 0xAA;
 
+//	int Connect();
+//int Disconnect();
+
 	enum {
 		STATE_READY,
 		STATE_ID,

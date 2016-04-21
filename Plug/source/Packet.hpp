@@ -17,6 +17,7 @@ class Communicator;
 		static const unsigned char TYPE_ID = 0x00;
 		static const unsigned char TYPE_INT = 0x01;
 		static const unsigned char TYPE_FLOAT = 0x02;
+		static const unsigned char TYPE_FLOATARRAY = 0x03;
 
 		Packet();
 		Packet(int nodeID, int msgType,
@@ -30,6 +31,7 @@ class Communicator;
 
 		int32_t GetDataAsInt() const;
 		float GetDataAsFloat() const;
+		vector<float> GetDataAsFloatArray() const;
 
 		void SetNodeID(unsigned int nodeID);
 		void SetMsgType(unsigned char msgType);

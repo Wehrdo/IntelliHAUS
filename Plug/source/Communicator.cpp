@@ -40,6 +40,8 @@ int Node::Communicator::Connect() {
 		return -1;
 	}
 
+	SendPacket(Packet(nodeID, Packet::TYPE_ID, vector<unsigned char>()));
+
 	StartListening();
 
 	return 0;

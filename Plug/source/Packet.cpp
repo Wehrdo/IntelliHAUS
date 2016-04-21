@@ -66,6 +66,26 @@ float Node::Packet::GetDataAsFloat() const {
 	return *(float*)(&bits);
 }
 
+vector<float> Node::Packet::GetDataAsFloatArray() const  {
+	if(msgType != TYPE_FLOATARRAY)
+		throw Exception("Packet::GetDataAsFloatArray: "
+				"Packet is not of type 'TYPE_FLOATARRAY'");
+
+	vector<float> values;
+	int count = data[0];
+
+	for(int i = 0; i < count; i++) {
+		uint32_t bits = data[4*i + 1] << 24;
+		bits |= data[4*i + 2] << 16;
+		bits |= data[4*i + 3] << 8;
+		bits |= data[4*i + 4];
+
+		values.push_back(*(float*)(&bits));
+	}
+
+	return values;
+}
+
 void Node::Packet::SetNodeID(unsigned int nodeID) {
 	this->nodeID = nodeID;
 }
