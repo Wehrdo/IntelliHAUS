@@ -4,13 +4,11 @@
 
 function RuleGraphics() {
     /*
-    Public methods
-     */
-    
-    var leafNodes={};
-    var index=1;
-    if(!id)var id=0;
-    var radius=20;
+	Variables
+	 */
+	var self=this;
+    if(typeof id=='undefined')id=0;
+    var radius = 20;
     var margin = {top: 20, right: 20, bottom: 30, left: 40};
     var width = 960 - margin.left - margin.right;
     var height = 710 - margin.top - margin.bottom;
@@ -21,9 +19,16 @@ function RuleGraphics() {
     var zoom = d3.behavior.zoom()
         .scaleExtent([1/5, 5])
         .on("zoom", zoomed);
-    var svg;
-    	
-    var positionData=[{
+    var svg=d3.select(".rule-drawing")
+			.append("svg")
+			.attr("width", "95%")
+    		.attr("height", window.innerHeight)
+    		.style("outline","#000000 solid 2px")
+    		.attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+    		.call(zoom)
+    		.on("dblclick.zoom", null)
+    		.append("g");
+	var positionData=[{
     	"id":null,
     	"x":null,
     	"y":null,
@@ -32,93 +37,154 @@ function RuleGraphics() {
     	"x1":null,
     	"y1":null,
     	"x2":null,
-    	"y2":null
+    	"y2":null,
+		"id":null
     }];
-    
-    this.updateTree = function() {
-		var nodes=ruleContainer.getRule();
+    var nodes;
+	var depths;
+	
+	/*
+    Public methods
+     */
+	
+    //Create tree on page load
+    self.createTree = function() {
+		var positions=ruleContainer.getPositions();
 		//nodes=translate(nodes, null);
-		prepareLeafNodes(nodes, 1);
-		var depths=setDepths(nodes, 1, 0);
-		var positions=calculatePositions(depths, 1);
-
-		posData(positions);
-		linData(positions);
-		drawNodes(positionData, lineData);
+		self.posData(positions);
+		self.linData(positions);
+		drawNodes();
     };
-
-    
-    /*
+	//Create new 'decision' dot
+	self.addDecision = function(nodeData, pid, range) {
+		var parentX=nodeData[pid].x;
+		var parentY=nodeData[pid].y;
+		var newNode = svg.append("circle")
+			.attr("class", "dot empty" )
+			.attr("cx",  parentX+1 )
+			.attr("cy", parentY )
+			.attr("r", radius)
+			.attr("id", id.toString() )
+			.attr("onclick", "d3.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);sidebar.dotClicked(this.id);" );
+		var newLine = svg.append("line")
+			.attr("class", "branch")
+			.attr("x1", parentX)
+			.attr("y1", parentY)
+			.attr("x2", parentX+1)
+			.attr("y2", parentY)
+			.attr("id", pid+"-"+id)
+			.attr("onmouseenter", "d3.select(this).classed('focus', true);")
+			.attr("onmouseout", "d3.select(this).classed('focus', false);");
+		newLine.moveToBack();
+		d3.select(document.getElementById(pid)).classed("empty", false);
+		updateTree(nodeData);
+	};
+	//Create new 'result' dot
+	self.addResult = function(nodeData, pid, range) {
+		var parentX=nodeData[pid].x;
+		var parentY=nodeData[pid].y;
+		var onclick="d3.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);sidebar.dotClicked("+id.toString()+");";
+		console.log(onclick);
+		var newNode = svg.append("circle")
+			.attr("class", "dot result" )
+			.attr("cx",  parentX+1 )
+			.attr("cy", parentY )
+			.attr("r", radius)
+			.attr("id", id.toString() )
+			.on("click", function() {return "d3.selectAll('.active').classed('active',false);d3.select(this).classed('active',true);sidebar.dotClicked(this.id);"} );
+		var newLine = svg.append("line")
+			.attr("class", "branch")
+			.attr("x1", parentX)
+			.attr("y1", parentY)
+			.attr("x2", parentX+1)
+			.attr("y2", parentY)
+			.attr("id", pid+"-"+id)
+			.attr("onmouseenter", "d3.select(this).classed('focus', true);")
+			.attr("onmouseout", "d3.select(this).classed('focus', false);");
+		newLine.moveToBack();
+		d3.select(document.getElementById(pid)).classed("empty", false);
+		updateTree(nodeData);
+	};
+	
+	self.removeTreeElements = function(nodeData, pid, branchId) {
+		if(nodeData[pid].branches.length==0)
+				d3.select(document.getElementById(pid)).classed("empty", true);
+		remove(document.getElementById(branchId));
+		remove(document.getElementById(pid+"-"+branchId));
+	};
+	self.setDotType = function(nodeData, dotId, newType) {
+		if(newType=='NodeInput')
+		{
+			d3.select(document.getElementById(dotId)).classed("result");
+		}
+	};
+	
+	self.linData = function(nodeData) {
+    	lineData=[];
+    	for(var key in nodeData)
+    	{
+    		var i;
+    		for(i = 0; i < nodeData[key].branches.length; i++)
+    		{
+    			var branch=nodeData[nodeData[key].branches[i]];
+    			lineData.push({
+    				"x1" : nodeData[key].x,
+    				"y1" : nodeData[key].y,
+    				"x2" : branch.x,
+    				"y2" : branch.y,
+					"id" : nodeData[key].dotId+"-"+branch.dotId
+    			});
+    		}
+    	}
+    };
+    self.posData = function(nodeData) {
+    	positionData=[];
+    	for(var key in nodeData)
+    	{
+    		positionData.push({
+    			"id" : nodeData[key].dotId,
+    			"x" : nodeData[key].x,
+    			"y" : nodeData[key].y,
+    			"type" : nodeData[key].type
+    		});
+    	}
+    };
+	self.updateTreeDep = function(nodeData) {
+		updateTree(nodeData);
+	}; 
+	self.updateTreeInd = function() {
+		var positions=RuleContainer.getPositions();
+		updateTree(positions);
+	};
+	
+	/*
     Private methods
      */
-	function translate(tree, pid){
-		var newObj={};
-		var temp={};
-		var branchPush={};
-		var rangePush;
-		id++;
-		var dotId=id,
-			type=Object.keys(tree)[0],
-			branches=[],
-			ranges=[],
-			nodeId=null,
-			data=null,
-			datastreamId=null,
-			parentId=pid;
-		if(type=='NodeInput')
-		{
-			data=tree[type].data;
-			nodeId=tree[type].nodeId;
-		}
-		else
-		{
-			if(tree[type].datastreamId)
-				datastreamId=tree[type].datastreamId;
-			if(tree[type].branches.length)
-			{
-				var i;
-				for(i=0;i<tree[type].branches.length;i++)
-				{
-					branchPush=translate(tree[type].branches[i].action, dotId);
-					for(var key in branchPush)
-						temp[key]=branchPush[key];
-					rangePush=tree[type].branches[i].value;
-					if(!rangePush.length)
-						rangePush=[rangePush, null];
-					branches.push(Object.keys(branchPush)[0]);
-					ranges.push(rangePush);
-				}
-			}
-			else if(tree[type].branches.action)
-			{
-				branchPush=translate(tree[type].branches.action, dotId);
-				rangePush=tree[type].branches.value;
-				if(!rangePush.length)
-					rangePush=[rangePush, null];
-				branches.push(Object.keys(branchPush)[0]);
-				ranges.push(rangePush);
-			}
-			else
-			{
 
-			}
-		}
-		newObj[dotId.toString()]={
-			"dotId" : dotId,
-			"type" : type,
-			"parent" : parentId,
-			"branches" : branches,
-			"ranges" : ranges,
-			"nodeId" : nodeId,
-			"data" : data,
-			"datastreamId" : datastreamId};
-		for(var key in temp)
+	//Moves all svg elements to their desired location transitionally
+	function updateTree(nodeData) {
+		self.posData(nodeData);
+		self.linData(nodeData);
+		for(var key in positionData)
 		{
-			newObj[key]=temp[key];
+			var dot=d3.select(document.getElementById(positionData[key].id));
+			dot.transition()
+				.attr("cx", positionData[key].x)
+				.attr("cy", positionData[key].y)
+				.duration(500);
 		}
-		return newObj;
+		for(var key in lineData)
+		{
+			var line=d3.select(document.getElementById(lineData[key].id));
+			line.transition()
+				.attr("x1", lineData[key].x1)
+				.attr("y1", lineData[key].y1)
+				.attr("x2", lineData[key].x2)
+				.attr("y2", lineData[key].y2)
+				.duration(500);
+		}
 	}
-     function dragstarted(d) {
+    function dragstarted(d) {
       //d3.event.sourceEvent.stopPropagation();
       d3.select(this).classed("dragging", true);
     }
@@ -135,12 +201,13 @@ function RuleGraphics() {
       svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     }
     
-    
+    //Move d3 element to end of siblings
     d3.selection.prototype.moveToFront = function() {
       return this.each(function(){
         this.parentNode.appendChild(this);
       });
     };
+	//Move d3 element to first of siblings
     d3.selection.prototype.moveToBack = function() { 
         return this.each(function() { 
             var firstChild = this.parentNode.firstChild; 
@@ -149,167 +216,35 @@ function RuleGraphics() {
             } 
         }); 
     };
-    function setHeights(nodeData, dotId) {
-    	var height=0;
-    	var branches=nodeData[dotId.toString()].branches;
-    	if(!branches.length)
-    	{
-    		height=2;
-    	}
-    	else
-    	{
-    		var i;
-    		for(i=0;i<branches.length;i++)
-    		{
-    			x=setHeights(nodeData, branches[i]);
-    			height+=x[branches[i].toString()].height;
-    			nodeData[branches[i].toString()]=x[branches[i].toString()];
-    		}
-    	}
-    	nodeData[dotId.toString()].height=height;
-    	return nodeData;
-    }
+	function remove(e) {
+		e.parentElement.removeChild(e);
+	}
 
-    
-    
-    
-    function prepareLeafNodes(nodeData) {
-    	leafNodes={};
-    	index=1;
-    	return getLeafNodes(nodeData, 1);
-    }
-    
-    function getLeafNodes(nodeData, dotId) {
-    	var branches=nodeData[dotId.toString()].branches;
-    	if(!branches.length)
-    	{
-    		leafNodes[dotId.toString()]=index++;
-    	}
-    	else
-    	{
-    		var i;
-    		for(i=0;i<branches.length;i++)
-    		{
-    			getLeafNodes(nodeData, branches[i]);
-    		}
-    	}
-    	return nodeData;
-    }
-    
-    function setDepths(nodeData, dotId, depth) {
-    	var branches=nodeData[dotId.toString()].branches;
-    	if(!branches.length)
-    	{
-    		
-    	}
-    	else
-    	{
-    		var i;
-    		for(i=0;i<branches.length;i++)
-    		{
-    			x=setDepths(nodeData, branches[i], depth+1);
-    			nodeData[branches[i].toString()]=x[branches[i].toString()];
-    		}
-    	}
-    	nodeData[dotId.toString()].depth=depth;
-    	return nodeData;
-    }
-    
-    
-    
-    
-    function calculatePositions(nodeData, dotId) {
-    	var branches=nodeData[dotId.toString()].branches;
-    	var x;
-    	var y=0;
-    	var temp={};
-    	if(!branches.length)
-    	{
-    		x=nodeData[dotId.toString()].depth*160+400;
-    		y=400+(leafNodes[dotId.toString()]-Object.keys(leafNodes).length/2)*80;
-    	}
-    	else
-    	{
-    		var i;
-    		for(i=0;i<branches.length;i++)
-    		{
-    			if(branches[i].y)
-    			{
-    				y+=branches[i].y;
-    			}
-    			else
-    			{
-    				temp=calculatePositions(nodeData, branches[i]);
-    				nodeData[branches[i].toString()]=temp[branches[i].toString()];
-    				y+=nodeData[branches[i].toString()].y;
-    			}
-    		}
-    		y/=branches.length;
-    		x=nodeData[dotId.toString()].depth*160+400;
-    	}
-    	nodeData[dotId.toString()].x=x;
-    	nodeData[dotId.toString()].y=y;
-    	return nodeData;
-    }
-    function linData(nodeData) {
-    	lineData=[];
-    	for(var key in nodeData)
-    	{
-    		var i;
-    		for(i=0;i<nodeData[key].branches.length;i++)
-    		{
-    			var branch=nodeData[nodeData[key].branches[i].toString()];
-    			lineData.push({
-    				"x1": nodeData[key].x,
-    				"y1": nodeData[key].y,
-    				"x2": branch.x,
-    				"y2": branch.y
-    			});
-    		}
-    	}
-    }
-    function posData(nodeData) {
-    	positionData=[];
-    	for(var key in nodeData)
-    	{
-    		positionData.push({
-    			"id": nodeData[key].dotId,
-    			"x": nodeData[key].x,
-    			"y": nodeData[key].y,
-    			"type":nodeData[key].type
-    		});
-    	}
-    }
     	
-    function drawNodes(p, l) {
-    	d3.select("svg").remove();
-    	svg = d3.select(".rule-drawing")
-    		.append("svg")
-    		.attr("width", "95%")
-    		.attr("height", window.innerHeight)
-    		.style("outline","#000000 solid 2px")
-    		.attr("transform", "translate(" + margin.left + "," + margin.right + ")")
-    		.call(zoom)
-    		.on("dblclick.zoom", null)
-    		.append("g");
+    function drawNodes() {
     	var lines=svg.selectAll(".branch")
-    		.data(l)
+    		.data(lineData)
     		.enter()
     		.append("line")
-    		.attr("stroke-width", 2)
-    		.attr("stroke", "black")
-    		.attr("x1", function(d) { return d.x1; })
-    		.attr("y1", function(d) { return d.y1; })
-    		.attr("x2", function(d) { return d.x2; })
-    		.attr("y2", function(d) { return d.y2; });
+			.attr("class", "branch")
+//			.attr("stroke-width", 2)
+//			.attr("stroke", "black")
+			.attr("x1", function(d) { return d.x1; })
+			.attr("y1", function(d) { return d.y1; })
+			.attr("x2", function(d) { return d.x2; })
+			.attr("y2", function(d) { return d.y2; })
+			.attr("id", function(d) { return d.id; })
+			.attr("onmouseenter", function(d) { return "d3.select(this).classed('focus', true);" })
+			.attr("onmouseout", function(d) { return "d3.select(this).classed('focus', false);" });
     	var dots = svg.selectAll(".dot")  
-    		.data(p)
+    		.data(positionData)
     		.enter()
     		.append("circle")
     		.attr("class", function(d) { return "dot "+((d.type=="NodeInput")?"result":"decision"); })
     		.attr("cx", function(d) { return d.x; })
     		.attr("cy", function(d) { return d.y; })
     		.attr("r", radius)
+			.attr("id", function(d) { return d.id; })
     		.attr("onclick", function(d) { return "d3.select('svg').selectAll('.active').classed('active',false);d3.select(this).classed('active',true);sidebar.dotClicked(" + d.id + ");"});
     }
 }
