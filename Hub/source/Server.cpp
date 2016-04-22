@@ -41,10 +41,17 @@ void Hub::Server::Authenticate() {
 		return;
 	}
 
-	http.Post("/authenticate", authMsg,
-			[this](const HTTP::Message& msg) {
-				cbAuthenticate(Exception(), msg);
-			});
+	try {
+		http.Post("/authenticate", authMsg,
+				[this](const HTTP::Message& msg) {
+					cbAuthenticate(Exception(), msg);
+				});
+	}
+	catch(exception &e) {
+		cout << "Authenticate error: " << e.what() << endl;
+
+		return;
+	}
 }
 
 void Hub::Server::cbAuthenticate(const Exception& e, const HTTP::Message& msg) {
@@ -151,7 +158,14 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 			cout << "SendDatapoint complete." << endl;
 	};
 
-	http.Post("/api/datapoint", msg, cbLambda);
+	try {
+		http.Post("/api/datapoint", msg, cbLambda);
+	}
+	catch(exception &e) {
+		cout << "SendDatapoint error: " << e.what() << endl;
+
+		return -1;
+	}
 
 	return 0;
 }
@@ -205,7 +219,14 @@ int Hub::Server::SendDiscrete(int nodeID, int data) {
 			cout << "SendDatapoint complete." << endl;
 	};
 
-	http.Post("/api/datapoint", msg, cbLambda);
+	try {
+		http.Post("/api/datapoint", msg, cbLambda);
+	}
+	catch(exception &e) {
+		cout << "SendDiscrete error: " << e.what() << endl;
+
+		return -1;
+	}
 
 	return 0;
 }
@@ -225,7 +246,13 @@ void Hub::Server::LongPoll() {
 			"x-access-token: " + accessToken + "\r\n"
 			"homeid: " + std::to_string(homeID) + "\r\n";
 
-	http.Get("/api/updates", header, [this](const Hub::HTTP::Message& msg){cbLongPoll(msg);});
+	try {
+		http.Get("/api/updates", header, [this](const Hub::HTTP::Message& msg){cbLongPoll(msg);});
+	}
+	catch(exception &e) {
+		cout << "LongPoll error: " << e.what() << endl;
+		return;
+	}
 }
 
 void Hub::Server::QueryStates() {
@@ -234,7 +261,14 @@ void Hub::Server::QueryStates() {
 			"x-access-token: " + accessToken + "\r\n"
 			"homeid: " + std::to_string(homeID) + "\r\n";
 
-	http.Get("/api/updates/all", header, [this](const Hub::HTTP::Message& msg){cbQueryStates(msg);});
+	try {
+		http.Get("/api/updates/all", header, [this](const Hub::HTTP::Message& msg){cbQueryStates(msg);});
+	}
+	catch(exception &e) {
+		cout << "QueryState error: " << e.what() << endl;
+
+		return;
+	}
 }
 
 
