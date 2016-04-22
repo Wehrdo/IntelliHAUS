@@ -35,7 +35,7 @@ while True:
     decoder.process_raw(buf, False, False)
     hyp = decoder.hyp()
     if hyp != None:
-        print("Best match: " + hyp.hypstr + ", score: " + hyp.best_score + ", confidence: " + logmath.exp(hyp.prob))
+        print("Best match: " + hyp.hypstr + ", score: " + str(hyp.best_score) + ", confidence: " + str(logmath.exp(hyp.prob)))
         comm.send_voice(phrase_map[hyp.hypstr])
         decoder.end_utt()
         decoder.start_utt()
