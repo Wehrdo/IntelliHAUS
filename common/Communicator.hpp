@@ -21,8 +21,8 @@ public:
 	Communicator(uint32_t nodeID, const string& remoteHostName,
 			function<void(const Node::Packet&)> cbPacket);
 
-	int Connect();
-	int Disconnect();
+	//int Connect();
+	//int Disconnect();
 
 	int SendPacket(const Node::Packet& p);
 
@@ -34,8 +34,10 @@ private:
 	static const int BUFFER_SIZE = 1;
 	static const unsigned char PACKET_START_BYTE = 0xAA;
 
-	//int Connect();
-	//int Disconnect();
+	int Connect();
+	int Disconnect();
+
+	bool isConnected;
 
 	enum {
 		STATE_READY,
