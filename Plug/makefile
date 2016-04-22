@@ -32,3 +32,6 @@ $(objdir)/Outlet.o: $(srcdir)/Outlet.cpp $(srcdir)/Outlet.hpp
 
 clean:
 	rm $(objdir)/*.o
+
+cleancommon:
+	rm $(comdir)/$(objdir)/*.o
