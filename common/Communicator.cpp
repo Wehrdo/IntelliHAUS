@@ -12,6 +12,8 @@ Node::Communicator::Communicator(uint32_t nodeID, const string& remoteHostName,
 	state = STATE_READY;
 	isConnected = false;
 
+	Connect();
+
 	cout << "Connector initialized with hostname: " << hostName << endl;
 }
 

@@ -18,13 +18,13 @@ Plug: $(objdir)/Plug.o $(comdir)/$(objdir)/Communicator.o $(comdir)/$(objdir)/Pa
 $(objdir)/Plug.o: $(srcdir)/Plug.cpp $(srcdir)/Plug.hpp
 	$(CC) $(CFLAGS) -c $(srcdir)/Plug.cpp -o $(objdir)/Plug.o
 
-$(objdir)/Communicator.o: $(comdir)/Communicator.cpp $(comdir)/Communicator.hpp
+$(comdir)/$(objdir)/Communicator.o: $(comdir)/Communicator.cpp $(comdir)/Communicator.hpp
 	$(CC) $(CFLAGS) -c $(comdir)/Communicator.cpp -o $(comdir)/$(objdir)/Communicator.o
 
-$(objdir)/Packet.o: $(comdir)/Packet.cpp $(comdir)/Packet.hpp
+$(comdir)/$(objdir)/Packet.o: $(comdir)/Packet.cpp $(comdir)/Packet.hpp
 	$(CC) $(CFLAGS) -c $(comdir)/Packet.cpp -o $(comdir)/$(objdir)/Packet.o
 
-$(objdir)/Exception.o: $(comdir)/Exception.cpp $(comdir)/Exception.hpp
+$(comdir)/$(objdir)/Exception.o: $(comdir)/Exception.cpp $(comdir)/Exception.hpp
 	$(CC) $(CFLAGS) -c $(comdir)/Exception.cpp -o $(comdir)/$(objdir)/Exception.o
 
 $(objdir)/Outlet.o: $(srcdir)/Outlet.cpp $(srcdir)/Outlet.hpp

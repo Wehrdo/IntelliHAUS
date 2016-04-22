@@ -26,7 +26,7 @@ int main() {
 				});
 			});
 
-	comm.Connect();
+	//comm.Connect();
 
 	cout << "Connected to hub" << endl;
 
@@ -39,7 +39,7 @@ int main() {
 		this_thread::sleep_for(chrono::milliseconds(10));
 	}
 
-	comm.Disconnect();
+	//comm.Disconnect();
 
 	return 0;
 }
