@@ -10,6 +10,7 @@ Node::Communicator::Communicator(uint32_t nodeID, const string& remoteHostName,
 	this->cbPacket = cbPacket;
 
 	state = STATE_READY;
+	isConnected = false;
 
 	cout << "Connector initialized with hostname: " << hostName << endl;
 }
