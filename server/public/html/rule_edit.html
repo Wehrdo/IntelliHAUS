@@ -204,6 +204,12 @@
                         class="form-control"></select>
 
                 <h5>Branches</h5>
+                <div class="row branch-row">
+                    <div class="input-group">
+                        <span class="input-group-addon">Event</span>
+                        <span class="form-control">Default</span>
+                    </div>
+                </div>
                 <div data-bind="foreach: ranges" class="form-group">
                     <div class="row branch-row">
                         <div class="branch-delete">
@@ -215,7 +221,7 @@
                         <div class="branch-row">
                             <div class="input-group">
                                 <span class="input-group-addon">Event</span>
-                                <select data-bind="options: $root.remainingEvents,
+                                <select data-bind="options: $root.discreteEvents,
                                                     optionsValue: 'value',
                                                     optionsText: 'label',
                                                     value: $root.ranges()[$index()].value,
@@ -225,7 +231,7 @@
                         </div>
                     </div>
                 </div>
-                <button data-bind="click: addBranch, visible: remainingEvents().length" type="button" class="btn btn-block btn-primary">New branch</button>
+                <button data-bind="click: addBranch, visible: $root.ranges().length != $root.discreteEvents().length" type="button" class="btn btn-block btn-primary">New branch</button>
             </div>
         </div>
 

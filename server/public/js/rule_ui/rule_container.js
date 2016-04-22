@@ -27,12 +27,12 @@ function RuleContainer() {
 	};
 
     self.updateRanges = function(nid, newRanges) {
-        treeMap[nid].ranges = newRanges;
-		var arr=checkBrokenBranches(treeMap, nid);
-		sortBranches(nid, arr);
-		var positions=prepareTreeUpdate();
-		ruleGraphics.updateTreeDep(positions);
-		//checkBranches(nid);
+        // treeMap[nid].ranges = newRanges;
+		// var arr=checkBrokenBranches(treeMap, nid);
+		// sortBranches(nid, arr);
+		// var positions=prepareTreeUpdate();
+		// ruleGraphics.updateTreeDep(positions);
+		// //checkBranches(nid);
     };
 
     self.getRule = function() {
@@ -151,8 +151,10 @@ function RuleContainer() {
 			{
 				lifetime=tree[type].lifetime;
 				var default_translated = translate(tree[type].default, dotId);
-				newObj[default_translated.dotId] = default_translated;
-				def = default_translated.dotId;
+                for (var key in default_translated)
+                    temp[key] = default_translated[key];
+                // TODO: Don't assume Object.keys() has the order items were added
+				def = Object.keys(default_translated)[0];
 			}
             if (tree[type].branches.length) {
                 var i;
@@ -270,8 +272,9 @@ function RuleContainer() {
 		return branchArr;
 	}
 	function prepareTreeUpdate() {
-		var leafNodes=prepareLeafNodes(treeMap);
-		var depths=setTreeDepth(treeMap);
+		var newObject = jQuery.extend(true, {}, treeMap);
+		var leafNodes=prepareLeafNodes(newObject);
+		var depths=setTreeDepth(newObject);
 		var positions=calculatePositions(depths, "1", leafNodes);
 		return positions;
 	}
@@ -374,11 +377,7 @@ function RuleContainer() {
     	return setDepths(nodeData, 1, 0);
     }
 	function calculatePositions(nodeData, dotId, leafNodes) {
-    	if(nodeData[dotId].default)
-		{
-			nodeData[dotId].branches.splice(0,0,)
-		}
-		var branches=nodeData[dotId].branches;
+    	var branches=nodeData[dotId].branches;
     	var x;
     	var y=0;
     	var temp={};

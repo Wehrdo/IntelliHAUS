@@ -20,6 +20,13 @@ function SidebarModel() {
         }
         if (dotData.type === 'DataDecision') {
             self.selectedDatastream(dotData.datastreamId);
+        }
+        if (dotData.type === "EventDecision") {
+            // Convert to ranges if EventDecision
+            self.ranges(dotData.ranges.map(function(value) {
+                return {value: value}
+            }));
+        } else {
             // Convert ranges array to array of objects.
             // Knockout doesn't like arrays of mixed types
             self.ranges(dotData.ranges.map(function(range) {
@@ -27,11 +34,6 @@ function SidebarModel() {
                     start: range[0],
                     end: range[1]
                 }
-            }));
-        } else if (dotData.type === 'EventDecision') {
-            // Convert to ranges if EventDecision
-            self.ranges(dotData.ranges.map(function(value) {
-                return {value: value}
             }));
         }
         self.branches = dotData.branches;
@@ -155,10 +157,7 @@ function SidebarModel() {
     // The ranges for each corresponding branch
     self.ranges = ko.observableArray();
 
-    self.remainingEvents = ko.computed(function() {
-        var used_events = self.ranges().map(function(valObj) {
-            return valObj.value;
-        });
+    self.discreteEvents = ko.computed(function() {
         if (self.curType() == "EventDecision" && self.getActiveDatastream()) {
             var labels = self.getActiveDatastream().discreteLabels;
             var remaining = [];
