@@ -1,14 +1,14 @@
 #include "Server.hpp"
 
 
-Hub::Server::Server(int homeID, string url, const string& username,
+Hub::Server::Server(int homeID, const string& url, const string& username,
 			const string& password,
 			function<void(const vector<ServerUpdate>&)> cbUpdate)
-			: http(url), userName(username), password(password) {
+			: http(url, [this](){cbConnect();}),
+			userName(username), password(password),
+			asyncThread([this](){ThreadRoutine();}) {
 	this->homeID = homeID;
 	this->cbUpdate = cbUpdate;
-
-	Connect(cbConnect);
 }
 
 Hub::Server::~Server() {
@@ -20,297 +20,92 @@ void Hub::Server::ThreadRoutine() {
 		ioService.run();
 		ioService.reset();
 
-		this_thread::wait_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(10));
 	}
 }
 
-void cbConnect() {
-	ioService.post([this](){
-		Authenticate([this](const Exception& e) {
-			cbAuthenticate(e);
-		}
-	});
+void Hub::Server::cbConnect() {
+	cout << "cbConnect" << endl;
+	ioService.post([this](){ Authenticate(); });
 }
 
-int Hub::Server::Authenticate(function<void(const Exception& e)> cb) {
+void Hub::Server::Authenticate() {
 	HTTP::Message authMsg("Connection: keep-alive\r\nContent-Type: application/json\r\n",
-				string("{\"username\": \"") + username + "\",\r\n"
+				string("{\"username\": \"") + userName + "\",\r\n"
 				"\"password\": \"" + password + "\"}");
 
-	if(!isConnected) {
-		cb(Exception(Error_Code::SERVER_NOT_CONNECTED,
-				"Server::Authenticate error: not connected"));
-
+	if(!http.IsConnected()) {
+//		cbAuthenticate(Exception(Error_Code::SERVER_NOT_CONNECTED,
+//				"Server::Authenticate error: not connected"), HTTP::Message());
+		cout << "Not connected." << endl;
 		return;
 	}
 
-	auto authResp = http.Post("/authenticate", authMsg,
-				[this](const Message& msg) {
-					cbAuthenticate(msg);
-				});
+	http.Post("/authenticate", authMsg,
+			[this](const HTTP::Message& msg) {
+				cbAuthenticate(Exception(), msg);
+			});
 }
 
-	Json::Value jsonResp;
-	stringstream jsonStream(authResp.GetBody());
+void Hub::Server::cbAuthenticate(const Exception& e, const HTTP::Message& msg) {
+	cout << "cbAuthenticate" << endl;
 
-	jsonStream >> jsonResp;
+	cout << "HTTP Message:\r\n" << msg.GetBody() << endl;
+
+	if(e.GetErrorCode() == Error_Code::SERVER_NOT_CONNECTED) {
+		cout << "Authenticate error: Server not connected.";
+	}
+
+	Json::Value jsonResp;
+	stringstream jsonStream(msg.GetBody());
+
+	try {
+		jsonStream >> jsonResp;
+	}
+	catch(exception& e) {
+		cout << "Authenticate exception: " << e.what() << endl;
+		cout << "JSON String: " << msg.GetBody() << endl;
+		return;
+	}
+	catch(...) {
+		cout << "ERROR. Json string: " << msg.GetBody() << endl;
+		return;
+	}
 
 	bool success;
 
 	try {
 		success = jsonResp.get("success", false).asBool();
 	}
-	catch(Exception &e) {
-		cb(e);
-
-		return;
-	}
 	catch(exception &e) {
 		cout << "Authenticate exception caught: " << e.what() << endl;
-		return -1;
+		return;
 	}
 
 	if(!success) {
-		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
-				"Authenticate exception: " +
-			jsonResp.get("error", "Unspecified error").asString());
+		//throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
+		//		"Authenticate exception: " +
+		//	jsonResp.get("error", "Unspecified error").asString());
+		cout << "Authentication error: " <<
+			jsonResp.get("error", "Unspecified error").asString() << endl;
+
+		return;
 	}
 
 	accessToken = jsonResp.get("token", "").asString();
 
 	LongPoll();
 
-	return 0;
-}
+	cout << "cbAuthenticate finished." << endl;
 
-int Hub::Server::CreateUser(const string& username, const string& password,
-				const string& firstName, const string&lastName,
-				const string& email) {
-	Json::Value jsonBody;
-	stringstream bodyStream;
-
-	jsonBody["username"] = username;
-	jsonBody["password"] = password;
-	jsonBody["firstname"] = firstName;
-	jsonBody["lastname"] = lastName;
-	jsonBody["email"] = email;
-
-	bodyStream << jsonBody;
-
-	string header = "Connection: keep-alive\r\nContent-Type: application/json\r\n";
-	HTTP::Message msg(header, bodyStream.str());
-
-	cout << "Header:\n" << msg.ToString() << endl;
-
-	auto userResp = http.PostBlocking("/signup", msg);
-
-	cout << "Server response:\n" << userResp.ToString() << endl;
-
-	Json::Value jsonResp;
-	stringstream streamResp(userResp.GetBody());
-
-	streamResp >> jsonResp;
-
-	bool success;
-
-	try {
-		success = jsonResp.get("success", false).asBool();
-	}
-	catch(exception &e) {
-		cout << "CreateUser exception caught: " << e.what() << endl;
-		return -1;
-	}
-
-	if(!success) {
-		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
-			"Create User exception: " +
-			jsonResp.get("error", "Unspecified error").asString());
-	}
-
-	return 0;
-}
-
-int Hub::Server::CreateHome(const string& homeName) {
-	if(accessToken.length() == 0) {
-		throw Exception(Error_Code::SERVER_ERROR_NOT_AUTHENTICATED,
-					"Create Home exception: "
-					"authentication needed");
-	}
-
-	Json::Value jsonParams;
-	stringstream bodyStream;
-
-	jsonParams["name"] = homeName;
-
-	bodyStream << jsonParams;
-
-	string header = "Connection: keep-alive\r\n"
-			"Content-Type: application/json\r\n"
-			"x-access-token:" + accessToken + "\r\n";
-	HTTP::Message msg(header, bodyStream.str());
-
-	cout << "User message:\r\n" << msg.ToString() << endl;
-
-	auto userResp = http.PostBlocking("/api/home", msg);
-
-	cout << "Server response:\n" << userResp.ToString() << endl;
-
-	Json::Value jsonResp;
-	stringstream streamResp(userResp.GetBody());
-
-	streamResp >> jsonResp;
-
-	return 0;
-}
-
-int Hub::Server::GetHomeID(const string& homeName) {
-	if(accessToken.length() == 0) {
-		throw Exception(Error_Code::SERVER_ERROR_NOT_AUTHENTICATED,
-					"GetHomeID exception: "
-					"authentication needed");
-	}
-
-	string header = "Connection: keep-alive\r\n"
-			"x-access-token: " + accessToken + "\r\n";
-
-	auto msg = http.GetBlocking("/api/home", header);
-
-	Json::Value jsonResp;
-	stringstream streamResp(msg.GetBody());
-
-	streamResp >> jsonResp;
-
-	bool success = jsonResp.get("success", false).asBool();
-
-	if(!success) {
-		throw Exception(Error_Code::SERVER_ERROR_NOT_AUTHENTICATED,
-				"GetHomeID exception: " +
-				jsonResp.get("error", "unspecified error").asString());
-	}
-
-	Json::Value jsonHomes = jsonResp["homes"];
-
-	if(!jsonHomes.isArray()) {
-		throw Exception(Error_Code::SERVER_ERROR_INVALID_JSON_RESPONSE,
-				"GetHomeID exception: "
-				"JSON homes array not given");
-	}
-
-	int homeID = -1;
-
-	for(auto &home : jsonHomes) {
-		int id = home.get("id", "-1").asInt();
-		string name = home.get("name", "").asString();
-
-		if(name == homeName) {
-			homeID = id;
-			break;
-		}
-	}
-
-	return homeID;
-}
-
-int Hub::Server::CreateDatastream(const string& name, Datatype datatype) {
-	Json::Value jsonRequest;
-	stringstream streamRequest;
-
-	jsonRequest["name"] = name;
-
-	switch(datatype) {
-	case DISCRETE:
-		jsonRequest["datatype"] = "discrete";
-		break;
-	case BINARY:
-		jsonRequest["datatype"] = "binary";
-		break;
-	case CONTINUOUS:
-	default:
-		jsonRequest["datatype"] = "continuous";
-		break;
-	}
-
-	streamRequest << jsonRequest;
-	string header = "Connection: keep-alive\r\n"
-			"Content-Type: application/json\r\n"
-			"x-access-token: " + accessToken + "\r\n";
-
-	HTTP::Message msg(header, streamRequest.str());
-
-	auto msgResp = http.PostBlocking("/api/datastream", msg);
-
-	Json::Value jsonResp;
-	stringstream streamResp(msgResp.GetBody());
-
-	streamResp >> jsonResp;
-
-	bool success = jsonResp.get("success", "false").asBool();
-
-	if(!success) {
-		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
-			"CreateDatastream exception: " +
-			jsonResp.get("error", "No error specified").asString());
-	}
-
-	return jsonResp.get("id", "-1").asInt();
-}
-
-int Hub::Server::CreateNode(int homeID, const string& name,
-			Datatype datatype, const string& outputName,
-			int streamID) {
-	Json::Value jsonRequest;
-	stringstream streamRequest;
-
-	jsonRequest["homeid"] = homeID;
-	jsonRequest["name"] = name;
-	jsonRequest["outputname"] = outputName;
-	jsonRequest["datastreamid"] = streamID;
-
-	switch(datatype) {
-	case DISCRETE:
-		jsonRequest["outputtype"] = "discrete";
-		break;
-	case BINARY:
-		jsonRequest["outputtype"] = "binary";
-		break;
-	case CONTINUOUS:
-	default:
-		jsonRequest["outputtype"] = "continuous";
-		break;
-	}
-
-	streamRequest << jsonRequest;
-	string header = "Connection: keep-alive\r\n"
-			"Content-Type: application/json\r\n"
-			"x-access-token: " + accessToken + "\r\n";
-
-	HTTP::Message msg(header, streamRequest.str());
-
-//	cout << "HTTP Request:\r\n" << msg.ToString() << endl;
-
-	auto msgResp = http.PostBlocking("/api/node", msg);
-
-	Json::Value jsonResp;
-	stringstream streamResp(msgResp.GetBody());
-
-	streamResp >> jsonResp;
-
-	bool success = jsonResp.get("success", "false").asBool();
-
-//	cout << msgResp.ToString() << endl;
-
-	if(!success) {
-		throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
-			"CreateNode exception: " +
-			jsonResp.get("error", "No error specified").asString());
-	}
-
-	return jsonResp.get("id", "-1").asInt();
+	return;
 }
 
 int Hub::Server::SendDatapoint(int nodeID, float data) {
 	Json::Value jsonRequest;
 	stringstream streamRequest;
+
+	cout << "SendDatapoint" << endl;
 
 	jsonRequest["nodeid"] = nodeID;
 	jsonRequest["data"] = data;
@@ -359,23 +154,81 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 	return 0;
 }
 
+
+int Hub::Server::SendDiscrete(int nodeID, int data) {
+	Json::Value jsonRequest;
+	stringstream streamRequest;
+
+	cout << "SendDatapoint" << endl;
+
+	jsonRequest["nodeid"] = nodeID;
+	jsonRequest["data"] = data;
+
+	streamRequest << jsonRequest;
+
+	string header = "Connection: keep-alive\r\n"
+			"Content-Type: application/json\r\n"
+			"x-access-token: " + accessToken + "\r\n";
+
+	HTTP::Message msg(header, streamRequest.str());
+
+	auto cbLambda = [](const HTTP::Message& msgResp) {
+		Json::Value jsonResp;
+		stringstream streamResp(msgResp.GetBody());
+
+		streamResp >> jsonResp;
+
+		bool success;
+
+		try {
+			success = jsonResp.get("success", "false").asBool();
+		}
+		catch(exception &e) {
+			cout << "SendDatapoint exception caught: " << e.what() << endl;
+			return -1;
+		}
+		catch(...) {
+			cout << "SendDatapoint non std::exception"
+				"exception caught." << endl;
+		}
+
+		if(!success) {
+			cout << "SendDatapoint exception: " <<
+				jsonResp.get("error", "No error specified")
+					.asString();
+
+			//TODO: Check error, retry
+		}
+		else
+			cout << "SendDatapoint complete." << endl;
+	};
+
+	http.Post("/api/datapoint", msg, cbLambda);
+
+	return 0;
+}
+
+
+
 void Hub::Server::LongPoll() {
 	string header = "Connection: keep-alive\r\n"
 			"Content-Type: application/json\r\n"
 			"x-access-token: " + accessToken + "\r\n"
 			"homeid: " + std::to_string(homeID) + "\r\n";
 
-	http.Get("/api/rule/updates", header, [this](const Hub::HTTP::Message& msg){cbLongPoll(msg);});
+	http.Get("/api/updates", header, [this](const Hub::HTTP::Message& msg){cbLongPoll(msg);});
 }
 
 void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
+	cout << "cbLongPoll" << endl;
 
 	Json::Value jsonResp;
 
 	stringstream streamResp(msg.GetBody());
 	stringstream testStream;
 
-	streamResp >> jsonResp;
+	//TODO: put try/catch block here
+		streamResp >> jsonResp;
 
 	bool success;
 

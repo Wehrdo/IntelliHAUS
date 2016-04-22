@@ -32,9 +32,11 @@ string Hub::HTTP::Message::ToString() const {
 }
 
 
-Hub::HTTP::HTTP(string hostName)
+Hub::HTTP::HTTP(string hostName, function<void()> extCbConnect)
 		: hostName(hostName),
 		asyncThread([this](){ThreadRoutine();}) {
+
+		this->extCbConnect = extCbConnect;
 
 		Connect();
 }
@@ -58,7 +60,7 @@ int Hub::HTTP::Connect() {
 	boost::asio::ip::tcp::resolver::query query(hostName, "http");
 
 	//Resolve IP addresses for hostName
-	boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+	boost::asio::ip::tcp::resolver::iterator endpointIterator = resolver.resolve(query);
 
 	//Create a socket
 	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));
@@ -76,6 +78,10 @@ int Hub::HTTP::Connect() {
 	return 0;
 }
 
+bool Hub::HTTP::IsConnected() {
+	return isConnected;
+}
+
 void Hub::HTTP::cbConnect(const boost::system::error_code& error) {
 	if(error) {
 		cout << "Async connect error: " << error.message() << endl;
@@ -87,6 +93,9 @@ void Hub::HTTP::cbConnect(const boost::system::error_code& error) {
 		isConnected = true;
 
 		cout << "Async connected." << endl;
+
+		//Notify on connection
+		extCbConnect();
 
 		StartListening();
 	}
@@ -166,7 +175,7 @@ void Hub::HTTP::cbReceive(const boost::system::error_code& error, size_t bytesTr
 void HTTP::Get(const string &path, const string &header,
 			function<void(const Message&)> callback) {
 	if(!isConnected)
-		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
+		throw Exception(Error_Code::HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
 
 	boost::asio::streambuf request, response;
 	boost::system::error_code error;
@@ -198,7 +207,7 @@ void HTTP::Get(const string &path, const string &header,
 void Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessage,
 					function<void(const Message&)> callback) {
 	if(!isConnected)
-		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
+		throw Exception(Error_Code::HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
 
 	boost::asio::streambuf request, response;
 	boost::system::error_code error;
@@ -227,7 +236,7 @@ void Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessage,
 
 Hub::HTTP::Message Hub::HTTP::GetBlocking(const string& path, const string& header) {
 	if(!isConnected)
-		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
+		throw Exception(Error_Code::HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
 
 	Message msg;
 	mutex blockMutex;
@@ -246,7 +255,7 @@ Hub::HTTP::Message Hub::HTTP::GetBlocking(const string& path, const string& head
 
 Hub::HTTP::Message Hub::HTTP::PostBlocking(const string& path, const Hub::HTTP::Message& postMessage) {
 	if(!isConnected)
-		throw Exception(HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
+		throw Exception(Error_Code::HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
 
 	Message msg;
 	mutex blockMutex;

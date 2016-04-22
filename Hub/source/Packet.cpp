@@ -41,7 +41,7 @@ const vector<unsigned char>&  Hub::Packet::GetData() const {
 }
 
 int32_t Hub::Packet::GetDataAsInt() const {
-	if(msgType != TYPE_INT)
+	if(msgType != TYPE_INT && msgType != TYPE_DISCRETE)
 		throw Exception(Error_Code::PACKET_WRONG_TYPE,
 				"Packet::GetDataAsInt: "
 				"Packet is not of type 'TYPE_INT'");

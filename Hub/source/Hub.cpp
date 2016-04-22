@@ -51,6 +51,14 @@ void PacketCallback(Hub::Packet p, Server &server) {
 			server.SendDatapoint(nodeID, p.GetDataAsFloat());
 		break;
 
+		case Packet::TYPE_DISCRETE: {
+			int val = p.GetDataAsInt();
+			cout << "Received discrete value '" << val << "' from node " <<
+				nodeID << endl;
+			server.SendDiscrete(nodeID, val);
+		}
+		break;
+
 		default:
 			message = "Received unimplemented message type from"
 				"node " + to_string(nodeID) + ": " +
@@ -65,7 +73,7 @@ int main() {
 	boost::asio::io_service ioService;
 	shared_ptr<NodeServer> nodeServer;
 
-	Server server(HOMEID, SERVER_URL,
+	Server server(HOMEID, SERVER_URL, USERNAME, PASSWORD,
 		[&ioService, &nodeServer](const vector<Server::ServerUpdate>& updates) {
 					cout << "Immediately received " << updates.size() << endl;
 					ioService.post([&nodeServer, updates]() {
@@ -83,28 +91,6 @@ int main() {
 
 	cout << "NodeServer created" << endl;
 
-	int retVal = server.Connect();
-	if(retVal < 0) {
-		cout << "Error connecting to server." << endl;
-		return -1;
-	}
-
-	cout << "Server connected" << endl;
-
-	this_thread::sleep_for(chrono::seconds(2));
-
-	try {
-		server.Authenticate(USERNAME, PASSWORD);
-	}
-	catch(exception e) {
-		cout << "Exception caught: " << e.what() << endl;
-		return -1;
-	}
-
-	cout << "Server authenticated" << endl;
-
-	this_thread::sleep_for(chrono::seconds(2));
-
 	try {
 		nodeServer->Start();
 	}
@@ -121,8 +107,6 @@ int main() {
 
 		this_thread::sleep_for(chrono::milliseconds(10));
 	}
-
-	server.Disconnect();
 
 	return 0;
 }

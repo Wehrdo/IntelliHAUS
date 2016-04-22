@@ -35,16 +35,20 @@ public:
 	bool IsConnected();
 
 	int SendDatapoint(int nodeID, float data);
+	int SendDiscrete(int nodeID, int data);
 private:
-	void Connect();
-	void Disconnect();
+//	void Connect();
+//	void Disconnect();
 
 	void Authenticate();
+	void cbAuthenticate(const Exception& e, const HTTP::Message& msg);
 
 	void LongPoll();
 	void cbLongPoll(const Hub::HTTP::Message& msg);
 
 	void ThreadRoutine();
+
+	void cbConnect();
 
 	function<void(const vector<ServerUpdate>&)> cbUpdate;
 
@@ -54,7 +58,7 @@ private:
 
 	Hub::HTTP http;
 	int homeID;
-	string accessToken, username, password;
+	string accessToken, userName, password;
 	bool isConnected;
 };
 

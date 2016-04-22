@@ -1,4 +1,5 @@
 #ifndef ERROR_CODE
+#define ERROR_CODE
 
 namespace Hub
 {

@@ -12,6 +12,8 @@
 #include <queue>
 #include <mutex>
 
+#include "Exception.hpp"
+
 using namespace std;
 //using namespace Hub;
 
@@ -40,7 +42,7 @@ public:
 			string header, body;
 	};
 
-	HTTP(string hostName);
+	HTTP(string hostName, function<void()> extCbConnect);
 	~HTTP();
 
 	bool IsConnected();
@@ -67,13 +69,16 @@ private:
 	int ParseBodyLength(const string& header);
 	void ThreadRoutine();
 	void ProcessSingleChar(char ch);
+
 	void cbReceive(const boost::system::error_code& error, size_t bytesTransferred);
+	void cbConnect(const boost::system::error_code& error);
 
 	string hostName;
 	boost::asio::io_service ioService;
 	unique_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 	thread asyncThread;
 	queue<function<void(const Message&)>> respQueue;
+	function<void()> extCbConnect;
 	bool isConnected;
 };
 

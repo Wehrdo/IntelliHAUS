@@ -11,11 +11,13 @@ namespace Hub {
 
 class Exception : public exception {
 public:
+	Exception();
+
 	Exception(int code, const string& msg);
 
 	virtual const char* what() const noexcept;
 
-	int GetErrorCode();
+	int GetErrorCode() const;
 
 	operator bool();
 
