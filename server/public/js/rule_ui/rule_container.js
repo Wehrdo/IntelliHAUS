@@ -68,8 +68,18 @@ function RuleContainer() {
     // Set the type for an existing dot
     self.setDotType = function(dotId, newType) {
         treeMap[dotId].type = newType;
-        ruleGraphics.setDotType(dotId, newType);
-    };
+		console.log(newType);
+		
+		if(newType=="EventDecision")
+		{
+			id++;
+			console.log("hi");
+			var positions=prepareTreeUpdate();
+			ruleGraphics.addDefault(positions, dotId);
+			ruleGraphics.setDotType(positions, dotId, newType);
+			console.log(positions);
+		}
+	};
 	self.deleteAllBranches = function(nid) {
 		//console.log(treeMap[nid].branches);
 		//console.log(treeMap[nid].branches.length);
@@ -419,8 +429,8 @@ function RuleContainer() {
 		var nodeId=node.nodeId;
 		var data=node.data;
 		var ranges=node.ranges;
-		var nodeDefault=node.nodeDefault;
-		var lifetime=node.lifetime;
+		//var nodeDefault=node.default;
+		//var lifetime=node.lifetime;
 		if(type=="NodeInput")
 		{
 			forServer[type]={
@@ -441,8 +451,9 @@ function RuleContainer() {
 			if(type=="EventDecision")
 			{
 				forServer[type].lifetime = node.lifetime;
-				forServer[type]["default"] = node.nodeDefault;
+				forServer[type]["default"] = node.default;
 				forServer[type].datastreamId = node.datastreamId;
+				
 			}
 			else if(type=="DataDecision")
 			{

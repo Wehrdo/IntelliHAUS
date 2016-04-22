@@ -89,7 +89,7 @@ function RuleGraphics() {
 			.attr("cy", parentY )
 			.attr("r", radius)
 			.attr("id", id.toString() )
-			.on("click", function() {return "ruleGraphics.changeActiveNode(this.id);sidebar.dotClicked(this.id);"} );
+			.attr("onclick", "ruleGraphics.changeActiveNode(this.id);sidebar.dotClicked(this.id);" );
 		var newLine = svg.append("line")
 			.attr("class", "branch")
 			.attr("x1", parentX)
@@ -116,6 +116,28 @@ function RuleGraphics() {
 			d3.select(document.getElementById(dotId)).classed("result");
 		}
 	};
+	self.addDefault = function(nodeData, pid) {
+		var parentX=nodeData[pid].x;
+		var parentY=nodeData[pid].y;
+		var newNode = svg.append("circle")
+			.attr("class", "dot decision empty" )
+			.attr("cx",  parentX+1 )
+			.attr("cy", parentY )
+			.attr("r", radius)
+			.attr("id", id.toString() )
+			.attr("onclick", "ruleGraphics.changeActiveNode(this.id);sidebar.dotClicked(this.id);" );
+		var newLine = svg.append("line")
+			.attr("class", "branch default")
+			.attr("x1", parentX)
+			.attr("y1", parentY)
+			.attr("x2", parentX+1)
+			.attr("y2", parentY)
+			.attr("id", pid+"-"+id)
+			.attr("onmouseenter", "d3.select(this).classed('focus', true);")
+			.attr("onmouseout", "d3.select(this).classed('focus', false);");
+		newLine.moveToBack();
+		updateTree(nodeData);
+	}
 	self.changeActiveNode = function(nid) {
 		d3.selectAll(".dot")
 			.classed("active", false);

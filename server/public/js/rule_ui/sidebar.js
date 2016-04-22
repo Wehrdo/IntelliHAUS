@@ -38,7 +38,6 @@ function SidebarModel() {
         }
         self.branches = dotData.branches;
         self.curType(dotData.type);
-        console.log(dotId);
     };
 
     self.branchesChanged = function() {
@@ -66,6 +65,7 @@ function SidebarModel() {
     // Type was selected for a previously EmptyDecision
     self.setDotType = function() {
         ruleContainer.setDotType(curDot, self.curType());
+		console.log(self.curType());
     };
 
     self.deleteDot = function() {
