@@ -50,6 +50,10 @@
     flex-basis: 0;
 }
 
+.default-box {
+    border-color: lightgreen;
+    border-width: 2px;
+}
 
 /*For graphics*/
 

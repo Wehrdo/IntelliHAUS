@@ -21,16 +21,18 @@ function SidebarModel() {
         if (dotData.type === 'DataDecision' || dotData.type === 'EventDecision') {
             self.selectedDatastream(dotData.datastreamId);
         }
+        if (dotData.type === 'EventDecision') {
+            // Initialize the lifetime of an event
+            self.eventLifetime(dotData.lifetime);
+        }
         // Convert ranges array to array of objects.
         // Knockout doesn't like arrays of mixed types
-        console.log(dotData.ranges);
         self.ranges(dotData.ranges.map(function(range) {
             return {
                 start: range[0],
                 end: range[1]
             }
         }));
-        console.log(self.ranges());
         self.branches = dotData.branches;
         self.curType(dotData.type);
     };
@@ -40,7 +42,6 @@ function SidebarModel() {
         var ranges_array = self.ranges().map(function (rangeObj) {
             return [rangeObj.start, rangeObj.end];
         });
-        console.log('hey!', ranges_array);
         ruleContainer.updateRanges(curDot, ranges_array);
     };
     self.currentDot = function() {
@@ -148,7 +149,7 @@ function SidebarModel() {
     self.ranges = ko.observableArray();
 
     self.discreteEvents = ko.computed(function() {
-        if (self.curType() == "EventDecision" && self.getActiveDatastream()) {
+        if (self.curType() == "EventDecision" && self.getActiveDatastream() && self.getActiveDatastream().datatype == "discrete") {
             var labels = self.getActiveDatastream().discreteLabels;
             var remaining = [];
             for (var i = 0; i < labels.length; i++) {
@@ -161,6 +162,12 @@ function SidebarModel() {
         } else {
             return [];
         }
+    });
+
+    self.eventLifetime = ko.observable();
+    // Notify ruleContainer of updates to lifetime
+    self.eventLifetime.subscribe(function() {
+        ruleContainer.setLifetime(curDot, self.eventLifetime());
     });
 
     // Add a new branch
