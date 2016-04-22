@@ -111,7 +111,7 @@ function RuleContainer() {
 				"data" : [],
 				"datastreamId" : null,
 				"default" : null,
-				"lifetime" : null
+				"lifetime" : 1
 				};
 			var positions=prepareTreeUpdate();
 			ruleGraphics.addDefault(positions, dotId);
@@ -121,6 +121,10 @@ function RuleContainer() {
 	self.deleteAllBranches = function(nid) {
 		//console.log(treeMap[nid].branches);
 		//console.log(treeMap[nid].branches.length);
+		if(treeMap[nid].type=="EventDecision")
+		{
+			self.deleteBranch(treeMap[nid].default);
+		}
 		var branches=treeMap[nid].branches;
 		var length=branches.length;
 		for(var i = 0; i < length; i++)
@@ -133,12 +137,20 @@ function RuleContainer() {
 		return treeMap[nid].parent;
 	}
     self.deleteBranch = function(branchId) {
+		
 		var pid=treeMap[branchId].parent;
-        var i=treeMap[pid.toString()].branches.indexOf(branchId);
+		if(treeMap[pid].default)
+		{
+			treeMap=removeSubtree(treeMap, pid, nodeData[pid].default);
+			var positions=prepareTreeUpdate();
+			ruleGraphics.updateTreeDep(positions);
+		}
+        var i=treeMap[pid].branches.indexOf(branchId);
 		if(i > -1)
 		{
-			treeMap[pid.toString()].branches.splice(i,1);
-			treeMap[pid.toString()].ranges.splice(i,1);
+			treeMap[pid].branches.splice(i,1);
+			treeMap[pid].ranges.splice(i,1);
+			
 			treeMap=removeSubtree(treeMap, pid, branchId);
 			var positions=prepareTreeUpdate();
 			ruleGraphics.updateTreeDep(positions);
@@ -161,6 +173,9 @@ function RuleContainer() {
     // Set the ID to use for a datastream in a DataDecision
     self.setDatastream = function(dotId, dsId) {
         treeMap[dotId].datastreamId = dsId;
+    };
+	self.setLifetime = function(dotId, lt) {
+        treeMap[dotId].lifetime = lt;
     };
     
 	/*
@@ -343,6 +358,10 @@ function RuleContainer() {
 		ruleGraphics.removeTreeElements(nodeData, pid, branchId);
 		if(!nodeData[branchId])
 			return nodeData;
+		if(nodeData[branchId].default)
+		{
+			
+		}
 		if(!nodeData[branchId].branches.length)
 		{
 			delete nodeData[branchId];
