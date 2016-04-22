@@ -43,7 +43,8 @@ function SidebarModel() {
     };
     self.currentDot = function() {
         return curDot;
-    }
+    };
+
     /*
      Knockout Bindings
      */
@@ -182,7 +183,6 @@ function SidebarModel() {
                 return ('00' + hours).substr(-2) + ':' + ('00' + minutes).substr(-2);
             },
             write: function(value) {
-                self.branchesChanged();
                 var hours = Number.parseInt(value.substr(0, 2));
                 var minutes = Number.parseInt(value.substr(3, 2));
                 var total_minutes = hours*60 + minutes;
@@ -190,6 +190,7 @@ function SidebarModel() {
                     total_minutes = 1440;
                 }
                 obj[prop] = hours*60 + minutes;
+                self.branchesChanged();
             }
         });
     };
