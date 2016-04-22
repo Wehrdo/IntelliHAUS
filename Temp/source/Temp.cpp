@@ -20,7 +20,7 @@ int main() {
 
 	this_thread::sleep_for(chrono::seconds(2));
 
-	comm.Connect();
+	//comm.Connect();
 
 	for(;;) {
 		ifstream sensor(sensorPath);
@@ -64,7 +64,7 @@ int main() {
 		this_thread::sleep_for(chrono::milliseconds(DELAY));
 	}
 
-	comm.Disconnect();
+	//comm.Disconnect();
 
 	return 0;
 }

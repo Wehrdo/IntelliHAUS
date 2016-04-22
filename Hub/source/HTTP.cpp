@@ -59,8 +59,22 @@ int Hub::HTTP::Connect() {
 	//Initialize resolver query
 	boost::asio::ip::tcp::resolver::query query(hostName, "http");
 
-	//Resolve IP addresses for hostName
-	boost::asio::ip::tcp::resolver::iterator endpointIterator = resolver.resolve(query);
+	boost::asio::ip::tcp::resolver::iterator endpointIterator;
+
+	try {
+		//Resolve IP addresses for hostName
+		endpointIterator = resolver.resolve(query);
+	}
+	catch(exception &e) {
+		cout << "Connect error: " << e.what() << endl;
+
+		ioService.post([this]() {
+			this_thread::sleep_for(chrono::seconds(1));
+			Connect();
+		});
+
+		return -1;
+	}
 
 	//Create a socket
 	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));

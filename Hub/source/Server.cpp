@@ -94,6 +94,8 @@ void Hub::Server::cbAuthenticate(const Exception& e, const HTTP::Message& msg) {
 
 	accessToken = jsonResp.get("token", "").asString();
 
+	QueryStates();
+
 	LongPoll();
 
 	cout << "cbAuthenticate finished." << endl;
@@ -208,7 +210,14 @@ int Hub::Server::SendDiscrete(int nodeID, int data) {
 	return 0;
 }
 
-
+vector<float> Hub::Server::GetNodeState(int nodeID) {
+	try {
+		return nodeStates[nodeID];
+	}
+	catch(exception &e) {
+		return vector<float>();
+	}
+}
 
 void Hub::Server::LongPoll() {
 	string header = "Connection: keep-alive\r\n"
@@ -218,6 +227,16 @@ void Hub::Server::LongPoll() {
 
 	http.Get("/api/updates", header, [this](const Hub::HTTP::Message& msg){cbLongPoll(msg);});
 }
+
+void Hub::Server::QueryStates() {
+	string header = "Connection: keep-alive\r\n"
+			"Content-Type: application/json\r\n"
+			"x-access-token: " + accessToken + "\r\n"
+			"homeid: " + std::to_string(homeID) + "\r\n";
+
+	http.Get("/api/updates/all", header, [this](const Hub::HTTP::Message& msg){cbQueryStates(msg);});
+}
+
 
 void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 	cout << "cbLongPoll" << endl;
@@ -247,6 +266,8 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 
 	Json::Value updates = jsonResp["updates"];
 
+	UpdateStates(updates);
+
 	int updateCount = 0;
 	vector<ServerUpdate> serverUpdates;
 
@@ -274,4 +295,77 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 		cbUpdate(serverUpdates);
 
 	LongPoll();
+}
+
+void Hub::Server::cbQueryStates(const Hub::HTTP::Message& msg) {
+	cout << "cbLongPoll" << endl;
+
+	Json::Value jsonResp;
+
+	stringstream streamResp(msg.GetBody());
+	stringstream testStream;
+
+	//TODO: put try/catch block here
+		streamResp >> jsonResp;
+
+	bool success;
+
+	try {
+		success = jsonResp.get("success", "false").asBool();
+	}
+	catch(exception &e) {
+		cout << "QueryStates exception: " << e.what() << endl;
+		return;
+	}
+
+	if(!success) {
+		cout << "QueryStates error." << endl;
+		return;
+	}
+
+	Json::Value updates = jsonResp["updates"];
+
+	int updateCount = 0;
+	vector<ServerUpdate> serverUpdates;
+
+	UpdateStates(updates);
+
+	for(auto &update : updates) {
+		updateCount++;
+
+		ServerUpdate serverUpdate;
+
+		serverUpdate.nodeID = update.get("nodeId", "0").asInt();
+
+		Json::Value values = update["data"];
+
+		for(auto &value : values) {
+			float f;
+			serverUpdate.values.push_back(f = value.asFloat());
+			cout << "Float: " << f << endl;
+		}
+
+		serverUpdates.push_back(serverUpdate);
+	}
+
+	cout << "Query States response: " << updateCount << " updates." << endl;
+
+	if(updateCount > 0)
+		cbUpdate(serverUpdates);
+}
+
+void Hub::Server::UpdateStates(const Json::Value& updateArray) {
+	for(auto &update : updateArray) {
+		int nodeID = update.get("nodeId", "0").asInt();
+		vector<float> data;
+
+		Json::Value values = update["data"];
+
+		for(auto &value : values) {
+			float f;
+			data.push_back(f = value.asFloat());
+		}
+
+		nodeStates[nodeID] = data;
+	}
 }
