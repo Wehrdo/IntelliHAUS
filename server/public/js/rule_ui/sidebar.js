@@ -18,39 +18,29 @@ function SidebarModel() {
             self.data(createDataKoArray(dotData.data));
             self.selectedNode(dotData.nodeId);
         }
-        if (dotData.type === 'DataDecision') {
+        if (dotData.type === 'DataDecision' || dotData.type === 'EventDecision') {
             self.selectedDatastream(dotData.datastreamId);
         }
-        if (dotData.type === "EventDecision") {
-            // Convert to ranges if EventDecision
-            self.ranges(dotData.ranges.map(function(value) {
-                return {value: value}
-            }));
-        } else {
-            // Convert ranges array to array of objects.
-            // Knockout doesn't like arrays of mixed types
-            self.ranges(dotData.ranges.map(function(range) {
-                return {
-                    start: range[0],
-                    end: range[1]
-                }
-            }));
-        }
+        // Convert ranges array to array of objects.
+        // Knockout doesn't like arrays of mixed types
+        console.log(dotData.ranges);
+        self.ranges(dotData.ranges.map(function(range) {
+            return {
+                start: range[0],
+                end: range[1]
+            }
+        }));
+        console.log(self.ranges());
         self.branches = dotData.branches;
         self.curType(dotData.type);
     };
 
     self.branchesChanged = function() {
-        // Convert the array of range objects back to array of arrays, unless it is an EventDecision
-        if (self.curType() == "EventDecision") {
-            var ranges_array = self.ranges().map(function(rangeObj) {
-                return rangeObj.value;
-            });
-        } else {
-            var ranges_array = self.ranges().map(function (rangeObj) {
-                return [rangeObj.start, rangeObj.end];
-            });
-        }
+        // Convert the array of range objects back to array of arrays
+        var ranges_array = self.ranges().map(function (rangeObj) {
+            return [rangeObj.start, rangeObj.end];
+        });
+        console.log('hey!', ranges_array);
         ruleContainer.updateRanges(curDot, ranges_array);
     };
     self.currentDot = function() {
@@ -176,14 +166,10 @@ function SidebarModel() {
     // Add a new branch
     self.addBranch = function() {
         ruleContainer.addBranch(curDot, [undefined, undefined]);
-        if (self.curType() == "EventDecision") {
-            self.ranges.push({value: undefined});
-        } else {
-            self.ranges.push({
-                start: undefined,
-                end: undefined
-            });
-        }
+        self.ranges.push({
+            start: undefined,
+            end: undefined
+        });
         // self.branches.push(0);
         // TODO: Call ruleContainer.addBranch().
         // TODO: The branches array might get updated already

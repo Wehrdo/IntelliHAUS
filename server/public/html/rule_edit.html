@@ -224,7 +224,8 @@
                                 <select data-bind="options: $root.discreteEvents,
                                                     optionsValue: 'value',
                                                     optionsText: 'label',
-                                                    value: $root.ranges()[$index()].value,
+                                                    value: $data.start,
+                                                    valueAllowUnset: true,
                                                     event: {change: $root.branchesChanged}"
                                        class="form-control"></select>
                             </div>

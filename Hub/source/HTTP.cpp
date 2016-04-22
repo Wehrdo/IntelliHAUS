@@ -85,10 +85,6 @@ int Hub::HTTP::Connect() {
 					cbConnect(error);
 				});
 
-//	isConnected = true;
-
-//	StartListening();
-
 	return 0;
 }
 
@@ -111,6 +107,7 @@ void Hub::HTTP::cbConnect(const boost::system::error_code& error) {
 		//Notify on connection
 		extCbConnect();
 
+		//Start the async read
 		StartListening();
 	}
 }
@@ -145,13 +142,9 @@ Hub::HTTP::~HTTP() {
 }
 
 void Hub::HTTP::StartListening() {
-//	cout << "listening" << endl;
-/*	tcpSocket->async_receive(boost::asio::buffer(buffer, BUFFER_SIZE), 0,
-			[this](const boost::system::error_code& error,
-				size_t bytesTransferred) {
-					cbReceive(error, bytesTransferred);
-			});*/
-
+	//Start an async read
+	//for at least 1 byte
+	//and call cbReceive on completion
 	boost::asio::async_read(*tcpSocket,
 				boost::asio::buffer(buffer, BUFFER_SIZE),
 				boost::asio::transfer_at_least(1),
@@ -162,10 +155,9 @@ void Hub::HTTP::StartListening() {
 }
 
 void Hub::HTTP::cbReceive(const boost::system::error_code& error, size_t bytesTransferred) {
-//	cout << "done listening" << endl;
+	//Process each character individually
+	//with the HTTP receive state machine
 	for(int i = 0; i < bytesTransferred; i++) {
-//	cout << "Received char: " << buffer[i] << endl;
-//		cout << buffer[i];
 		ProcessSingleChar(buffer[i]);
 	}
 
@@ -199,14 +191,17 @@ void HTTP::Get(const string &path, const string &header,
 
 	stringstream outStream;
 
+	//Build the request header
 	requestStream << "GET " << path << " HTTP/1.1\r\n";
 	requestStream << "Host: " << hostName << "\r\n";
 	requestStream << header << "\r\n";
 
+	//Send the request synchronously
 	boost::asio::write(*tcpSocket, request);
 
 	int queueSize = respQueue.size();
-
+	
+	//Use the async thread to push the callback onto the queue
 	ioService.post([this, callback]() {
 		respQueue.push(callback);
 	});
@@ -232,16 +227,19 @@ void Hub::HTTP::Post(const string& path, const Hub::HTTP::Message& postMessage,
 
 	stringstream outStream;
 
+	//Build the HTTP header
 	requestStream << "POST " << path << " HTTP/1.1\r\n";
 	requestStream << "Host: " << hostName << "\r\n";
 	requestStream << "Content-Length: " << postMessage.GetBody().length() << "\r\n";
 	requestStream << postMessage.GetHeader() << "\r\n";
 	requestStream << postMessage.GetBody();
 
+	//Perform syncronous write
 	boost::asio::write(*tcpSocket, request);
 
 	int queueSize = respQueue.size();
 
+	//Use the async thread to push the callback onto the queue
 	ioService.post([this, callback](){
 		respQueue.push(callback);
 	});
@@ -253,15 +251,19 @@ Hub::HTTP::Message Hub::HTTP::GetBlocking(const string& path, const string& head
 		throw Exception(Error_Code::HTTP_NOT_CONNECTED, "HTTP Exception: Not connected.");
 
 	Message msg;
+
+	//Used to safely block until the GET request has completed
 	mutex blockMutex;
 
 	blockMutex.lock();
 
+	//Use lambda callback to unblock mutex when complete
 	Get(path, header, [&blockMutex, &msg](const Message& message) {
 			msg = message;
 			blockMutex.unlock();
 		});
 
+	//Block until lambda callback is called
 	blockMutex.lock();
 
 	return msg;
@@ -290,11 +292,13 @@ Hub::HTTP::Message Hub::HTTP::PostBlocking(const string& path, const Hub::HTTP::
 int Hub::HTTP::ParseBodyLength(const string& header) {
 	const string token = "Content-Length: ";
 
+	//Search the header for "Content-Length:" value
 	int pos = FindInStrIC(header, token), retVal;
 
 	if(pos < 0)
 		return -1;
 
+	//Parse the value
 	stringstream stream(header.substr(pos + token.length()));
 	stream >> retVal;
 
@@ -302,10 +306,12 @@ int Hub::HTTP::ParseBodyLength(const string& header) {
 }
 
 void Hub::HTTP::ProcessSingleChar(char ch) {
+	//State machine states
 	static enum {
 		STATE_HEADER,
 		STATE_BODY
 	} state = STATE_HEADER;
+
 	static char lastChar = '\0';
 	static Message currentMsg = Message();
 	static int nlCount = 0;
@@ -313,10 +319,13 @@ void Hub::HTTP::ProcessSingleChar(char ch) {
 
 	if(state == STATE_HEADER) {
 		currentMsg.header += ch;
+
+		//Check if newline (\r\n)
 		if(ch == '\n') {
 			if(lastChar == '\r') {
 				nlCount++;
-
+				
+				//The header is over after two consecutive newlines
 				if(nlCount == 2) {
 					bodyLength = ParseBodyLength(currentMsg.header);
 

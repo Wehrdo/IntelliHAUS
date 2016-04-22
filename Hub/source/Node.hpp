@@ -12,6 +12,14 @@
 #include "Communicator.hpp"
 #include "Exception.hpp"
 
+/*
+	*Node.hpp
+	*Implements class Hub::Node, which contains all information for a connected Node
+	*
+	*
+	*
+*/
+
 using namespace std;
 //using namespace Hub;
 
@@ -19,11 +27,13 @@ namespace Hub {
 class Node
 {
 public:
+	//Constructor
 	Node(function<void(const Hub::Packet&)> cbPacket,
 		function<void(Hub::Node*)> cbClose);
 
 	~Node();
 
+	//No longer used, kept for legacy value
 	shared_ptr<boost::asio::ip::tcp::socket> GetSocket();
 
 	void Start();
