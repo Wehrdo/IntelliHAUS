@@ -27,8 +27,8 @@ function RuleContainer() {
 	};
 
     self.updateRanges = function(nid, newRanges) {
-        // treeMap[nid].ranges = newRanges;
-		// var arr=checkBrokenBranches(treeMap, nid);
+        treeMap[nid].ranges = newRanges;
+		var arr=checkBrokenBranches(treeMap, nid);
 		// sortBranches(nid, arr);
 		// var positions=prepareTreeUpdate();
 		// ruleGraphics.updateTreeDep(positions);
@@ -68,16 +68,26 @@ function RuleContainer() {
     // Set the type for an existing dot
     self.setDotType = function(dotId, newType) {
         treeMap[dotId].type = newType;
-		console.log(newType);
 		
 		if(newType=="EventDecision")
 		{
 			id++;
-			console.log("hi");
+			treeMap[dotId].default = id.toString();
+			treeMap[id.toString()]={
+				"dotId" : id.toString(),
+				"type" : 'EmptyDecision',
+				"parent" : dotId,
+				"branches" : [],
+				"ranges" : [],
+				"nodeId" : null,
+				"data" : [],
+				"datastreamId" : null,
+				"default" : null,
+				"lifetime" : null
+				};
 			var positions=prepareTreeUpdate();
 			ruleGraphics.addDefault(positions, dotId);
 			ruleGraphics.setDotType(positions, dotId, newType);
-			console.log(positions);
 		}
 	};
 	self.deleteAllBranches = function(nid) {
@@ -258,7 +268,6 @@ function RuleContainer() {
 		var branchArr=[];
 		var ranges=nodeData[nid].ranges;
 		var branches=nodeData[nid].branches;
-		console.log(ranges);
 		for(var i = 0; i < ranges.length; i++)
 		{
 			if(ranges[i][0]===undefined&&ranges[i][1]===undefined)
@@ -283,9 +292,11 @@ function RuleContainer() {
 	}
 	function prepareTreeUpdate() {
 		var newObject = jQuery.extend(true, {}, treeMap);
-		var leafNodes=prepareLeafNodes(newObject);
-		var depths=setTreeDepth(newObject);
-		var positions=calculatePositions(depths, "1", leafNodes);
+		var defaults=makeDefaults(newObject);
+		var leafNodes=prepareLeafNodes(defaults);
+		var depths=setTreeDepth(defaults);
+		console.log(defaults);
+		var positions=calculatePositions(defaults, "1", leafNodes);
 		return positions;
 	}
 	/* function initNode(pid) {
@@ -304,7 +315,6 @@ function RuleContainer() {
 		ruleGraphics.removeTreeElements(nodeData, pid, branchId);
 		if(!nodeData[branchId])
 			return nodeData;
-		console.log("got passed");
 		if(!nodeData[branchId].branches.length)
 		{
 			delete nodeData[branchId];
@@ -352,8 +362,11 @@ function RuleContainer() {
 		var leafNodes = {};
     	var branches=nodeData[dotId].branches;
     	if(!branches.length)
+		{
+			
     		leafNodes[dotId]=index++;
-    	else
+    	}
+		else
     	{
     		var i;
     		for(i = 0; i < branches.length; i++)
@@ -387,6 +400,8 @@ function RuleContainer() {
     	return setDepths(nodeData, 1, 0);
     }
 	function calculatePositions(nodeData, dotId, leafNodes) {
+		console.log("nodeData");
+		console.log(nodeData);
     	var branches=nodeData[dotId].branches;
     	var x;
     	var y=0;
@@ -419,6 +434,19 @@ function RuleContainer() {
     	nodeData[dotId].y=y;
     	return nodeData;
     }
+	function makeDefaults(nodeData) {
+		for(var i=0; i < Object.keys(nodeData).length; i++)
+		{
+			var obj=Object.keys(nodeData)[i];
+			var type=nodeData[obj].type;
+			if(type=="EventDecision")
+			{
+				nodeData[obj].branches.push(nodeData[obj]["default"]);
+				nodeData[obj].ranges.push([null, null]);
+			}
+		}
+		return nodeData;
+	}
 	function detranslate(nodeData, nid, isFirst) {
 		var forServer={};
 		

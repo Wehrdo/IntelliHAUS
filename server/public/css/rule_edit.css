@@ -121,3 +121,6 @@
 	stroke: red;
 	stroke-width: 5;
 }
+.branch.default {
+	stroke: green;
+}
