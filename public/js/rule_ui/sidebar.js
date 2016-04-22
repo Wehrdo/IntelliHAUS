@@ -5,7 +5,7 @@
 function SidebarModel() {
     var self = this;
     // Currently selected dot ID
-    var curDot = null;
+    curDot = null;
     /*
     Public methods
      */
@@ -31,6 +31,7 @@ function SidebarModel() {
         }));
         self.branches = dotData.branches;
         self.curType(dotData.type);
+		console.log(dotId);
     };
 
     self.branchesChanged = function() {
@@ -40,7 +41,9 @@ function SidebarModel() {
         });
         ruleContainer.updateRanges(curDot, ranges_array);
     };
-
+	self.currentDot = function() {
+		return curDot;
+	}
     /*
     Knockout Bindings
      */
@@ -52,9 +55,18 @@ function SidebarModel() {
     };
 
     self.deleteDot = function() {
-        ruleContainer.deleteDot(curDot);
+        ruleContainer.deleteAllBranches(curDot);
+		ruleContainer.setDotType(curDot, "EmptyDecision");
         self.dotClicked(curDot);
     };
+	self.removeDot = function() {
+		var pid=ruleContainer.getParent(curDot);
+		if(pid!=null)
+		{
+			ruleContainer.deleteBranch(curDot);
+			self.dotClicked(pid);
+		}
+	}
 
     // All the datastreams of the user
     self.datastreams = ko.observableArray([]);
@@ -146,7 +158,7 @@ function SidebarModel() {
         self.ranges.splice(index, 1);
         // TODO: Notify ruleContainer
         // self.branches.splice(index, 1);
-        ruleContainer.deleteDot(self.branches[index]);
+        ruleContainer.deleteBranch(self.branches[index]);
     };
 
     // Converts the minutes of a day (0 - 1440) into a date string for a time input box
@@ -204,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ko.applyBindings(window.sidebar, document.getElementById("all-sidebars"));
 
 
-    $.getJSON('/api/home', function(data) {
+    /*$.getJSON('/api/home', function(data) {
         if (data.success) {
             $.getJSON('/api/node?homeid=' + data.homes[0].id, function(data) {
                 if (data.success) {
@@ -219,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.log("Error getting homes: " + data.error);
         }
-    });
+    });*/
 
 
     $.getJSON('/api/datastream', function(data) {
