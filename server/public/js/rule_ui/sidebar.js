@@ -23,6 +23,7 @@ function SidebarModel() {
         }
         // Convert ranges array to array of objects.
         // Knockout doesn't like arrays of mixed types
+        console.log(dotData.ranges);
         self.ranges(dotData.ranges.map(function(range) {
             return {
                 start: range[0],
@@ -40,6 +41,7 @@ function SidebarModel() {
         var ranges_array = self.ranges().map(function (rangeObj) {
             return [rangeObj.start, rangeObj.end];
         });
+        console.log('hey!', ranges_array);
         ruleContainer.updateRanges(curDot, ranges_array);
     };
     self.currentDot = function() {

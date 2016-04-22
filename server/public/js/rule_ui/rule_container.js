@@ -50,12 +50,12 @@ function RuleContainer() {
 	};
 
     self.updateRanges = function(nid, newRanges) {
-        // treeMap[nid].ranges = newRanges;
-		// var arr=checkBrokenBranches(treeMap, nid);
+        treeMap[nid].ranges = newRanges;
+		var arr=checkBrokenBranches(treeMap, nid);
 		// sortBranches(nid, arr);
-		// var positions=prepareTreeUpdate();
-		// ruleGraphics.updateTreeDep(positions);
-		// //checkBranches(nid);
+		var positions=prepareTreeUpdate();
+		ruleGraphics.updateTreeDep(positions);
+		//checkBranches(nid);
     };
 
     self.getRule = function() {

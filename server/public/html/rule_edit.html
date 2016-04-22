@@ -222,9 +222,10 @@
                             <div class="input-group">
                                 <span class="input-group-addon">Event</span>
                                 <select data-bind="options: $root.discreteEvents,
-                                                    optionsValue: 'start',
+                                                    optionsValue: 'value',
                                                     optionsText: 'label',
-                                                    value: $root.ranges()[$index()].start,
+                                                    value: $data.start,
+                                                    valueAllowUnset: true,
                                                     event: {change: $root.branchesChanged}"
                                        class="form-control"></select>
                             </div>
