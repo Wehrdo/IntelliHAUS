@@ -20,25 +20,36 @@ function SidebarModel() {
         }
         if (dotData.type === 'DataDecision') {
             self.selectedDatastream(dotData.datastreamId);
+            // Convert ranges array to array of objects.
+            // Knockout doesn't like arrays of mixed types
+            self.ranges(dotData.ranges.map(function(range) {
+                return {
+                    start: range[0],
+                    end: range[1]
+                }
+            }));
+        } else if (dotData.type === 'EventDecision') {
+            // Convert to ranges if EventDecision
+            self.ranges(dotData.ranges.map(function(value) {
+                return {value: value}
+            }));
         }
-        // Convert ranges array to array of objects.
-        // Knockout doesn't like arrays of mixed types
-        self.ranges(dotData.ranges.map(function(range) {
-            return {
-                start: range[0],
-                end: range[1]
-            }
-        }));
         self.branches = dotData.branches;
         self.curType(dotData.type);
         console.log(dotId);
     };
 
     self.branchesChanged = function() {
-        // Convert the array of range objects back to array of arrays
-        var ranges_array = self.ranges().map(function(rangeObj) {
-            return [rangeObj.start, rangeObj.end];
-        });
+        // Convert the array of range objects back to array of arrays, unless it is an EventDecision
+        if (self.curType() == "EventDecision") {
+            var ranges_array = self.ranges().map(function(rangeObj) {
+                return rangeObj.value;
+            });
+        } else {
+            var ranges_array = self.ranges().map(function (rangeObj) {
+                return [rangeObj.start, rangeObj.end];
+            });
+        }
         ruleContainer.updateRanges(curDot, ranges_array);
     };
     self.currentDot = function() {
@@ -67,7 +78,7 @@ function SidebarModel() {
             ruleContainer.deleteBranch(curDot);
             self.dotClicked(pid);
         }
-    }
+    };
 
     // All the datastreams of the user
     self.datastreams = ko.observableArray([]);
@@ -115,6 +126,11 @@ function SidebarModel() {
         }
     });
 
+    self.getActiveDatastream = function() {
+        return self.datastreams().filter(function(datastream) {
+            return datastream.id == self.selectedDatastream();
+        })[0];
+    };
 
     function createDataKoArray(data) {
         return data.map(function(inData) {
@@ -139,13 +155,36 @@ function SidebarModel() {
     // The ranges for each corresponding branch
     self.ranges = ko.observableArray();
 
+    self.remainingEvents = ko.computed(function() {
+        var used_events = self.ranges().map(function(valObj) {
+            return valObj.value;
+        });
+        if (self.curType() == "EventDecision" && self.getActiveDatastream()) {
+            var labels = self.getActiveDatastream().discreteLabels;
+            var remaining = [];
+            for (var i = 0; i < labels.length; i++) {
+                remaining.push({
+                    value: i,
+                    label: labels[i]
+                });
+            }
+            return remaining;
+        } else {
+            return [];
+        }
+    });
+
     // Add a new branch
     self.addBranch = function() {
         ruleContainer.addBranch(curDot, [undefined, undefined]);
-        self.ranges.push({
-            start: undefined,
-            end: undefined
-        });
+        if (self.curType() == "EventDecision") {
+            self.ranges.push({value: undefined});
+        } else {
+            self.ranges.push({
+                start: undefined,
+                end: undefined
+            });
+        }
         // self.branches.push(0);
         // TODO: Call ruleContainer.addBranch().
         // TODO: The branches array might get updated already
@@ -216,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.sidebar = new SidebarModel();
     ko.applyBindings(window.sidebar, document.getElementById("all-sidebars"));
 
-
+    // Get user's nodes
     $.getJSON('/api/home', function(data) {
         if (data.success) {
             $.getJSON('/api/node?homeid=' + data.homes[0].id, function(data) {
@@ -234,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-
+    // Get user's datastreams
     $.getJSON('/api/datastream', function(data) {
         if (data.success) {
             sidebar.datastreams(data.datastreams);
