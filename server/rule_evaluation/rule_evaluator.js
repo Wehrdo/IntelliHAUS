@@ -47,7 +47,7 @@ function evalAction(action) {
             if (datapoint && age <= action[action_type].lifetime) {
                 evalEventBranches(action[action_type], datapoint.discreteData);
             } else { // Otherwise do the default
-                evalAction(action[acttion_type].default);
+                evalAction(action[action_type].default);
             }
         })
     }

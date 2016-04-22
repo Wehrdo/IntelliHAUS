@@ -167,7 +167,10 @@ function SidebarModel() {
     self.eventLifetime = ko.observable();
     // Notify ruleContainer of updates to lifetime
     self.eventLifetime.subscribe(function() {
-        ruleContainer.setLifetime(curDot, self.eventLifetime());
+        var parsed = Number.parseFloat(self.eventLifetime());
+        if (!isNaN(parsed)) {
+            ruleContainer.setLifetime(curDot, parsed);
+        }
     });
 
     // Add a new branch
