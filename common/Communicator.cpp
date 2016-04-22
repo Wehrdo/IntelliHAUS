@@ -19,7 +19,9 @@ Node::Communicator::Communicator(uint32_t nodeID, const string& remoteHostName,
 
 int Node::Communicator::Connect() {
 	boost::system::error_code error;
+	bool failed = true;
 
+	try {
 	//Initialize DNS resolver
 	boost::asio::ip::tcp::resolver resolver(ioService);
 
@@ -34,18 +36,30 @@ int Node::Communicator::Connect() {
 
 	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));
 
-	try {
+	//try {
 		//Try to connect to the server
 		boost::asio::connect(*tcpSocket, endpointIterator);
+
+		failed = false;
 	}
 	catch(exception &e) {
 		cout << "Node::Communicator exception: " << e.what() << endl;
-		return -1;
+		//return -1;
 	}
 
-	SendPacket(Packet(nodeID, Packet::TYPE_ID, vector<unsigned char>()));
+	if(failed) {
+		this_thread::sleep_for(chrono::seconds(1));
+		ioService.post([this](){Connect();});
 
-	StartListening();
+		return -1;
+	}
+	else {
+		isConnected = true;
+
+		SendPacket(Packet(nodeID, Packet::TYPE_ID, vector<unsigned char>()));
+
+		StartListening();
+	}
 
 	return 0;
 }
@@ -67,10 +81,12 @@ int Node::Communicator::Disconnect() {
 	//error occurred
 	if(error) {
 		//TODO: return meaningful error code
-		return -1;
+		//return -1;
 	}
 
 	tcpSocket->close();
+
+	isConnected = false;
 
 	return 0;
 }
@@ -152,6 +168,12 @@ void Node::Communicator::cbReceive(const boost::system::error_code& error,
 				size_t bytesTransferred) {
 	if(error) {
 		cout << "General async_receive error" << endl;
+
+		Disconnect();
+
+		ioService.post([this](){Connect();});
+
+		return;
 	}
 	else {
 		for(int i = 0; i < bytesTransferred; i++) {
@@ -165,6 +187,10 @@ void Node::Communicator::cbReceive(const boost::system::error_code& error,
 }
 
 int Node::Communicator::SendPacket(const Node::Packet& p) {
+
+	if(!isConnected)
+		return 0;
+
 	vector<unsigned char> outData;
 
 	unsigned int nodeID = p.GetNodeID();
@@ -192,12 +218,25 @@ int Node::Communicator::SendPacket(const Node::Packet& p) {
 	for(auto &b : p.GetData())
 		outData.push_back(b);
 
-	//Send the packet over TCP
-	int nWritten = boost::asio::write(*tcpSocket, boost::asio::buffer(outData));
+	int nWritten = 0;
+
+	try {
+		//Send the packet over TCP
+		nWritten = boost::asio::write(*tcpSocket, boost::asio::buffer(outData));
+	}
+	catch(exception &e) {
+		cout << "Write error: " << e.what() << endl;
+
+		Disconnect();
+
+		ioService.post([this](){Connect();});
+
+		return 0;
+	}
 
 	cout << "Bytes written: " << nWritten << endl;
 
-	return 0;
+	return nWritten;
 }
 
 int Node::Communicator::SendID() {
