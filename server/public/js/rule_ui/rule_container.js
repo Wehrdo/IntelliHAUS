@@ -115,7 +115,7 @@ function RuleContainer() {
 				};
 			var positions=prepareTreeUpdate();
 			ruleGraphics.addDefault(positions, dotId);
-			ruleGraphics.setDotType(positions, dotId, newType);
+			ruleGraphics.setDotType(dotId, newType);
 		}
 	};
 	self.deleteAllBranches = function(nid) {
@@ -141,7 +141,7 @@ function RuleContainer() {
 		var pid=treeMap[branchId].parent;
 		if(treeMap[pid].default)
 		{
-			treeMap=removeSubtree(treeMap, pid, nodeData[pid].default);
+			treeMap=removeSubtree(treeMap, pid, treeMap[pid].default);
 			var positions=prepareTreeUpdate();
 			ruleGraphics.updateTreeDep(positions);
 		}
@@ -351,7 +351,7 @@ function RuleContainer() {
 			"ranges" : [],
 			"nodeId" : null,
 			"data" : null,
-			"dataStreamId" : null
+			"datastreamId" : null
 		};
 	} */
 	function removeSubtree(nodeData, pid, branchId) {

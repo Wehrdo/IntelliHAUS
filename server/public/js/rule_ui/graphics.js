@@ -105,12 +105,12 @@ function RuleGraphics() {
 	};
 
 	self.removeTreeElements = function(nodeData, nid, branchId) {
-		if(!nodeData[nid]||!nodeData[nid].branches.length)
+		if((!nodeData[nid]||!nodeData[nid].branches.length)&&!nodeData[nid].default)
 			d3.select(document.getElementById(nid)).classed("empty", true);
 		remove(document.getElementById(branchId));
 		remove(document.getElementById(nid+"-"+branchId));
 	};
-	self.setDotType = function(nodeData, dotId, newType) {
+	self.setDotType = function(dotId, newType) {
 		if(newType=='NodeInput')
 		{
 			d3.select(document.getElementById(dotId)).classed("result");
