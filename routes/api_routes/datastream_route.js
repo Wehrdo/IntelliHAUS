@@ -113,7 +113,8 @@ router.post('/', function (req, res) {
         UserId: req.user.id,
         name: name,
         datatype: datatype,
-        public: isPublic
+        public: isPublic,
+        discreteLabels: req.body.discretelabels
     });
 
     newDatastream.save()
