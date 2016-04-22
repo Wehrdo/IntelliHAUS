@@ -149,10 +149,8 @@ function RuleContainer() {
             }
 			if(type=="EventDecision")
 			{
+				def=tree[type].default;
 				lifetime=tree[type].lifetime;
-				var default_translated = translate(tree[type].default, dotId);
-				newObj[default_translated.dotId] = default_translated;
-				def = default_translated.dotId;
 			}
             if (tree[type].branches.length) {
                 var i;
@@ -270,8 +268,9 @@ function RuleContainer() {
 		return branchArr;
 	}
 	function prepareTreeUpdate() {
-		var leafNodes=prepareLeafNodes(treeMap);
-		var depths=setTreeDepth(treeMap);
+		var newObject = jQuery.extend(true, {}, treeMap);
+		var leafNodes=prepareLeafNodes(newObject);
+		var depths=setTreeDepth(newObject);
 		var positions=calculatePositions(depths, "1", leafNodes);
 		return positions;
 	}
@@ -374,11 +373,7 @@ function RuleContainer() {
     	return setDepths(nodeData, 1, 0);
     }
 	function calculatePositions(nodeData, dotId, leafNodes) {
-    	if(nodeData[dotId].default)
-		{
-			nodeData[dotId].branches.splice(0,0,)
-		}
-		var branches=nodeData[dotId].branches;
+    	var branches=nodeData[dotId].branches;
     	var x;
     	var y=0;
     	var temp={};
@@ -465,11 +460,9 @@ document.addEventListener('DOMContentLoaded', function() {
     $.getJSON('/api/rule/' + ruleId, function(data) {
         if (data.success) {
 			ruleContainer.initRule(data.rule);
-            ruleGraphics.createTree();
-			sidebar.dotClicked("1");
+            ruleGraphics    .createTree();
         } else {
             console.log(data.error);
         }
     });
-	
 });
