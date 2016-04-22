@@ -40,7 +40,6 @@
 }
 
 .sidebar-supercontainer {
-	width: 20%;
     flex-grow: 4;
     flex-basis: 0;
 }
@@ -83,28 +82,15 @@
     fill: lightskyblue;
     stroke: steelblue;
 }
-.dot.empty {
-    fill: lightgrey;
-    stroke: steelblue;
-}
 .dot.active {
     fill: gold;
     stroke: goldenrod;
+}
+.dot.empty {
+    fill: lightgrey;
+    stroke: steelblue;
 }
 <!-- 	.dot.active.dragging {
             fill: goldenrod;
             stroke: darkgoldenrod;
         } -->
-		
-.branch {
-	stroke: black;
-	stroke-width: 3;
-}
-.branch.focus {
-	stroke: black;
-	stroke-width: 5;
-}
-.branch.conflicted {
-	stroke: red;
-	stroke-width: 5;
-}

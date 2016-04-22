@@ -22,6 +22,9 @@
         <div class="sidebar-container" data-bind="if: curType()==='EmptyDecision', visible: curType()==='EmptyDecision'">
             <div class="panel panel-default">
                 <h5><strong>Select Type</strong></h5>
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
                 <select id="type-select"
                         class="form-control"
                         data-bind="value: curType, event: {change: $root.setDotType}">
@@ -42,9 +45,12 @@
         <div class="sidebar-container" data-bind="if: curType()==='TimeDecision', visible: curType()==='TimeDecision'">
             <div class="panel panel-default">
                 <h4>Time Decision
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
                     <button type="button"
                             class="delete-dot btn btn-danger btn-sm"
-                            data-bind="click: $root.deleteDot">Delete</button>
+                            data-bind="click: $root.deleteDot">Reset</button>
                 </h4>
                 <h5>Branches</h5>
                 <div data-bind="foreach: ranges" class="form-group">
@@ -82,9 +88,12 @@
         <div class="sidebar-container" data-bind="if: curType()==='DayDecision', visible: curType()==='DayDecision'">
             <div class="panel panel-default">
                 <h4>Day Decision
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
                     <button type="button"
                             class="delete-dot btn btn-danger btn-sm"
-                            data-bind="click: $root.deleteDot">Delete</button>
+                            data-bind="click: $root.deleteDot">Reset</button>
                 </h4>
                 <h5>Branches</h5>
                 <div data-bind="foreach: ranges" class="form-group">
@@ -124,9 +133,12 @@
         <div class="sidebar-container" data-bind="if: curType()==='DataDecision', visible: curType()==='DataDecision'">
             <div class="panel panel-default">
                 <h4>Data Decision
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
                     <button type="button"
                             class="delete-dot btn btn-danger btn-sm"
-                            data-bind="click: $root.deleteDot">Delete</button>
+                            data-bind="click: $root.deleteDot">Reset</button>
                 </h4>
                 <h5>Choose Datastream</h5>
                 <select
@@ -180,9 +192,12 @@
         <div class="sidebar-container" data-bind="if: curType()==='NodeInput', visible: curType()==='NodeInput'">
             <div class="panel panel-default">
                 <h4>Actuate Node
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
                     <button type="button"
                             class="delete-dot btn btn-danger btn-sm"
-                            data-bind="click: $root.deleteDot">Delete</button>
+                            data-bind="click: $root.deleteDot">Reset</button>
                 </h4>
                 <h5><strong>Choose which node</strong></h5>
                 <select
