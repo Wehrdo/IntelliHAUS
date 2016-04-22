@@ -27,12 +27,12 @@ function RuleContainer() {
 	};
 
     self.updateRanges = function(nid, newRanges) {
-        treeMap[nid].ranges = newRanges;
-		var arr=checkBrokenBranches(treeMap, nid);
-		sortBranches(nid, arr);
-		var positions=prepareTreeUpdate();
-		ruleGraphics.updateTreeDep(positions);
-		//checkBranches(nid);
+        // treeMap[nid].ranges = newRanges;
+		// var arr=checkBrokenBranches(treeMap, nid);
+		// sortBranches(nid, arr);
+		// var positions=prepareTreeUpdate();
+		// ruleGraphics.updateTreeDep(positions);
+		// //checkBranches(nid);
     };
 
     self.getRule = function() {
@@ -149,8 +149,12 @@ function RuleContainer() {
             }
 			if(type=="EventDecision")
 			{
-				def=tree[type].default;
 				lifetime=tree[type].lifetime;
+				var default_translated = translate(tree[type].default, dotId);
+                for (var key in default_translated)
+                    temp[key] = default_translated[key];
+                // TODO: Don't assume Object.keys() has the order items were added
+				def = Object.keys(default_translated)[0];
 			}
             if (tree[type].branches.length) {
                 var i;
@@ -460,9 +464,11 @@ document.addEventListener('DOMContentLoaded', function() {
     $.getJSON('/api/rule/' + ruleId, function(data) {
         if (data.success) {
 			ruleContainer.initRule(data.rule);
-            ruleGraphics    .createTree();
+            ruleGraphics.createTree();
+			sidebar.dotClicked("1");
         } else {
             console.log(data.error);
         }
     });
+	
 });

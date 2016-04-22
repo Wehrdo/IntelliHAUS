@@ -158,6 +158,7 @@ exports.logicValidate = function(req, res, next) {
         for (var i = 0, keys = Object.keys(rule); i < keys.length; i++) {
             var decisionType = keys[i];
             var check_range;
+            var do_check_range = true;
             if (decisionType === "TimeDecision") {
                 check_range = [0, 1440];
                 // Find all times that need to be evaluated for this rule
@@ -174,6 +175,7 @@ exports.logicValidate = function(req, res, next) {
             else if (decisionType === "EventDecision") {
                 // Since EventDecisions have the 'default' option, we do not need to check
                 // their branch coverage
+                do_check_range = false;
                 q.add(rule[decisionType].default);
                 // Ensure the lifetime is positive
                 valid = valid && (rule[decisionType].lifetime > 0);
@@ -183,7 +185,7 @@ exports.logicValidate = function(req, res, next) {
                 continue;
             }
             // Is a branch, so check coverage
-            if (!validateBranchCoverage(rule[decisionType].branches, check_range)) {
+            if (do_check_range && !validateBranchCoverage(rule[decisionType].branches, check_range)) {
                 valid = false;
             }
             // Add all subactions
