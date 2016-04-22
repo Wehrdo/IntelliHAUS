@@ -27,14 +27,20 @@ using namespace Hub;
 
 void UpdateCallback(NodeServer& nodeServer, const vector<Server::ServerUpdate>& updates);
 
-void PacketCallback(Hub::Packet p, Server &server) {
+void PacketCallback(Hub::Packet p, Server &server, NodeServer& nodeServer) {
 	string message;
 	uint32_t nodeID = p.GetNodeID();
 
 	switch(p.GetMsgType()) {
-		case Packet::TYPE_ID:
-			message = "Identification received from Node " +
-				to_string(nodeID);
+		case Packet::TYPE_ID: {
+				message = "Identification received from Node " +
+					to_string(nodeID);
+
+				auto values = server.GetNodeState(nodeID);
+				
+				if(values.size() > 0)
+					nodeServer.SendActuation(nodeID, values);
+		}
 		break;
 
 		case Packet::TYPE_INT:
@@ -83,9 +89,9 @@ int main() {
 
 	cout << "Server created" << endl;
 
-	nodeServer.reset(new NodeServer([&ioService, &server](Packet p){
-		ioService.post([&server, p](){
-			PacketCallback(p, server);
+	nodeServer.reset(new NodeServer([&ioService, &server, &nodeServer](Packet p){
+		ioService.post([&server, &nodeServer, p](){
+			PacketCallback(p, server, *nodeServer);
 			});
 		}));
 

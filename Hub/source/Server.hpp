@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <vector>
+#include <map>
 #include <functional>
 #include <boost/asio.hpp>
 #include "Exception.hpp"
@@ -36,6 +37,8 @@ public:
 
 	int SendDatapoint(int nodeID, float data);
 	int SendDiscrete(int nodeID, int data);
+
+	vector<float> GetNodeState(int nodeID);
 private:
 //	void Connect();
 //	void Disconnect();
@@ -45,6 +48,11 @@ private:
 
 	void LongPoll();
 	void cbLongPoll(const Hub::HTTP::Message& msg);
+
+	void QueryStates();
+	void cbQueryStates(const Hub::HTTP::Message& msg);
+
+	void UpdateStates(const Json::Value& updateArray);
 
 	void ThreadRoutine();
 
@@ -60,6 +68,7 @@ private:
 	int homeID;
 	string accessToken, userName, password;
 	bool isConnected;
+	map<int, vector<float>> nodeStates;
 };
 
 };
