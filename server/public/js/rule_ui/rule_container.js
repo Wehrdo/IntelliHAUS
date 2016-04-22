@@ -7,6 +7,7 @@ function RuleContainer() {
 	var name = null;
 	var treeMap = null;
 	var index = null;
+    var rule_id = null;
 	var svg=d3.select("svg");
 	l=0;
 	if(typeof id=='undefined')id=0;
@@ -15,11 +16,33 @@ function RuleContainer() {
      */
 
 	// Given a rule from the database, initialize the container for it
-	self.initRule = function(ruleInfo) {
+	self.initRule = function(ruleInfo, this_rule_id) {
 		treeMap = translate(ruleInfo.rule, null);
 		name = ruleInfo.name;
+        rule_id = this_rule_id;
 		console.log(treeMap);
 	};
+
+    self.save = function() {
+        var translated = detranslate(treeMap, "1");
+        console.log(translated);
+        $.ajax({
+            url: '/api/rule/' + rule_id,
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                name: name,
+                rule: translated
+            }),
+            success: function(data) {
+                console.log("success");
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR.responseJSON.error.toString());
+            }
+        })
+    };
 
     // Returns the information about a specific dot
 	self.getDot = function(dotId) {
@@ -409,48 +432,53 @@ function RuleContainer() {
     	nodeData[dotId].y=y;
     	return nodeData;
     }
-	function detranslate(nodeData, nid, isFirst) {
-		var forServer={};
-		
-		var node=nodeData[nid];
-		var type=node.type;
-		var branches=node.branches;
-		var datastreamId=node.datastreamId;
-		var nodeId=node.nodeId;
-		var data=node.data;
-		var ranges=node.ranges;
-		var nodeDefault=node.nodeDefault;
-		var lifetime=node.lifetime;
-		if(type=="NodeInput")
-		{
-			forServer[type]={
-				"nodeId" : nodeId,
-				"data" :data
-			}
-			return forServer;
-		}
-		else
-		{
-			delete nodeData[nid];
-			forServer.branches=[];
-			for(var key in node.branches)
-				forServer[type].branches.push({
-					"value" : node.ranges[i],
-					"action" : detranslate(nodeData, node.branches[i], 0)
-				});
-			if(type=="EventDecision")
-			{
-				forServer[type].lifetime = node.lifetime;
-				forServer[type]["default"] = node.nodeDefault;
-				forServer[type].datastreamId = node.datastreamId;
-			}
-			else if(type=="DataDecision")
-			{
-				forServer[type].datastreamId = node.datastreamId;
-			}
-			return forServer;
-		}
-	}
+    function detranslate(nodeData, nid, isFirst) {
+        var forServer={};
+
+        var node=nodeData[nid];
+        var type=node.type;
+        var branches=node.branches;
+        var datastreamId=node.datastreamId;
+        var nodeId=node.nodeId;
+        var data=node.data;
+        var ranges=node.ranges;
+        //var nodeDefault=node.nodeDefault;
+        //var lifetime=node.lifetime;
+        if(type=="NodeInput") {
+            forServer[type]={
+                "nodeId" : nodeId,
+                "data" :data
+            };
+            return forServer;
+        }
+        else if (type == "EmptyDecision") {
+            return null;
+        }
+        else
+        {
+            forServer[type] = {};
+            forServer[type].branches=[];
+            var i = 0;
+            for(var key in node.branches) {
+                forServer[type].branches.push({
+                    "value": node.ranges[i],
+                    "action": detranslate(nodeData, node.branches[i], 0)
+                });
+                i++;
+            }
+            if(type=="EventDecision")
+            {
+                forServer[type].lifetime = node.lifetime;
+                forServer[type]["default"] = node.nodeDefault;
+                forServer[type].datastreamId = node.datastreamId;
+            }
+            else if(type=="DataDecision")
+            {
+                forServer[type].datastreamId = node.datastreamId;
+            }
+            return forServer;
+        }
+    }
 	//console.log(detranslate(treeMap, "1", true));
 }
 
@@ -463,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     $.getJSON('/api/rule/' + ruleId, function(data) {
         if (data.success) {
-			ruleContainer.initRule(data.rule);
+			ruleContainer.initRule(data.rule, ruleId);
             ruleGraphics.createTree();
 			sidebar.dotClicked("1");
         } else {
