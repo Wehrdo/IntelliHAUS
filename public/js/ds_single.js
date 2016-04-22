@@ -35,12 +35,20 @@ function Plot() {
         .attr("class", "axis-y")
         .call(yAxis);
 
+    // Datatype for this datastream
+    var datatype = null;
+
+    // Set the datatype to plot for this datastream
+    this.setDatatype = function(plot_datatype) {
+        datatype = plot_datatype + 'Data';
+    };
+
     lineGen = d3.svg.line()
         .x(function(d) {
             return xScale(new Date(d.time));
         })
         .y(function(d) {
-            return yScale(d.continuousData);
+            return yScale(d[datatype]);
         });
     plot.append("svg:path")
         .attr('class', 'line')
@@ -61,7 +69,7 @@ function Plot() {
         //xScale.domain([new Date(curData[0].time), new Date(curData[curData.length-1].time)]);
 
         var tempPts = $.map(curData, function(pt) {return pt.time});
-        yScale.domain(d3.extent(curData, function(d) {return d.continuousData}));
+        yScale.domain(d3.extent(curData, function(d) {return d[datatype]}));
 
         // Must update scales before updating line
         var newPlot = plot.transition();
@@ -161,6 +169,7 @@ function DatastreamModel() {
 
     // Get info about the datastream
     $.getJSON('/api/datastream/' + dsId + '/info', function(data) {
+        plot.setDatatype(data.datastream.datatype);
         // auto-map JSON from server to knockout observables
         ko.mapping.fromJS(data.datastream, self.info);
         // Subscribe to each property that can be changed and saved to the server
