@@ -1,6 +1,12 @@
 #ifndef ERROR_CODE
 #define ERROR_CODE
 
+/*
+	*ErrorCode.hpp
+	*This contains the error codes
+	*To be used with the Hub::Exception class
+*/
+
 namespace Hub
 {
 namespace Error_Code
