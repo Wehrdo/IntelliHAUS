@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "definitions": {
+    "nodeInput": {
+      "type": "object",
+      "properties": {
+        "nodeId": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "nodeId",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "object",
+      "properties": {
+        "DataDecision": {
+          "$ref": "#/definitions/dataDecision"
+        },
+        "EventDecision": {
+          "$ref": "#/definitions/eventDecision"
+        },
+        "TimeDecision": {
+          "$ref": "#/definitions/timeDecision"
+        },
+        "DayDecision": {
+          "$ref": "#/definitions/dayDecision"
+        }
+      },
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": false
+    },
+    "action": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "NodeInput": {
+              "$ref": "#/definitions/nodeInput"
+            }
+          },
+          "minProperties": 1,
+          "maxProperties": 1,
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/definitions/decision"
+        }
+      ]
+    },
+    "branch": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "action": {
+          "$ref": "#/definitions/action"
+        }
+      },
+      "required": [
+        "value",
+        "action"
+      ],
+      "additionalProperties": false
+    },
+    "dataDecision": {
+      "type": "object",
+      "properties": {
+        "datastreamId": {
+          "type": "integer"
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/branch"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "datastreamId",
+        "branches"
+      ],
+      "additionalProperties": false
+    },
+    "eventDecision": {
+      "type": "object",
+      "properties": {
+        "datastreamId": {
+          "type": "integer"
+        },
+        "lifetime": {
+          "type": "number"
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/branch"
+          },
+          "minItems": 1
+        },
+        "default": {
+          "$ref": "#/definitions/action"
+        }
+      },
+      "required": [
+        "datastreamId",
+        "branches",
+        "default",
+        "lifetime"
+      ],
+      "additionalProperties": false
+    },
+    "timeDecision": {
+      "type": "object",
+      "properties": {
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/branch"
+          },
+          "minItems": 2
+        }
+      },
+      "required": [
+        "branches"
+      ]
+    },
+    "dayDecision": {
+      "type": "object",
+      "properties": {
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/branch"
+          },
+          "minItems": 2
+        }
+      },
+      "required": [
+        "branches"
+      ]
+    }
+  },
+  "$ref": "#/definitions/decision"
+}

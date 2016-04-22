@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Rule</title>
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/rule_edit.css">
+    <script src="/js/d3/d3.js" charset="utf-8"></script>
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+
+    <script src="/js/rule_ui/rule_container.js"></script>
+    <script src="/js/rule_ui/sidebar.js"></script>
+    <script src="/js/rule_ui/graphics.js"></script>
+</head>
+<body>
+<div id="navbar"></div>
+
+<div class="rule-ui">
+    <div id="all-sidebars" class="sidebar-supercontainer">
+        <div class="sidebar-container" data-bind="if: curType()==='EmptyDecision', visible: curType()==='EmptyDecision'">
+            <div class="panel panel-default">
+                <h5><strong>Select Type</strong></h5>
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
+                <select id="type-select"
+                        class="form-control"
+                        data-bind="value: curType, event: {change: $root.setDotType}">
+                    <option value="EmptyDecision" disabled selected>Choose one</option>
+                    <optgroup label="Decisions">
+                        <option value="TimeDecision">Time</option>
+                        <option value="DayDecision">Day</option>
+                        <option value="DataDecision">Datastream</option>
+                        <option value="EventDecision">Event</option>
+                    </optgroup>
+                    <optgroup label="Actions">
+                        <option value="NodeInput">Actuate Node</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <div class="sidebar-container" data-bind="if: curType()==='TimeDecision', visible: curType()==='TimeDecision'">
+            <div class="panel panel-default">
+                <h4>Time Decision
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Reset</button>
+                </h4>
+                <h5>Branches</h5>
+                <div data-bind="foreach: ranges" class="form-group">
+                    <div class="row branch-row">
+                        <div class="branch-delete">
+                            <button data-bind="click: $root.deleteBranch.bind($data, $index())"
+                                    type="button" class="btn btn-danger">
+                                <span class="glyphicon glyphicon-remove-circle"></span>
+                            </button>
+                        </div>
+                        <div class="branch-row">
+                            <div class="input-group">
+                                <span class="input-group-addon">Start</span>
+                                <input type="time"
+                                       data-bind="value: $root.createTimeComputed($root.ranges()[$index()], 'start')"
+                                       placeholder="Range start"
+                                       class="form-control">
+                            </div>
+                        </div>
+                        <div class="branch-row">
+                            <div class="input-group">
+                                <span class="input-group-addon">End</span>
+                                <input type="time"
+                                       data-bind="value: $root.createTimeComputed($root.ranges()[$index()], 'end')"
+                                       placeholder="Range end"
+                                       class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button data-bind="click: addBranch" type="button" class="btn btn-block btn-primary">New branch</button>
+            </div>
+        </div>
+
+        <div class="sidebar-container" data-bind="if: curType()==='DayDecision', visible: curType()==='DayDecision'">
+            <div class="panel panel-default">
+                <h4>Day Decision
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Reset</button>
+                </h4>
+                <h5>Branches</h5>
+                <div data-bind="foreach: ranges" class="form-group">
+                    <div class="row branch-row">
+                        <div class="branch-delete">
+                            <button data-bind="click: $root.deleteBranch.bind($data, $index())"
+                                    type="button" class="btn btn-danger">
+                                <span class="glyphicon glyphicon-remove-circle"></span>
+                            </button>
+                        </div>
+                        <div class="branch-row">
+                            <div class="input-group">
+                                <span class="input-group-addon">Start</span>
+                                <select class="form-control"
+                                        data-bind="options: $root.days,
+                                                   optionsText: 'name',
+                                                   optionsValue: 'id',
+                                                   value: $data.start"></select>
+                            </div>
+                        </div>
+                        <div class="branch-row">
+                            <div class="input-group">
+                                <span class="input-group-addon">End</span>
+                                <select class="form-control"
+                                        data-bind="options: $root.days,
+                                                   optionsText: $root.inclusiveEndDay,
+                                                   optionsValue: 'id',
+                                                   value: $data.end"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button data-bind="click: addBranch" type="button" class="btn btn-block btn-primary">New branch</button>
+            </div>
+        </div>
+
+        <div class="sidebar-container" data-bind="if: curType()==='DataDecision', visible: curType()==='DataDecision'">
+            <div class="panel panel-default">
+                <h4>Data Decision
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Reset</button>
+                </h4>
+                <h5>Choose Datastream</h5>
+                <select
+                        data-bind="options: continuousDatastreams,
+                                    optionsText: 'name',
+                                    optionsValue: 'id',
+                                    value: selectedDatastream,
+                                    valueAllowUnset: true,
+                                    event: {change: $root.datastreamChanged}"
+                        class="form-control"></select>
+
+                <h5>Branches</h5>
+                <div data-bind="foreach: ranges" class="form-group">
+                    <div class="row branch-row">
+                        <div class="branch-delete">
+                            <button data-bind="click: $root.deleteBranch.bind($data, $index())"
+                                    type="button" class="btn btn-danger">
+                                <span class="glyphicon glyphicon-remove-circle"></span>
+                            </button>
+                        </div>
+                        <div class="branch-row">
+                            <div class="input-group">
+                                <span class="input-group-addon">Start</span>
+                                <input type="text"
+                                       data-bind="textInput: $data.start, event: {keyup: $root.branchesChanged}"
+                                       placeholder="Range start"
+                                       class="form-control">
+                            </div>
+                        </div>
+                        <div class="branch-row">
+                            <div class="input-group">
+                                <span class="input-group-addon">End</span>
+                                <input type="text"
+                                       data-bind="textInput: $data.end, event: {keyup: $root.branchesChanged}"
+                                       placeholder="Range end"
+                                       class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button data-bind="click: addBranch" type="button" class="btn btn-block btn-primary">New branch</button>
+            </div>
+        </div>
+
+        <div class="sidebar-container" data-bind="if: curType()==='EventDecision', visible: curType()==='EventDecision'">
+            <div class="panel panel-default">
+                <h5>Event Decision</h5>
+            </div>
+        </div>
+
+        <div class="sidebar-container" data-bind="if: curType()==='NodeInput', visible: curType()==='NodeInput'">
+            <div class="panel panel-default">
+                <h4>Actuate Node
+					<button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.removeDot">Delete</button>
+                    <button type="button"
+                            class="delete-dot btn btn-danger btn-sm"
+                            data-bind="click: $root.deleteDot">Reset</button>
+                </h4>
+                <h5><strong>Choose which node</strong></h5>
+                <select
+                    data-bind="options: nodes, optionsText: 'name', optionsValue: 'id', value: selectedNode, valueAllowUnset: true, event: {change: $root.nodeToActuateChanged}"
+                    class="form-control"></select>
+
+                <h5><strong>Decide Data</strong></h5>
+                <div data-bind="if: selectedNode() != -1">
+                    <form class="form-horizontal" id="actuate_form" data-bind="foreach: getActiveNode().inputNames">
+                        <div class="form-group">
+                            <label data-bind="text: $data, attr: {'for': 'actuate_' + $data()" class="col-sm-3 control-label">$</label>
+                            <div class="col-sm-9">
+                                <input type="text"
+                                       data-bind="textInput: $root.data()[$index()], attr: {'id': 'actuate_' + $data()"
+                                       class="form-control"
+                                       placeholder="Enter Data">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rule-drawing"></div>
+
+</div>
+</body>
+</html>

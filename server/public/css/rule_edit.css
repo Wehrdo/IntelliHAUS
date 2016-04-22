@@ -1,0 +1,96 @@
+.sidebar-container {
+    padding: 10px;
+}
+
+.panel {
+    padding: 5px;
+}
+
+.delete-dot {
+    float: right;
+}
+
+.branch-row {
+    display: flex;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-bottom: 3px;
+}
+
+.branch-delete {
+    flex-grow: 1;
+}
+
+.branch-range {
+    flex-grow: 4;
+}
+
+.range-input {
+    max-width: 100%;
+}
+
+.rule-ui {
+    display: flex;
+}
+
+.rule-drawing {
+    flex-grow: 10;
+    flex-basis: 0;
+}
+
+.sidebar-supercontainer {
+    flex-grow: 4;
+    flex-basis: 0;
+}
+
+
+/*For graphics*/
+
+.container {
+    width: 20%;
+    height: 700px;
+    float: left;
+    outline: #000000 solid 1px;
+    background-color: #eeeeee;
+    padding: 0px;
+    top: 0px;
+}
+.hidden {
+    display:none;
+}
+.full {
+    fill: green;
+}
+.result {
+    fill: orange;
+}
+.overlay {
+    fill: none;
+    pointer-events: all;
+    outline: #00FF00 dotted 2px;
+}
+.dot {
+    fill: lightsteelblue;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+.dot.result {
+    fill: orange;
+}
+.dot.dragging {
+    fill: lightskyblue;
+    stroke: steelblue;
+}
+.dot.active {
+    fill: gold;
+    stroke: goldenrod;
+}
+.dot.empty {
+    fill: lightgrey;
+    stroke: steelblue;
+}
+<!-- 	.dot.active.dragging {
+            fill: goldenrod;
+            stroke: darkgoldenrod;
+        } -->

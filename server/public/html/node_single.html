@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/ds_single.css">
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script src="/js/knockout/knockout.mapping-latest.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="/js/node_single.js"></script>
+
+    <title>Single Node</title>
+</head>
+<body>
+<div id="navbar"></div>
+
+
+<div class="info-settings-fixed">
+    <div class="settings panel panel-default">
+        <div class="alert alert-success" id="saved-alert" style="display:none">
+            <strong>All changes saved</strong>
+        </div>
+        <div class="alert alert-warning" id="unsaved-alert" style="display:none">
+            <strong>Saving...</strong>
+        </div>
+        <div class="alert alert-danger" id="failsave-alert" style="display:none">
+            <strong>Failed to save</strong>
+        </div>
+        <div class="form-group">
+            <label for="ds_name">Name:</label>
+            <input id="ds_name" data-bind="value: info.name, valueUpdate: 'afterkeyup'" type="text" class="form-control">
+        </div>
+        <div data-bind="if: info.Datastream.name()">
+            <h5><strong>Output data goes to:</strong></h5>
+            <select data-bind="options: datastreams, optionsText: 'name', optionsValue: 'id', value: info.DatastreamId, valueAllowUnset: true"
+                class="form-control"></select>
+        </div>
+        <h5><strong>Actuate node</strong></h5>
+        <form data-bind="submit: sendData" class="form-horizontal" id="actuate_form">
+            <div data-bind="foreach: info.inputNames" class="form-group">
+                <label data-bind="text: $data, attr: {'for': 'actuate_' + $data()" class="col-sm-2 control-label">$</label>
+                <div class="col-sm-10">
+                    <input value="0" data-bind="attr: {'id': 'actuate_' + $data()" type="text" class="form-control">
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Send Data</button>
+            </div>
+        </form>
+    </div>
+    <div class="info panel panel-default">
+        <h5><strong>Created on:</strong></h5>
+        <span data-bind="text: createdAtPretty"></span>
+    </div>
+</div>
+
+</body>
+</html>

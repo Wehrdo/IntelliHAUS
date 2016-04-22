@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Single Datastream</title>
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/ds_single.css">
+    <script src="/js/d3/d3.js" charset="utf-8"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="/js/knockout/knockout-3.4.0.js"></script>
+    <script src="/js/knockout/knockout.mapping-latest.js"></script>
+    <script src="/js/ds_single.js"></script>
+</head>
+<body>
+<div id="navbar"></div>
+<h1 data-bind="text: info.name"></h1>
+
+<div class="main-area">
+    <div class="info-settings">
+        <div class="settings panel panel-default">
+            <div class="alert alert-success" id="saved-alert" style="display:none">
+                <strong>All changes saved</strong>
+            </div>
+            <div class="alert alert-warning" id="unsaved-alert" style="display:none">
+                <strong>Saving...</strong>
+            </div>
+            <div class="alert alert-danger" id="failsave-alert" style="display:none">
+                <strong>Failed to save</strong>
+            </div>
+            <div class="form-group">
+                <label for="ds_name">Name:</label>
+                <input id="ds_name" data-bind="value: info.name, valueUpdate: 'afterkeyup'" type="text" class="form-control">
+            </div>
+            <label>Make datastream public:</label>
+            <br />
+            <div class="btn-group">
+                <button type="button"
+                        class="btn"
+                        data-bind="css: {'btn-warning': info.public()},
+                        click: function(){info.public(true)}">
+                    Yes
+                </button>
+                <button type="button"
+                        class="btn"
+                        data-bind="css: {'btn-primary': !info.public()},
+                        click: function(){info.public(false)}">
+                    No
+                </button>
+            </div>
+        </div>
+        <div class="info panel panel-default">
+            <h5><strong>Receives data from nodes:</strong></h5>
+            <div data-bind="foreach: info.Nodes" class="list-group">
+                <a data-bind="attr: {href: '/node/' + $data.id()}" class="list-group-item">
+                    <span data-bind="text: $data.name"></span>
+                </a>
+            </div>
+
+            <h5><strong>Created on:</strong></h5>
+            <span data-bind="text: createdAtPretty"></span>
+        </div>
+    </div>
+    <div class="data-area">
+        <div class="data-plot" id="data_plot">
+            <svg id="d3_plot"></svg>
+        </div>
+        <div class="data-settings">
+            <p>Adjust date range</p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

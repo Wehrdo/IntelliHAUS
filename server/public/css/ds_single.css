@@ -1,0 +1,70 @@
+
+.main-area {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.info-settings {
+    flex-grow: 1;
+    padding: 10px;
+    min-width: 150px;
+}
+
+.info-settings-fixed {
+    padding: 10px;
+    min-width: 150px;
+    max-width: 500px;
+}
+
+.settings, .info {
+    padding: 10px;
+}
+.settings:before {
+    top: 15px;
+    left: 15px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #747474;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    content: "Settings";
+}
+
+.info:before {
+    top: 15px;
+    left: 15px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #747474;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    content: "Information";
+}
+
+.data-area {
+    flex-grow: 3;
+    min-width: 10rem;
+}
+
+.data-plot svg {
+    width: 100%;
+    height: 100%;
+}
+
+.alert {
+    padding: 5px;
+}
+
+
+/*Overview page*/
+.create-box {
+    padding: 10px;
+}
+
+.create-box .input-group {
+    margin: 5px;
+}
+
+.list-group {
+    padding: 0 15px;
+}
