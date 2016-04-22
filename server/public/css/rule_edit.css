@@ -10,6 +10,11 @@
     float: right;
 }
 
+.save-btn {
+    padding: 10px;
+}
+
+
 .branch-row {
     display: flex;
     max-width: 100%;
@@ -40,6 +45,7 @@
 }
 
 .sidebar-supercontainer {
+	width: 20%;
     flex-grow: 4;
     flex-basis: 0;
 }
@@ -82,15 +88,36 @@
     fill: lightskyblue;
     stroke: steelblue;
 }
-.dot.active {
-    fill: gold;
-    stroke: goldenrod;
-}
 .dot.empty {
     fill: lightgrey;
     stroke: steelblue;
+}
+.dot.active {
+    fill: gold;
+    stroke: goldenrod;
 }
 <!-- 	.dot.active.dragging {
             fill: goldenrod;
             stroke: darkgoldenrod;
         } -->
+		
+.branch {
+	stroke: black;
+	stroke-width: 3;
+}
+.branch.empty {
+	stroke: black;
+	stroke-dasharray: 5,1;
+}
+.branch.incomplete {
+	stroke: red;
+	stroke-dasharray: 5,1;
+}
+.branch.focus {
+	stroke: black;
+	stroke-width: 5;
+}
+.branch.conflicted {
+	stroke: red;
+	stroke-width: 5;
+}

@@ -4,7 +4,10 @@
 
 function RuleContainer() {
     var self = this;
+    // name of this rule
 	var name = null;
+    // ID of this rule
+	var rule_id = null;
 	var treeMap = null;
 	var index = null;
 	var svg=d3.select("svg");
@@ -13,13 +16,35 @@ function RuleContainer() {
     /*
     Public methods
      */
-
+	
 	// Given a rule from the database, initialize the container for it
-	self.initRule = function(ruleInfo) {
+	self.initRule = function(ruleInfo, this_rule_id) {
 		treeMap = translate(ruleInfo.rule, null);
 		name = ruleInfo.name;
+        rule_id = this_rule_id;
 		console.log(treeMap);
 	};
+
+    self.save = function() {
+        var translated = detranslate(treeMap, "1");
+        console.log(translated);
+        $.ajax({
+            url: '/api/rule/' + rule_id,
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                name: name,
+                rule: translated
+            }),
+            success: function(data) {
+                console.log("success");
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR.responseJSON.error.toString());
+            }
+        })
+    };
 
     // Returns the information about a specific dot
 	self.getDot = function(dotId) {
@@ -55,9 +80,7 @@ function RuleContainer() {
             "ranges" : [],
             "nodeId" : null,
             "data" : [],
-            "datastreamId" : null,
-			"default" : null,
-			"lifetime" : null};
+            "datastreamId" : null};
         dot.branches.push(newDot.dotId);
         dot.ranges.push(range);
         treeMap[newDot.dotId] = newDot;
@@ -264,6 +287,9 @@ function RuleContainer() {
 	}
 	function prepareTreeUpdate() {
 		var leafNodes=prepareLeafNodes(treeMap);
+		var x="";
+		for(key in leafNodes)
+			x+=key+":"+leafNodes[key]+"\n";
 		var depths=setTreeDepth(treeMap);
 		var positions=calculatePositions(depths, "1", leafNodes);
 		return positions;
@@ -287,14 +313,13 @@ function RuleContainer() {
 		console.log("got passed");
 		if(!nodeData[branchId].branches.length)
 		{
-			delete nodeData[branchId];
 		}
 		else
 		{
 			var branches = nodeData[branchId].branches;
 			for(var i = 0; i < branches.length; i++)
 			{
-				nodeData=removeSubtree(nodeData, branchId, branches[i]);
+				nodeData=removeSubtree(branchId, branches[i]);
 			}
 		}
 		delete nodeData[branchId];
@@ -409,25 +434,30 @@ function RuleContainer() {
 		var nodeId=node.nodeId;
 		var data=node.data;
 		var ranges=node.ranges;
-		var nodeDefault=node.nodeDefault;
-		var lifetime=node.lifetime;
-		if(type=="NodeInput")
-		{
+		//var nodeDefault=node.nodeDefault;
+		//var lifetime=node.lifetime;
+		if(type=="NodeInput") {
 			forServer[type]={
 				"nodeId" : nodeId,
 				"data" :data
-			}
+			};
 			return forServer;
 		}
+        else if (type == "EmptyDecision") {
+            return null;
+        }
 		else
 		{
-			delete nodeData[nid];
-			forServer.branches=[];
-			for(var key in node.branches)
-				forServer[type].branches.push({
-					"value" : node.ranges[i],
-					"action" : detranslate(nodeData, node.branches[i], 0)
-				});
+            forServer[type] = {};
+			forServer[type].branches=[];
+            var i = 0;
+			for(var key in node.branches) {
+                forServer[type].branches.push({
+                    "value": node.ranges[i],
+                    "action": detranslate(nodeData, node.branches[i], 0)
+                });
+                i++;
+            }
 			if(type=="EventDecision")
 			{
 				forServer[type].lifetime = node.lifetime;
@@ -441,7 +471,6 @@ function RuleContainer() {
 			return forServer;
 		}
 	}
-	//console.log(detranslate(treeMap, "1", true));
 }
 
 window.ruleContainer = new RuleContainer();
@@ -449,11 +478,11 @@ window.ruleContainer = new RuleContainer();
 document.addEventListener('DOMContentLoaded', function() {
     // Get the ID from the URL
     var splitURL = window.location.href.split('/');
-    var ruleId = splitURL[splitURL.length-1].replace(/\D/g,'');
+    var rule_id = splitURL[splitURL.length-1].replace(/\D/g,'');
 
-    $.getJSON('/api/rule/' + ruleId, function(data) {
+    $.getJSON('/api/rule/' + rule_id, function(data) {
         if (data.success) {
-			ruleContainer.initRule(data.rule);
+			ruleContainer.initRule(data.rule, rule_id);
             ruleGraphics    .createTree();
         } else {
             console.log(data.error);
