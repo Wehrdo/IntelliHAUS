@@ -151,7 +151,7 @@ function evalEventBranches(decision, curVal) {
 }
 
 process.on('message', function(message) {
-    models.Rule.findById(message.ruleId)
+    models.Rule.findById(message.rule_id)
         .then(function(db_rule) {
             evalAction(db_rule.rule);
         });
