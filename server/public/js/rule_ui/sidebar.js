@@ -7,7 +7,7 @@ function SidebarModel() {
     // Currently selected dot ID
     curDot = null;
     /*
-    Public methods
+     Public methods
      */
     self.dotClicked = function(dotId) {
         curDot = dotId;
@@ -31,7 +31,7 @@ function SidebarModel() {
         }));
         self.branches = dotData.branches;
         self.curType(dotData.type);
-		console.log(dotId);
+        console.log(dotId);
     };
 
     self.branchesChanged = function() {
@@ -41,11 +41,11 @@ function SidebarModel() {
         });
         ruleContainer.updateRanges(curDot, ranges_array);
     };
-	self.currentDot = function() {
-		return curDot;
-	}
+    self.currentDot = function() {
+        return curDot;
+    }
     /*
-    Knockout Bindings
+     Knockout Bindings
      */
     self.curType = ko.observable("InitialValue");
 
@@ -56,17 +56,17 @@ function SidebarModel() {
 
     self.deleteDot = function() {
         ruleContainer.deleteAllBranches(curDot);
-		ruleContainer.setDotType(curDot, "EmptyDecision");
+        ruleContainer.setDotType(curDot, "EmptyDecision");
         self.dotClicked(curDot);
     };
-	self.removeDot = function() {
-		var pid=ruleContainer.getParent(curDot);
-		if(pid!=null)
-		{
-			ruleContainer.deleteBranch(curDot);
-			self.dotClicked(pid);
-		}
-	}
+    self.removeDot = function() {
+        var pid=ruleContainer.getParent(curDot);
+        if(pid!=null)
+        {
+            ruleContainer.deleteBranch(curDot);
+            self.dotClicked(pid);
+        }
+    }
 
     // All the datastreams of the user
     self.datastreams = ko.observableArray([]);
@@ -196,12 +196,12 @@ function SidebarModel() {
 
     // Array of days of the week for a DayDecision
     self.days = [{name: 'Sunday', id: 0},
-                {name: 'Monday', id: 1},
-                {name: 'Tuesday', id: 2},
-                {name: 'Wednesday', id: 3},
-                {name: 'Thursday', id: 4},
-                {name: 'Friday', id: 5},
-                {name: 'Saturday', id: 6}];
+        {name: 'Monday', id: 1},
+        {name: 'Tuesday', id: 2},
+        {name: 'Wednesday', id: 3},
+        {name: 'Thursday', id: 4},
+        {name: 'Friday', id: 5},
+        {name: 'Saturday', id: 6}];
 
     // Returns the name of the day if the range were inclusive
     // Users would expect the day to be inclusive
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ko.applyBindings(window.sidebar, document.getElementById("all-sidebars"));
 
 
-    /*$.getJSON('/api/home', function(data) {
+    $.getJSON('/api/home', function(data) {
         if (data.success) {
             $.getJSON('/api/node?homeid=' + data.homes[0].id, function(data) {
                 if (data.success) {
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.log("Error getting homes: " + data.error);
         }
-    });*/
+    });
 
 
     $.getJSON('/api/datastream', function(data) {

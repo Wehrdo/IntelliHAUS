@@ -3,58 +3,58 @@
  */
 
 function RuleGraphics() {
-    /*
-	Variables
+	/*
+	 Variables
 	 */
 	var self=this;
-    if(typeof id=='undefined')id=0;
-    var radius = 20;
-    var margin = {top: 20, right: 20, bottom: 30, left: 40};
-    var width = 960 - margin.left - margin.right;
-    var height = 710 - margin.top - margin.bottom;
-    var drag = d3.behavior.drag()  
-    	.on('dragstart', dragstarted)
-    	.on('drag', dragged)
-    	.on('dragend', dragended);
-    var zoom = d3.behavior.zoom()
-        .scaleExtent([1/5, 5])
-        .on("zoom", zoomed);
-    var svg=d3.select(".rule-drawing")
-			.append("svg")
-			.attr("width", "95%")
-    		.attr("height", window.innerHeight)
-    		.style("outline","#000000 solid 2px")
-    		.attr("transform", "translate(" + margin.left + "," + margin.right + ")")
-    		.call(zoom)
-    		.on("dblclick.zoom", null)
-    		.append("g");
+	if(typeof id=='undefined')id=0;
+	var radius = 20;
+	var margin = {top: 20, right: 20, bottom: 30, left: 40};
+	var width = 960 - margin.left - margin.right;
+	var height = 710 - margin.top - margin.bottom;
+	var drag = d3.behavior.drag()
+		.on('dragstart', dragstarted)
+		.on('drag', dragged)
+		.on('dragend', dragended);
+	var zoom = d3.behavior.zoom()
+		.scaleExtent([1/5, 5])
+		.on("zoom", zoomed);
+	var svg=d3.select(".rule-drawing")
+		.append("svg")
+		.attr("width", "95%")
+		.attr("height", window.innerHeight)
+		.style("outline","#000000 solid 2px")
+		.attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+		.call(zoom)
+		.on("dblclick.zoom", null)
+		.append("g");
 	var positionData=[{
-    	"id":null,
-    	"x":null,
-    	"y":null,
-    	"type":null}];
-    var lineData=[{
-    	"x1":null,
-    	"y1":null,
-    	"x2":null,
-    	"y2":null,
+		"id":null,
+		"x":null,
+		"y":null,
+		"type":null}];
+	var lineData=[{
+		"x1":null,
+		"y1":null,
+		"x2":null,
+		"y2":null,
 		"id":null
-    }];
-    var nodes;
+	}];
+	var nodes;
 	var depths;
-	
+
 	/*
-    Public methods
-     */
-	
-    //Create tree on page load
-    self.createTree = function() {
+	 Public methods
+	 */
+
+	//Create tree on page load
+	self.createTree = function() {
 		var positions=ruleContainer.getPositions();
 		//nodes=translate(nodes, null);
 		self.posData(positions);
 		self.linData(positions);
 		drawNodes();
-    };
+	};
 	//Create new 'decision' dot
 	self.addDecision = function(nodeData, pid, range) {
 		var parentX=nodeData[pid].x;
@@ -103,10 +103,10 @@ function RuleGraphics() {
 		d3.select(document.getElementById(pid)).classed("empty", false);
 		updateTree(nodeData);
 	};
-	
+
 	self.removeTreeElements = function(nodeData, nid, branchId) {
 		if(!nodeData[nid]||!nodeData[nid].branches.length)
-				d3.select(document.getElementById(nid)).classed("empty", true);
+			d3.select(document.getElementById(nid)).classed("empty", true);
 		remove(document.getElementById(branchId));
 		remove(document.getElementById(nid+"-"+branchId));
 	};
@@ -123,38 +123,38 @@ function RuleGraphics() {
 			.classed("active", true);
 	}
 	self.linData = function(nodeData) {
-    	lineData=[];
-    	for(var key in nodeData)
-    	{
-    		var i;
-    		for(i = 0; i < nodeData[key].branches.length; i++)
-    		{
-    			var branch=nodeData[nodeData[key].branches[i]];
-    			lineData.push({
-    				"x1" : nodeData[key].x,
-    				"y1" : nodeData[key].y,
-    				"x2" : branch.x,
-    				"y2" : branch.y,
+		lineData=[];
+		for(var key in nodeData)
+		{
+			var i;
+			for(i = 0; i < nodeData[key].branches.length; i++)
+			{
+				var branch=nodeData[nodeData[key].branches[i]];
+				lineData.push({
+					"x1" : nodeData[key].x,
+					"y1" : nodeData[key].y,
+					"x2" : branch.x,
+					"y2" : branch.y,
 					"id" : nodeData[key].dotId+"-"+branch.dotId
-    			});
-    		}
-    	}
-    };
-    self.posData = function(nodeData) {
-    	positionData=[];
-    	for(var key in nodeData)
-    	{
-    		positionData.push({
-    			"id" : nodeData[key].dotId,
-    			"x" : nodeData[key].x,
-    			"y" : nodeData[key].y,
-    			"type" : nodeData[key].type
-    		});
-    	}
-    };
+				});
+			}
+		}
+	};
+	self.posData = function(nodeData) {
+		positionData=[];
+		for(var key in nodeData)
+		{
+			positionData.push({
+				"id" : nodeData[key].dotId,
+				"x" : nodeData[key].x,
+				"y" : nodeData[key].y,
+				"type" : nodeData[key].type
+			});
+		}
+	};
 	self.updateTreeDep = function(nodeData) {
 		updateTree(nodeData);
-	}; 
+	};
 	self.updateTreeInd = function() {
 		var positions=RuleContainer.getPositions();
 		updateTree(positions);
@@ -176,8 +176,8 @@ function RuleGraphics() {
 			.classed("branch empty");
 	}
 	/*
-    Private methods
-     */
+	 Private methods
+	 */
 
 	//Moves all svg elements to their desired location transitionally
 	function updateTree(nodeData) {
@@ -202,51 +202,51 @@ function RuleGraphics() {
 				.duration(500);
 		}
 	}
-    function dragstarted(d) {
-      //d3.event.sourceEvent.stopPropagation();
-      d3.select(this).classed("dragging", true);
-    }
-    
-    function dragged(d) {
-      d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-    }
-    
-    function dragended(d) {
-      d3.select(this).classed("dragging", false);
-      //swapDisplay();
-    }
-    function zoomed() {
-      svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    }
-    
-    //Move d3 element to end of siblings
-    d3.selection.prototype.moveToFront = function() {
-      return this.each(function(){
-        this.parentNode.appendChild(this);
-      });
-    };
+	function dragstarted(d) {
+		//d3.event.sourceEvent.stopPropagation();
+		d3.select(this).classed("dragging", true);
+	}
+
+	function dragged(d) {
+		d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+	}
+
+	function dragended(d) {
+		d3.select(this).classed("dragging", false);
+		//swapDisplay();
+	}
+	function zoomed() {
+		svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	}
+
+	//Move d3 element to end of siblings
+	d3.selection.prototype.moveToFront = function() {
+		return this.each(function(){
+			this.parentNode.appendChild(this);
+		});
+	};
 	//Move d3 element to first of siblings
-    d3.selection.prototype.moveToBack = function() { 
-        return this.each(function() { 
-            var firstChild = this.parentNode.firstChild; 
-            if (firstChild) { 
-                this.parentNode.insertBefore(this, firstChild); 
-            } 
-        }); 
-    };
+	d3.selection.prototype.moveToBack = function() {
+		return this.each(function() {
+			var firstChild = this.parentNode.firstChild;
+			if (firstChild) {
+				this.parentNode.insertBefore(this, firstChild);
+			}
+		});
+	};
 	function remove(e) {
 		e.parentElement.removeChild(e);
 	}
 
-    	
-    function drawNodes() {
-    	var lines=svg.selectAll(".branch")
-    		.data(lineData)
-    		.enter()
-    		.append("line")
+
+	function drawNodes() {
+		var lines=svg.selectAll(".branch")
+			.data(lineData)
+			.enter()
+			.append("line")
 			.attr("class", "branch")
-//			.attr("stroke-width", 2)
-//			.attr("stroke", "black")
+			//			.attr("stroke-width", 2)
+			//			.attr("stroke", "black")
 			.attr("x1", function(d) { return d.x1; })
 			.attr("y1", function(d) { return d.y1; })
 			.attr("x2", function(d) { return d.x2; })
@@ -254,19 +254,19 @@ function RuleGraphics() {
 			.attr("id", function(d) { return d.id.toString(); })
 			.attr("onmouseenter", function(d) { return "d3.select(this).classed('focus', true);" })
 			.attr("onmouseout", function(d) { return "d3.select(this).classed('focus', false);" });
-    	var dots = svg.selectAll(".dot")  
-    		.data(positionData)
-    		.enter()
-    		.append("circle")
-    		.attr("class", function(d) { return "dot "+((d.type=="NodeInput")?"result":((d.type=="EmptyDecision")?"empty decision":"decision")); })
-    		.attr("cx", function(d) { return d.x; })
-    		.attr("cy", function(d) { return d.y; })
-    		.attr("r", radius)
+		var dots = svg.selectAll(".dot")
+			.data(positionData)
+			.enter()
+			.append("circle")
+			.attr("class", function(d) { return "dot "+((d.type=="NodeInput")?"result":((d.type=="EmptyDecision")?"empty decision":"decision")); })
+			.attr("cx", function(d) { return d.x; })
+			.attr("cy", function(d) { return d.y; })
+			.attr("r", radius)
 			.attr("id", function(d) { return d.id.toString(); })
-    		.attr("onclick", function(d) { return "ruleGraphics.changeActiveNode(this.id);sidebar.dotClicked(this.id);"});
-    }
+			.attr("onclick", function(d) { return "ruleGraphics.changeActiveNode(this.id);sidebar.dotClicked(this.id);"});
+	}
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    window.ruleGraphics = new RuleGraphics();
+	window.ruleGraphics = new RuleGraphics();
 });

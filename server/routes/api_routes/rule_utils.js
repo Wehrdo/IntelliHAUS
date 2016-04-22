@@ -359,7 +359,7 @@ exports.setAssociations = function(req, res, next) {
         var records = req.eval_times.map(function (time) {
             return {
                 time: time,
-                RuleId: rule_id
+                RuleId: ruleId
             }
         });
         models.RuleTime.bulkCreate(records, {validate: true})
@@ -371,7 +371,7 @@ exports.setAssociations = function(req, res, next) {
             catchHandler(res)("Eval times not created");
         }
         // After creation or updating of rule, evaluate it
-        ruleEvaluation.evalRule(rule_id);
+        ruleEvaluation.evalRule(ruleId);
     }).catch(catchHandler(res))
     }).catch(catchHandler(res))
     }).catch(catchHandler(res))
