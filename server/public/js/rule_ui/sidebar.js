@@ -5,9 +5,9 @@
 function SidebarModel() {
     var self = this;
     // Currently selected dot ID
-    var curDot = null;
+    curDot = null;
     /*
-    Public methods
+     Public methods
      */
     self.dotClicked = function(dotId) {
         curDot = dotId;
@@ -31,6 +31,7 @@ function SidebarModel() {
         }));
         self.branches = dotData.branches;
         self.curType(dotData.type);
+        console.log(dotId);
     };
 
     self.branchesChanged = function() {
@@ -40,9 +41,12 @@ function SidebarModel() {
         });
         ruleContainer.updateRanges(curDot, ranges_array);
     };
+    self.currentDot = function() {
+        return curDot;
+    };
 
     /*
-    Knockout Bindings
+     Knockout Bindings
      */
     self.curType = ko.observable("InitialValue");
 
@@ -52,9 +56,18 @@ function SidebarModel() {
     };
 
     self.deleteDot = function() {
-        ruleContainer.deleteDot(curDot);
+        ruleContainer.deleteAllBranches(curDot);
+        ruleContainer.setDotType(curDot, "EmptyDecision");
         self.dotClicked(curDot);
     };
+    self.removeDot = function() {
+        var pid=ruleContainer.getParent(curDot);
+        if(pid!=null)
+        {
+            ruleContainer.deleteBranch(curDot);
+            self.dotClicked(pid);
+        }
+    }
 
     // All the datastreams of the user
     self.datastreams = ko.observableArray([]);
@@ -146,7 +159,7 @@ function SidebarModel() {
         self.ranges.splice(index, 1);
         // TODO: Notify ruleContainer
         // self.branches.splice(index, 1);
-        ruleContainer.deleteDot(self.branches[index]);
+        ruleContainer.deleteBranch(self.branches[index]);
     };
 
     // Converts the minutes of a day (0 - 1440) into a date string for a time input box
@@ -170,7 +183,6 @@ function SidebarModel() {
                 return ('00' + hours).substr(-2) + ':' + ('00' + minutes).substr(-2);
             },
             write: function(value) {
-                self.branchesChanged();
                 var hours = Number.parseInt(value.substr(0, 2));
                 var minutes = Number.parseInt(value.substr(3, 2));
                 var total_minutes = hours*60 + minutes;
@@ -178,18 +190,19 @@ function SidebarModel() {
                     total_minutes = 1440;
                 }
                 obj[prop] = hours*60 + minutes;
+                self.branchesChanged();
             }
         });
     };
 
     // Array of days of the week for a DayDecision
     self.days = [{name: 'Sunday', id: 0},
-                {name: 'Monday', id: 1},
-                {name: 'Tuesday', id: 2},
-                {name: 'Wednesday', id: 3},
-                {name: 'Thursday', id: 4},
-                {name: 'Friday', id: 5},
-                {name: 'Saturday', id: 6}];
+        {name: 'Monday', id: 1},
+        {name: 'Tuesday', id: 2},
+        {name: 'Wednesday', id: 3},
+        {name: 'Thursday', id: 4},
+        {name: 'Friday', id: 5},
+        {name: 'Saturday', id: 6}];
 
     // Returns the name of the day if the range were inclusive
     // Users would expect the day to be inclusive

@@ -81,7 +81,7 @@ function doEval() {
 }
 
 function evalRule(ruleId) {
-    eval_q.push(ruleId);
+    eval_q.push(rule_id);
     doEval();
 }
 
