@@ -22,9 +22,9 @@ int main() {
 	Communicator comm(NODEID, "intellihub.ece.iastate.edu",
 			[&strip](const Packet& p){cbPacket(p, strip);});
 
-	this_thread::sleep_for(chrono::seconds(2));
+	//this_thread::sleep_for(chrono::seconds(2));
 
-	comm.Connect();
+	//comm.Connect();
 
 	while(1) {
 		ioService.run();
@@ -33,7 +33,7 @@ int main() {
 		this_thread::sleep_for(chrono::milliseconds(10));
 	}
 
-	comm.Disconnect();
+	//comm.Disconnect();
 
 	return 0;
 }
