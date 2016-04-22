@@ -7,6 +7,7 @@ function RuleContainer() {
 	var name = null;
 	var treeMap = null;
 	var index = null;
+    var rule_id = null;
 	var svg=d3.select("svg");
 	l=0;
 	if(typeof id=='undefined')id=0;
@@ -15,11 +16,37 @@ function RuleContainer() {
      */
 
 	// Given a rule from the database, initialize the container for it
-	self.initRule = function(ruleInfo) {
+	self.initRule = function(ruleInfo, this_rule_id) {
 		treeMap = translate(ruleInfo.rule, null);
 		name = ruleInfo.name;
+        rule_id = this_rule_id;
 		console.log(treeMap);
 	};
+
+    self.save = function() {
+        var translated = detranslate(treeMap, "1");
+        console.log(translated);
+        $.ajax({
+            url: '/api/rule/' + rule_id,
+            type: 'PUT',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                name: name,
+                rule: translated
+            }),
+            success: function(data) {
+                if (data.success) {
+                    console.log("success");
+                } else {
+                    console.log("error: " + data.error);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR.responseJSON.error.toString());
+            }
+        })
+    };
 
     // Returns the information about a specific dot
 	self.getDot = function(dotId) {
@@ -68,6 +95,7 @@ function RuleContainer() {
     // Set the type for an existing dot
     self.setDotType = function(dotId, newType) {
         treeMap[dotId].type = newType;
+		console.log(newType);
 		
 		if(newType=="EventDecision")
 		{
@@ -268,6 +296,7 @@ function RuleContainer() {
 		var branchArr=[];
 		var ranges=nodeData[nid].ranges;
 		var branches=nodeData[nid].branches;
+		console.log(ranges);
 		for(var i = 0; i < ranges.length; i++)
 		{
 			if(ranges[i][0]===undefined&&ranges[i][1]===undefined)
@@ -295,7 +324,6 @@ function RuleContainer() {
 		var defaults=makeDefaults(newObject);
 		var leafNodes=prepareLeafNodes(defaults);
 		var depths=setTreeDepth(defaults);
-		console.log(defaults);
 		var positions=calculatePositions(defaults, "1", leafNodes);
 		return positions;
 	}
@@ -400,8 +428,6 @@ function RuleContainer() {
     	return setDepths(nodeData, 1, 0);
     }
 	function calculatePositions(nodeData, dotId, leafNodes) {
-		console.log("nodeData");
-		console.log(nodeData);
     	var branches=nodeData[dotId].branches;
     	var x;
     	var y=0;
@@ -434,62 +460,63 @@ function RuleContainer() {
     	nodeData[dotId].y=y;
     	return nodeData;
     }
-	function makeDefaults(nodeData) {
-		for(var i=0; i < Object.keys(nodeData).length; i++)
-		{
-			var obj=Object.keys(nodeData)[i];
-			var type=nodeData[obj].type;
-			if(type=="EventDecision")
-			{
-				nodeData[obj].branches.push(nodeData[obj]["default"]);
-				nodeData[obj].ranges.push([null, null]);
-			}
-		}
-		return nodeData;
-	}
-	function detranslate(nodeData, nid, isFirst) {
-		var forServer={};
-		
-		var node=nodeData[nid];
-		var type=node.type;
-		var branches=node.branches;
-		var datastreamId=node.datastreamId;
-		var nodeId=node.nodeId;
-		var data=node.data;
-		var ranges=node.ranges;
-		//var nodeDefault=node.default;
-		//var lifetime=node.lifetime;
-		if(type=="NodeInput")
-		{
-			forServer[type]={
-				"nodeId" : nodeId,
-				"data" : data
-			}
-			return forServer;
-		}
-		else
-		{
-			delete nodeData[nid];
-			forServer.branches=[];
-			for(var key in node.branches)
-				forServer[type].branches.push({
-					"value" : node.ranges[i],
-					"action" : detranslate(nodeData, node.branches[i], 0)
-				});
-			if(type=="EventDecision")
-			{
-				forServer[type].lifetime = node.lifetime;
-				forServer[type]["default"] = node.default;
-				forServer[type].datastreamId = node.datastreamId;
-				
-			}
-			else if(type=="DataDecision")
-			{
-				forServer[type].datastreamId = node.datastreamId;
-			}
-			return forServer;
-		}
-	}
+    function makeDefaults(nodeData) {
+        for(var i=0; i < Object.keys(nodeData).length; i++)
+        {
+            var obj=Object.keys(nodeData)[i];
+            var type=nodeData[obj].type;
+            if(type=="EventDecision")
+            {
+                nodeData[obj].branches.push(nodeData[obj]["default"]);
+                nodeData[obj].ranges.push([null, null]);
+            }
+        }
+        return nodeData;
+    }
+    function detranslate(nodeData, nid, isFirst) {
+        var forServer={};
+        var node=nodeData[nid];
+        if (node === null) {
+            return null;
+        }
+        var type=node.type;
+        var nodeId=node.nodeId;
+        var data=node.data;
+        if(type=="NodeInput") {
+            forServer[type]={
+                "nodeId" : nodeId,
+                "data" :data
+            };
+            return forServer;
+        }
+        else if (type == "EmptyDecision") {
+            return null;
+        }
+        else
+        {
+            forServer[type] = {};
+            forServer[type].branches=[];
+            var i = 0;
+            for(var key in node.branches) {
+                forServer[type].branches.push({
+                    "value": (type == "EventDecision") ? node.ranges[i][0] : node.ranges[i],
+                    "action": detranslate(nodeData, node.branches[i], 0)
+                });
+                i++;
+            }
+            if(type=="EventDecision")
+            {
+                forServer[type].lifetime = node.lifetime;
+                forServer[type]["default"] = detranslate(nodeData, node.default);
+                forServer[type].datastreamId = node.datastreamId;
+            }
+            else if(type=="DataDecision")
+            {
+                forServer[type].datastreamId = node.datastreamId;
+            }
+            return forServer;
+        }
+    }
 	//console.log(detranslate(treeMap, "1", true));
 }
 
@@ -502,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     $.getJSON('/api/rule/' + ruleId, function(data) {
         if (data.success) {
-			ruleContainer.initRule(data.rule);
+			ruleContainer.initRule(data.rule, ruleId);
             ruleGraphics.createTree();
 			sidebar.dotClicked("1");
         } else {

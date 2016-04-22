@@ -111,7 +111,8 @@
                                         data-bind="options: $root.days,
                                                    optionsText: 'name',
                                                    optionsValue: 'id',
-                                                   value: $data.start"></select>
+                                                   value: $data.start,
+                                                   event: {change: $root.branchesChanged}"></select>
                             </div>
                         </div>
                         <div class="branch-row">
@@ -121,7 +122,8 @@
                                         data-bind="options: $root.days,
                                                    optionsText: $root.inclusiveEndDay,
                                                    optionsValue: 'id',
-                                                   value: $data.end"></select>
+                                                   value: $data.end,
+                                                   event: {change: $root.branchesChanged}"></select>
                             </div>
                         </div>
                     </div>

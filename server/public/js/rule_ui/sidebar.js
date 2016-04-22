@@ -55,7 +55,7 @@ function SidebarModel() {
     // Type was selected for a previously EmptyDecision
     self.setDotType = function() {
         ruleContainer.setDotType(curDot, self.curType());
-		console.log(self.curType());
+        self.dotClicked(curDot);
     };
 
     self.deleteDot = function() {
@@ -213,7 +213,7 @@ function SidebarModel() {
                 if (total_minutes === 0 && prop === 'end') {
                     total_minutes = 1440;
                 }
-                obj[prop] = hours*60 + minutes;
+                obj[prop] = total_minutes;
                 self.branchesChanged();
             }
         });
