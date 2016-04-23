@@ -7,9 +7,14 @@ from hubComm import Communicator
 comm = Communicator("intellihub.ece.iastate.edu", 5)
 
 phrase_map = {
-    "turn the light on": 1,
-    "make the light blue": 2,
-    "switch the fan on": 3,
+    "turn the light on": 0,
+    "turn off the light": 1,
+    "turn the fan on": 2,
+    "turn off the fan": 3,
+    "make the light orange": 4,
+    "make the light green": 5,
+    "dim the lights": 6,
+    "follow the climate": 7
 }
 
 AUDIO_SIZE = 1024
@@ -35,7 +40,8 @@ while True:
     decoder.process_raw(buf, False, False)
     hyp = decoder.hyp()
     if hyp != None:
-        print("Best match: " + hyp.hypstr + ", score: " + str(hyp.best_score) + ", confidence: " + str(logmath.exp(hyp.prob)))
-        comm.send_voice(phrase_map[hyp.hypstr])
+        print("\nBest match: " + hyp.hypstr + ", score: " + str(hyp.best_score) + ", confidence: " + str(logmath.exp(hyp.prob)) + "\n")
+        if (hyp.hypstr in phrase_map):
+            comm.send_voice(phrase_map[hyp.hypstr])
         decoder.end_utt()
         decoder.start_utt()
