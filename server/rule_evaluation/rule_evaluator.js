@@ -151,7 +151,6 @@ function evalEventBranches(decision, curVal) {
 }
 
 process.on('message', function(message) {
-    console.log("Evaluating...");
     models.Rule.findById(message.ruleId)
         .then(function(db_rule) {
             evalAction(db_rule.rule);

@@ -147,7 +147,7 @@ function SidebarModel() {
     self.dataChanged = function() {
         ruleContainer.setNodeData(curDot,
             self.data().map(function(data_observable) {
-                return data_observable();
+                return Number.parseFloat(data_observable());
             }));
     };
 
