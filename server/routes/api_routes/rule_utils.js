@@ -170,13 +170,15 @@ exports.logicValidate = function(req, res, next) {
                 check_range = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
             }
             else if (decisionType === "DayDecision") {
-                check_range = [1, 7]
+                check_range = [0, 6]
             }
             else if (decisionType === "EventDecision") {
                 // Since EventDecisions have the 'default' option, we do not need to check
                 // their branch coverage
                 do_check_range = false;
-                q.add(rule[decisionType].default);
+                if (rule[decisionType].default) {
+                    q.add(rule[decisionType].default);
+                }
                 // Ensure the lifetime is positive
                 valid = valid && (rule[decisionType].lifetime > 0);
             }

@@ -66,7 +66,7 @@ router.put('/:id(\\d+)',
     function(req, res, next) {
         // Update the corresponding rule
         req.rule.update(
-            req.body.rule,
+            req.body,
             {fields: ['name', 'rule']}
         ).then(function() {
             // Rule updated, delete RuleTime entries

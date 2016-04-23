@@ -111,7 +111,8 @@
                                         data-bind="options: $root.days,
                                                    optionsText: 'name',
                                                    optionsValue: 'id',
-                                                   value: $data.start"></select>
+                                                   value: $data.start,
+                                                   event: {change: $root.branchesChanged}"></select>
                             </div>
                         </div>
                         <div class="branch-row">
@@ -121,7 +122,8 @@
                                         data-bind="options: $root.days,
                                                    optionsText: $root.inclusiveEndDay,
                                                    optionsValue: 'id',
-                                                   value: $data.end"></select>
+                                                   value: $data.end,
+                                                   event: {change: $root.branchesChanged}"></select>
                             </div>
                         </div>
                     </div>
@@ -205,9 +207,9 @@
 
                 <h5>Branches</h5>
                 <div class="row branch-row">
-                    <div class="input-group">
-                        <span class="input-group-addon">Event</span>
-                        <span class="form-control">Default</span>
+                    <div class="input-group ">
+                        <span class="input-group-addon default-box">Event</span>
+                        <span class="form-control default-box">Default</span>
                     </div>
                 </div>
                 <div data-bind="foreach: ranges" class="form-group">
@@ -222,14 +224,19 @@
                             <div class="input-group">
                                 <span class="input-group-addon">Event</span>
                                 <select data-bind="options: $root.discreteEvents,
-                                                    optionsValue: 'start',
+                                                    optionsValue: 'value',
                                                     optionsText: 'label',
-                                                    value: $root.ranges()[$index()].start,
+                                                    value: $data.start,
+                                                    valueAllowUnset: true,
                                                     event: {change: $root.branchesChanged}"
                                        class="form-control"></select>
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Event Lifetime</label>
+                    <input type="text" data-bind="textInput: eventLifetime" placeholder="Minutes">
                 </div>
                 <button data-bind="click: addBranch, visible: $root.ranges().length != $root.discreteEvents().length" type="button" class="btn btn-block btn-primary">New branch</button>
             </div>

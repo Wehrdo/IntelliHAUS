@@ -36,7 +36,11 @@ function RuleContainer() {
                 rule: translated
             }),
             success: function(data) {
-                console.log("success");
+                if (data.success) {
+                    console.log("success");
+                } else {
+                    console.log("error: " + data.error);
+                }
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR.responseJSON.error.toString());
@@ -50,8 +54,8 @@ function RuleContainer() {
 	};
 
     self.updateRanges = function(nid, newRanges) {
-        // treeMap[nid].ranges = newRanges;
-		// var arr=checkBrokenBranches(treeMap, nid);
+        treeMap[nid].ranges = newRanges;
+		var arr=checkBrokenBranches(treeMap, nid);
 		// sortBranches(nid, arr);
 		// var positions=prepareTreeUpdate();
 		// ruleGraphics.updateTreeDep(positions);
@@ -91,11 +95,36 @@ function RuleContainer() {
     // Set the type for an existing dot
     self.setDotType = function(dotId, newType) {
         treeMap[dotId].type = newType;
-        ruleGraphics.setDotType(dotId, newType);
-    };
+		console.log(newType);
+		
+		if(newType=="EventDecision")
+		{
+			id++;
+			treeMap[dotId].default = id.toString();
+			treeMap[id.toString()]={
+				"dotId" : id.toString(),
+				"type" : 'EmptyDecision',
+				"parent" : dotId,
+				"branches" : [],
+				"ranges" : [],
+				"nodeId" : null,
+				"data" : [],
+				"datastreamId" : null,
+				"default" : null,
+				"lifetime" : 1
+				};
+			var positions=prepareTreeUpdate();
+			ruleGraphics.addDefault(positions, dotId);
+			ruleGraphics.setDotType(dotId, newType);
+		}
+	};
 	self.deleteAllBranches = function(nid) {
 		//console.log(treeMap[nid].branches);
 		//console.log(treeMap[nid].branches.length);
+		if(treeMap[nid].type=="EventDecision")
+		{
+			self.deleteBranch(treeMap[nid].default);
+		}
 		var branches=treeMap[nid].branches;
 		var length=branches.length;
 		for(var i = 0; i < length; i++)
@@ -108,12 +137,20 @@ function RuleContainer() {
 		return treeMap[nid].parent;
 	}
     self.deleteBranch = function(branchId) {
+		
 		var pid=treeMap[branchId].parent;
-        var i=treeMap[pid.toString()].branches.indexOf(branchId);
+		if(treeMap[pid].default)
+		{
+			treeMap=removeSubtree(treeMap, pid, treeMap[pid].default);
+			var positions=prepareTreeUpdate();
+			ruleGraphics.updateTreeDep(positions);
+		}
+        var i=treeMap[pid].branches.indexOf(branchId);
 		if(i > -1)
 		{
-			treeMap[pid.toString()].branches.splice(i,1);
-			treeMap[pid.toString()].ranges.splice(i,1);
+			treeMap[pid].branches.splice(i,1);
+			treeMap[pid].ranges.splice(i,1);
+			
 			treeMap=removeSubtree(treeMap, pid, branchId);
 			var positions=prepareTreeUpdate();
 			ruleGraphics.updateTreeDep(positions);
@@ -136,6 +173,9 @@ function RuleContainer() {
     // Set the ID to use for a datastream in a DataDecision
     self.setDatastream = function(dotId, dsId) {
         treeMap[dotId].datastreamId = dsId;
+    };
+	self.setLifetime = function(dotId, lt) {
+        treeMap[dotId].lifetime = lt;
     };
     
 	/*
@@ -296,9 +336,10 @@ function RuleContainer() {
 	}
 	function prepareTreeUpdate() {
 		var newObject = jQuery.extend(true, {}, treeMap);
-		var leafNodes=prepareLeafNodes(newObject);
-		var depths=setTreeDepth(newObject);
-		var positions=calculatePositions(depths, "1", leafNodes);
+		var defaults=makeDefaults(newObject);
+		var leafNodes=prepareLeafNodes(defaults);
+		var depths=setTreeDepth(defaults);
+		var positions=calculatePositions(defaults, "1", leafNodes);
 		return positions;
 	}
 	/* function initNode(pid) {
@@ -310,14 +351,17 @@ function RuleContainer() {
 			"ranges" : [],
 			"nodeId" : null,
 			"data" : null,
-			"dataStreamId" : null
+			"datastreamId" : null
 		};
 	} */
 	function removeSubtree(nodeData, pid, branchId) {
 		ruleGraphics.removeTreeElements(nodeData, pid, branchId);
 		if(!nodeData[branchId])
 			return nodeData;
-		console.log("got passed");
+		if(nodeData[branchId].default)
+		{
+			
+		}
 		if(!nodeData[branchId].branches.length)
 		{
 			delete nodeData[branchId];
@@ -365,8 +409,11 @@ function RuleContainer() {
 		var leafNodes = {};
     	var branches=nodeData[dotId].branches;
     	if(!branches.length)
+		{
+			
     		leafNodes[dotId]=index++;
-    	else
+    	}
+		else
     	{
     		var i;
     		for(i = 0; i < branches.length; i++)
@@ -432,18 +479,28 @@ function RuleContainer() {
     	nodeData[dotId].y=y;
     	return nodeData;
     }
+    function makeDefaults(nodeData) {
+        for(var i=0; i < Object.keys(nodeData).length; i++)
+        {
+            var obj=Object.keys(nodeData)[i];
+            var type=nodeData[obj].type;
+            if(type=="EventDecision")
+            {
+                nodeData[obj].branches.push(nodeData[obj]["default"]);
+                nodeData[obj].ranges.push([null, null]);
+            }
+        }
+        return nodeData;
+    }
     function detranslate(nodeData, nid, isFirst) {
         var forServer={};
-
         var node=nodeData[nid];
+        if (node === null) {
+            return null;
+        }
         var type=node.type;
-        var branches=node.branches;
-        var datastreamId=node.datastreamId;
         var nodeId=node.nodeId;
         var data=node.data;
-        var ranges=node.ranges;
-        //var nodeDefault=node.nodeDefault;
-        //var lifetime=node.lifetime;
         if(type=="NodeInput") {
             forServer[type]={
                 "nodeId" : nodeId,
@@ -461,7 +518,7 @@ function RuleContainer() {
             var i = 0;
             for(var key in node.branches) {
                 forServer[type].branches.push({
-                    "value": node.ranges[i],
+                    "value": (type == "EventDecision") ? node.ranges[i][0] : node.ranges[i],
                     "action": detranslate(nodeData, node.branches[i], 0)
                 });
                 i++;
@@ -469,7 +526,7 @@ function RuleContainer() {
             if(type=="EventDecision")
             {
                 forServer[type].lifetime = node.lifetime;
-                forServer[type]["default"] = node.nodeDefault;
+                forServer[type]["default"] = detranslate(nodeData, node.default);
                 forServer[type].datastreamId = node.datastreamId;
             }
             else if(type=="DataDecision")

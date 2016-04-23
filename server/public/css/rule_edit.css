@@ -50,6 +50,10 @@
     flex-basis: 0;
 }
 
+.default-box {
+    border-color: lightgreen;
+    border-width: 2px;
+}
 
 /*For graphics*/
 
@@ -120,4 +124,7 @@
 .branch.conflicted {
 	stroke: red;
 	stroke-width: 5;
+}
+.branch.default {
+	stroke: lightgreen;
 }

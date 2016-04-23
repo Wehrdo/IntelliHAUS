@@ -47,7 +47,7 @@ function evalAction(action) {
             if (datapoint && age <= action[action_type].lifetime) {
                 evalEventBranches(action[action_type], datapoint.discreteData);
             } else { // Otherwise do the default
-                evalAction(action[acttion_type].default);
+                evalAction(action[action_type].default);
             }
         })
     }
@@ -64,7 +64,7 @@ function evalAction(action) {
             .then(function(node) {
                 if (node) {
                     // Check if the new data is the same as the old data
-                    if (node.lastData.length == data_to_send.length &&
+                    if (node.lastData && node.lastData.length == data_to_send.length &&
                         node.lastData.every(function (val, idx) {
                             return val == data_to_send[idx];
                         })) {
@@ -151,7 +151,7 @@ function evalEventBranches(decision, curVal) {
 }
 
 process.on('message', function(message) {
-    models.Rule.findById(message.rule_id)
+    models.Rule.findById(message.ruleId)
         .then(function(db_rule) {
             evalAction(db_rule.rule);
         });

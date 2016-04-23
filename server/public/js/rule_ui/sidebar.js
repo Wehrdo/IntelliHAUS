@@ -21,6 +21,10 @@ function SidebarModel() {
         if (dotData.type === 'DataDecision' || dotData.type === 'EventDecision') {
             self.selectedDatastream(dotData.datastreamId);
         }
+        if (dotData.type === 'EventDecision') {
+            // Initialize the lifetime of an event
+            self.eventLifetime(dotData.lifetime);
+        }
         // Convert ranges array to array of objects.
         // Knockout doesn't like arrays of mixed types
         self.ranges(dotData.ranges.map(function(range) {
@@ -29,16 +33,22 @@ function SidebarModel() {
                 end: range[1]
             }
         }));
-        console.log(self.ranges());
         self.branches = dotData.branches;
         self.curType(dotData.type);
-        console.log(dotId);
     };
+
+    function parseRangePoint(value) {
+        if (value === "POSITIVE_INFINITY" || value === "NEGATIVE_INFINITY") {
+            return value;
+        } else {
+            return Number.parseFloat(value);
+        }
+    }
 
     self.branchesChanged = function() {
         // Convert the array of range objects back to array of arrays
         var ranges_array = self.ranges().map(function (rangeObj) {
-            return [rangeObj.start, rangeObj.end];
+            return [parseRangePoint(rangeObj.start), parseRangePoint(rangeObj.end)];
         });
         ruleContainer.updateRanges(curDot, ranges_array);
     };
@@ -54,6 +64,7 @@ function SidebarModel() {
     // Type was selected for a previously EmptyDecision
     self.setDotType = function() {
         ruleContainer.setDotType(curDot, self.curType());
+        self.dotClicked(curDot);
     };
 
     self.deleteDot = function() {
@@ -136,7 +147,7 @@ function SidebarModel() {
     self.dataChanged = function() {
         ruleContainer.setNodeData(curDot,
             self.data().map(function(data_observable) {
-                return data_observable();
+                return Number.parseFloat(data_observable());
             }));
     };
 
@@ -146,7 +157,7 @@ function SidebarModel() {
     self.ranges = ko.observableArray();
 
     self.discreteEvents = ko.computed(function() {
-        if (self.curType() == "EventDecision" && self.getActiveDatastream()) {
+        if (self.curType() == "EventDecision" && self.getActiveDatastream() && self.getActiveDatastream().datatype == "discrete") {
             var labels = self.getActiveDatastream().discreteLabels;
             var remaining = [];
             for (var i = 0; i < labels.length; i++) {
@@ -158,6 +169,15 @@ function SidebarModel() {
             return remaining;
         } else {
             return [];
+        }
+    });
+
+    self.eventLifetime = ko.observable();
+    // Notify ruleContainer of updates to lifetime
+    self.eventLifetime.subscribe(function() {
+        var parsed = Number.parseFloat(self.eventLifetime());
+        if (!isNaN(parsed)) {
+            ruleContainer.setLifetime(curDot, parsed);
         }
     });
 
@@ -211,7 +231,7 @@ function SidebarModel() {
                 if (total_minutes === 0 && prop === 'end') {
                     total_minutes = 1440;
                 }
-                obj[prop] = hours*60 + minutes;
+                obj[prop] = total_minutes;
                 self.branchesChanged();
             }
         });
