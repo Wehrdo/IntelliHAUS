@@ -17,7 +17,8 @@ config.db_password = 'postgres';
 config.db_options = {
     'dialect': 'postgres',
     'port': 5432,
-    'timezone': 'America/Chicago'
+    'timezone': 'America/Chicago',
+    'logging': false
 };
 
 // Set long-poll timeout to be 30 seconds

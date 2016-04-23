@@ -253,6 +253,22 @@ function SidebarModel() {
         var dayToShow = (((item.id-1)%7)+7)%7;
         return self.days[dayToShow].name;
     };
+
+    self.alertSave = function(success) {
+        if (success) {
+            var errorAlert = $('#failsave-alert')[0].style.display = 'none';
+            var savedAlert = $('#saved-alert');
+            savedAlert.fadeIn(150);
+            // after 1s, begin fading out the 'saved changes' box
+            setTimeout(function() {
+                savedAlert.fadeOut(1500);
+            }, 1000)
+        } else {
+            // In error, show error warning
+            var errorAlert = $('#failsave-alert')[0];
+            errorAlert.style.display = '';
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

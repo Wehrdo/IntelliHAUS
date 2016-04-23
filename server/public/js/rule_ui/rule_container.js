@@ -37,16 +37,15 @@ function RuleContainer() {
             }),
             success: function(data) {
                 if (data.success) {
-					alert("Saved!");
-                    console.log("success");
+                    sidebar.alertSave(true);
                 } else {
                     console.log("error: " + data.error);
-					alert("Unable to save");
+					sidebar.alertSave(false);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR.responseJSON.error.toString());
-				alert("Unable to save");
+                sidebar.alertSave(false);
             }
         })
     };
