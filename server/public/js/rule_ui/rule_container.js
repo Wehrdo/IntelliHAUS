@@ -37,13 +37,16 @@ function RuleContainer() {
             }),
             success: function(data) {
                 if (data.success) {
+					alert("Saved!");
                     console.log("success");
                 } else {
                     console.log("error: " + data.error);
+					alert("Unable to save");
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR.responseJSON.error.toString());
+				alert("Unable to save");
             }
         })
     };
@@ -84,7 +87,8 @@ function RuleContainer() {
             "data" : [],
             "datastreamId" : null,
 			"default" : null,
-			"lifetime" : null};
+			"lifetime" : null
+			};
         dot.branches.push(newDot.dotId);
         dot.ranges.push(range);
         treeMap[newDot.dotId] = newDot;
@@ -95,7 +99,6 @@ function RuleContainer() {
     // Set the type for an existing dot
     self.setDotType = function(dotId, newType) {
         treeMap[dotId].type = newType;
-		console.log(newType);
 		
 		if(newType=="EventDecision")
 		{
@@ -115,8 +118,8 @@ function RuleContainer() {
 				};
 			var positions=prepareTreeUpdate();
 			ruleGraphics.addDefault(positions, dotId);
-			ruleGraphics.setDotType(dotId, newType);
 		}
+		ruleGraphics.setDotType(dotId, newType);
 	};
 	self.deleteAllBranches = function(nid) {
 		//console.log(treeMap[nid].branches);
@@ -339,7 +342,7 @@ function RuleContainer() {
 		var defaults=makeDefaults(newObject);
 		var leafNodes=prepareLeafNodes(defaults);
 		var depths=setTreeDepth(defaults);
-		var positions=calculatePositions(defaults, "1", leafNodes);
+		var positions=calculatePositions(depths, "1", leafNodes);
 		return positions;
 	}
 	/* function initNode(pid) {
@@ -356,13 +359,15 @@ function RuleContainer() {
 	} */
 	function removeSubtree(nodeData, pid, branchId) {
 		ruleGraphics.removeTreeElements(nodeData, pid, branchId);
-		if(!nodeData[branchId])
-			return nodeData;
+		
 		if(nodeData[branchId].default)
 		{
-			
 		}
-		if(!nodeData[branchId].branches.length)
+		else if(!nodeData[branchId])
+		{
+
+		}
+		else if(!nodeData[branchId].branches.length)
 		{
 			delete nodeData[branchId];
 		}
@@ -399,8 +404,7 @@ function RuleContainer() {
 		return obj;
 	}
 	
-	function prepareLeafNodes(nodeData)
-	{
+	function prepareLeafNodes(nodeData) {
     	index=1;
 		return getLeafNodes(nodeData, "1");
 	}
@@ -410,7 +414,6 @@ function RuleContainer() {
     	var branches=nodeData[dotId].branches;
     	if(!branches.length)
 		{
-			
     		leafNodes[dotId]=index++;
     	}
 		else

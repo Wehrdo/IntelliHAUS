@@ -82,11 +82,12 @@
 }
 .dot {
     fill: lightsteelblue;
-    stroke: steelblue;
-    stroke-width: 1.5px;
+    stroke: #505050;
+    stroke-width: 2px;
 }
 .dot.result {
     fill: orange;
+	stroke: red;
 }
 .dot.dragging {
     fill: lightskyblue;
@@ -94,11 +95,25 @@
 }
 .dot.empty {
     fill: lightgrey;
-    stroke: steelblue;
+	stroke: lightsteelblue;
+}
+.dot.event-d {
+	fill: limegreen;
+}
+.dot.data-d {
+	fill: blueviolet;
+}
+.dot.day-d {
+	fill: darksalmon;
+}
+.dot.time-d {
+	fill: darkcyan;
 }
 .dot.active {
     fill: gold;
-    stroke: goldenrod;
+}
+.dot.active.empty {
+	stroke: goldenrod;
 }
 <!-- 	.dot.active.dragging {
             fill: goldenrod;
@@ -111,11 +126,11 @@
 }
 .branch.empty {
 	stroke: black;
-	stroke-dasharray: 5,1;
+	/*stroke-dasharray: 5,1;*/
 }
 .branch.incomplete {
 	stroke: red;
-	stroke-dasharray: 5,1;
+	/*stroke-dasharray: 5,1;*/
 }
 .branch.focus {
 	stroke: black;

@@ -59,6 +59,8 @@ function RuleGraphics() {
 	self.addDecision = function(nodeData, pid, range) {
 		var parentX=nodeData[pid].x;
 		var parentY=nodeData[pid].y;
+		d3.select(document.getElementById(pid))
+			.classed("empty", false);
 		var newNode = svg.append("circle")
 			.attr("class", "dot decision empty" )
 			.attr("cx",  parentX+1 )
@@ -83,6 +85,8 @@ function RuleGraphics() {
 	self.addResult = function(nodeData, pid, range) {
 		var parentX=nodeData[pid].x;
 		var parentY=nodeData[pid].y;
+		d3.select(document.getElementById(pid))
+			.classed("empty", false);
 		var newNode = svg.append("circle")
 			.attr("class", "dot result" )
 			.attr("cx",  parentX+1 )
@@ -111,14 +115,20 @@ function RuleGraphics() {
 		remove(document.getElementById(nid+"-"+branchId));
 	};
 	self.setDotType = function(dotId, newType) {
-		if(newType=='NodeInput')
-		{
-			d3.select(document.getElementById(dotId)).classed("result");
-		}
+		var dotType="dot" + convertType(newType);
+		console.log(dotType);
+		var dot=d3.select(document.getElementById(dotId));
+		if(dot.attr("class").match(/active/))
+			dotType=dotType+" active";
+		dot.attr("class", dotType);
+		console.log(dot.attr("class"));
 	};
 	self.addDefault = function(nodeData, pid) {
-		var parentX=nodeData[pid].x;
-		var parentY=nodeData[pid].y;
+		var parent=nodeData[pid];
+		var parentX=parent.x;
+		var parentY=parent.y;
+		d3.select(document.getElementById(pid))
+			.classed("empty", false);
 		var newNode = svg.append("circle")
 			.attr("class", "dot decision empty" )
 			.attr("cx",  parentX+1 )
@@ -149,6 +159,18 @@ function RuleGraphics() {
 		for(var key in nodeData)
 		{
 			var i;
+			if(nodeData[key].default)
+			{
+				var def=nodeData[nodeData[key].default];
+				lineData.push({
+					"x1" : nodeData[key].x,
+					"y1" : nodeData[key].y,
+					"x2" : def.x,
+					"y2" : def.y,
+					"id" : nodeData[key].dotId+"-"+def.dotId,
+					"type" : "default"
+				});
+			}
 			for(i = 0; i < nodeData[key].branches.length; i++)
 			{
 				var branch=nodeData[nodeData[key].branches[i]];
@@ -157,7 +179,8 @@ function RuleGraphics() {
 					"y1" : nodeData[key].y,
 					"x2" : branch.x,
 					"y2" : branch.y,
-					"id" : nodeData[key].dotId+"-"+branch.dotId
+					"id" : nodeData[key].dotId+"-"+branch.dotId,
+					"type" : null
 				});
 			}
 		}
@@ -183,20 +206,39 @@ function RuleGraphics() {
 	};
 	self.conflictedBranch = function(pid, branchId) {
 		d3.select(document.getElementById(pid+"-"+branchId))
-			.classed("branch conflicted");
-	}
+			.attr("class", "branch conflicted");
+	};
 	self.acceptedBranch = function(pid, branchId) {
 		d3.select(document.getElementById(pid+"-"+branchId))
-			.classed("branch");
-	}
+			.attr("class", "branch");
+	};
 	self.incompleteBranch = function(pid, branchId) {
 		d3.select(document.getElementById(pid+"-"+branchId))
-			.classed("branch incomplete");
-	}
+			.attr("class", "branch incomplete");
+	};
 	self.emptyBranch = function(pid, branchId) {
 		d3.select(document.getElementById(pid+"-"+branchId))
-			.classed("branch empty");
-	}
+			.attr("class", "branch empty");
+	};
+	/*self.eventDecision = function(nid) {
+		d3.select(document.getElementById(nid))
+			.classed("event-decision", true)
+			//.classed("data-decision", false)
+			//.classed("time-decision";
+	};
+	self.dataDecision = function(nid) {
+		d3.select(document.getElementById(nid))
+			.attr("class", "data-decision");
+	};
+	self.timeDecision = function(nid) {
+		d3.select(document.getElementById(nid))
+			.attr("class", "time-decision");
+	};
+	self.dayDecision = function(nid) {
+		d3.select(document.getElementById(nid))
+			.attr("class", "day-decision");
+	};*/
+	
 	/*
 	 Private methods
 	 */
@@ -223,6 +265,21 @@ function RuleGraphics() {
 				.attr("y2", lineData[key].y2)
 				.duration(500);
 		}
+	}
+	function convertType(type) {
+		if(type=="EmptyDecision")
+			return " decision empty";
+		else if(type=="EventDecision")
+			return " decision event-d";
+		else if(type=="DataDecision")
+			return " decision data-d";
+		else if(type=="TimeDecision")
+			return " decision time-d";
+		else if(type=="DayDecision")
+			return " decision day-d";
+		else if(type=="NodeInput")
+			return " result";
+		return "";
 	}
 	function dragstarted(d) {
 		//d3.event.sourceEvent.stopPropagation();
@@ -266,7 +323,7 @@ function RuleGraphics() {
 			.data(lineData)
 			.enter()
 			.append("line")
-			.attr("class", "branch")
+			.attr("class", function(d){ return ("branch" + ((d.type)?(" "+d.type):"")); })
 			//			.attr("stroke-width", 2)
 			//			.attr("stroke", "black")
 			.attr("x1", function(d) { return d.x1; })
@@ -280,7 +337,7 @@ function RuleGraphics() {
 			.data(positionData)
 			.enter()
 			.append("circle")
-			.attr("class", function(d) { return "dot "+((d.type=="NodeInput")?"result":((d.type=="EmptyDecision")?"empty decision":"decision")); })
+			.attr("class", function(d) { return "dot"+convertType(d.type); })
 			.attr("cx", function(d) { return d.x; })
 			.attr("cy", function(d) { return d.y; })
 			.attr("r", radius)
