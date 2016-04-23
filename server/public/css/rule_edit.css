@@ -128,18 +128,18 @@
 	stroke: black;
 	/*stroke-dasharray: 5,1;*/
 }
-.branch.incomplete {
+/*.branch.incomplete {
 	stroke: red;
-	/*stroke-dasharray: 5,1;*/
-}
+	stroke-dasharray: 5,1;
+}*/
 .branch.focus {
 	stroke: black;
 	stroke-width: 5;
 }
-.branch.conflicted {
+/*.branch.conflicted {
 	stroke: red;
 	stroke-width: 5;
-}
+}*/
 .branch.default {
 	stroke: lightgreen;
 }
