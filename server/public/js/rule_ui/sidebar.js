@@ -37,10 +37,18 @@ function SidebarModel() {
         self.curType(dotData.type);
     };
 
+    function parseRangePoint(value) {
+        if (value === "POSITIVE_INFINITY" || value === "NEGATIVE_INFINITY") {
+            return value;
+        } else {
+            return Number.parseFloat(value);
+        }
+    }
+
     self.branchesChanged = function() {
         // Convert the array of range objects back to array of arrays
         var ranges_array = self.ranges().map(function (rangeObj) {
-            return [rangeObj.start, rangeObj.end];
+            return [parseRangePoint(rangeObj.start), parseRangePoint(rangeObj.end)];
         });
         ruleContainer.updateRanges(curDot, ranges_array);
     };

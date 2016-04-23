@@ -64,7 +64,7 @@ function evalAction(action) {
             .then(function(node) {
                 if (node) {
                     // Check if the new data is the same as the old data
-                    if (node.lastData.length == data_to_send.length &&
+                    if (node.lastData && node.lastData.length == data_to_send.length &&
                         node.lastData.every(function (val, idx) {
                             return val == data_to_send[idx];
                         })) {
@@ -151,6 +151,7 @@ function evalEventBranches(decision, curVal) {
 }
 
 process.on('message', function(message) {
+    console.log("Evaluating...");
     models.Rule.findById(message.ruleId)
         .then(function(db_rule) {
             evalAction(db_rule.rule);
