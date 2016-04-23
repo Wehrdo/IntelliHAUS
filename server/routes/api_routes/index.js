@@ -4,6 +4,12 @@
 var express = require('express');
 var router = express.Router();
 
+// Logging router
+router.use(function(req, res, next) {
+    console.log('%s %s', req.method, req.url);
+    next();
+});
+
 var home = require('./home_route');
 router.use('/home', home);
 

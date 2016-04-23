@@ -19,6 +19,17 @@
 
 <div class="rule-ui">
     <div id="all-sidebars" class="sidebar-supercontainer">
+
+        <div class="alert alert-success" id="saved-alert" style="display:none">
+            <strong>All changes saved</strong>
+        </div>
+        <div class="alert alert-warning" id="unsaved-alert" style="display:none">
+            <strong>Saving...</strong>
+        </div>
+        <div class="alert alert-danger" id="failsave-alert" style="display:none">
+            <strong>Failed to save</strong>
+        </div>
+
         <div class="sidebar-container" data-bind="if: curType()==='EmptyDecision', visible: curType()==='EmptyDecision'">
             <div class="panel panel-default">
                 <h5><strong>Select Type</strong></h5>
