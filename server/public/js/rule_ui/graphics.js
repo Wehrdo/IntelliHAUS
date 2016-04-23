@@ -108,11 +108,9 @@ function RuleGraphics() {
 		updateTree(nodeData);
 	};
 
-	self.removeTreeElements = function(nodeData, nid, branchId) {
-		if((!nodeData[nid]||!nodeData[nid].branches.length)&&!nodeData[nid].default)
-			d3.select(document.getElementById(nid)).classed("empty", true);
-		remove(document.getElementById(branchId));
-		remove(document.getElementById(nid+"-"+branchId));
+	self.removeTreeElements = function(objId) {
+		console.log(objId);
+		remove(document.getElementById(objId));
 	};
 	self.setDotType = function(dotId, newType) {
 		var dotType="dot" + convertType(newType);

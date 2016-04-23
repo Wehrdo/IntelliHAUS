@@ -69,14 +69,15 @@ function SidebarModel() {
 
     self.deleteDot = function() {
         ruleContainer.deleteAllBranches(curDot);
-        ruleContainer.setDotType(curDot, "EmptyDecision");
+		ruleContainer.setDotType(curDot, "EmptyDecision");
         self.dotClicked(curDot);
     };
     self.removeDot = function() {
         var pid=ruleContainer.getParent(curDot);
         if(pid!=null)
         {
-            ruleContainer.deleteBranch(curDot);
+			ruleContainer.deleteAllBranches(curDot);
+            ruleContainer.deleteNode(curDot);
             self.dotClicked(pid);
         }
     };

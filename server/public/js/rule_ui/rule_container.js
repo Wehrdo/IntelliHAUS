@@ -124,42 +124,69 @@ function RuleContainer() {
 	self.deleteAllBranches = function(nid) {
 		//console.log(treeMap[nid].branches);
 		//console.log(treeMap[nid].branches.length);
-		if(treeMap[nid].type=="EventDecision")
+		if(treeMap[nid]["default"])
 		{
-			self.deleteBranch(treeMap[nid].default);
+			var def=treeMap[nid]["default"];
+			if(treeMap[def]["default"]||treeMap[def].branches)
+				self.deleteAllBranches(def);
+			self.deleteBranch(def);
+			treeMap[nid]["default"]=null;
 		}
 		var branches=treeMap[nid].branches;
 		var length=branches.length;
 		for(var i = 0; i < length; i++)
 		{
-			self.deleteBranch(branches[0]);
+			var branch=treeMap[nid].branches[0];
+			if(branch["default"]||branch.branches)
+				self.deleteAllBranches(branch);
+			self.deleteBranch(branch);
+			delete treeMap[treeMap[nid].branches[0]];
+			treeMap[nid].branches.splice(0,1);
+			treeMap[nid].ranges.splice(0,1);
 		}
+		var positions=prepareTreeUpdate();
+		ruleGraphics.updateTreeDep(positions);
+		self.setDotType(nid, "EmptyDecision");
+		sidebar.dotClicked(nid);
 	}
 	self.getParent = function(nid) {
 		//console.log(treeMap[nid].parent);
 		return treeMap[nid].parent;
 	}
-    self.deleteBranch = function(branchId) {
-		
-		var pid=treeMap[branchId].parent;
-		if(treeMap[pid].default)
+    self.deleteBranch = function(nid) {
+		var pid=treeMap[nid].parent;
+		if(!treeMap[pid])
+			return;
+		ruleGraphics.removeTreeElements(nid);
+		ruleGraphics.removeTreeElements(pid+"-"+nid);
+		delete treeMap[nid];
+    };
+	self.deleteNode = function(nid) {
+		alert("deleting node");
+		var pid=treeMap[nid].parent;
+		if(!treeMap[pid])
+			return;
+		ruleGraphics.removeTreeElements(nid);
+		ruleGraphics.removeTreeElements(pid+"-"+nid);
+		if(treeMap[pid]["default"]==nid)
 		{
-			treeMap=removeSubtree(treeMap, pid, treeMap[pid].default);
-			var positions=prepareTreeUpdate();
-			ruleGraphics.updateTreeDep(positions);
+			treeMap[pid]["default"]=null;
+			delete treeMap[nid];
 		}
-        var i=treeMap[pid].branches.indexOf(branchId);
-		if(i > -1)
+		else
 		{
+			var i=treeMap[pid].branches.indexOf(nid);
 			treeMap[pid].branches.splice(i,1);
 			treeMap[pid].ranges.splice(i,1);
-			
-			treeMap=removeSubtree(treeMap, pid, branchId);
-			var positions=prepareTreeUpdate();
-			ruleGraphics.updateTreeDep(positions);
+			if(!treeMap[pid].branches.length)
+				self.setDotType(pid, "EmptyDecision");
+			delete treeMap[nid];
 		}
+		var positions=prepareTreeUpdate();
+		ruleGraphics.updateTreeDep(positions);
 		ruleGraphics.changeActiveNode(pid);
-    };
+		sidebar.dotClicked(pid);
+	}
 
     // Set the node ID for a node actuator
     // Also set the data attribute for this dot (Keeps the number of items consistent)
@@ -339,7 +366,10 @@ function RuleContainer() {
 	}
 	function prepareTreeUpdate() {
 		var newObject = jQuery.extend(true, {}, treeMap);
+		console.log(treeMap);
+		console.log(newObject);
 		var defaults=makeDefaults(newObject);
+		console.log(defaults);
 		var leafNodes=prepareLeafNodes(defaults);
 		var depths=setTreeDepth(defaults);
 		var positions=calculatePositions(depths, "1", leafNodes);
@@ -357,52 +387,6 @@ function RuleContainer() {
 			"datastreamId" : null
 		};
 	} */
-	function removeSubtree(nodeData, pid, branchId) {
-		ruleGraphics.removeTreeElements(nodeData, pid, branchId);
-		
-		if(nodeData[branchId].default)
-		{
-		}
-		else if(!nodeData[branchId])
-		{
-
-		}
-		else if(!nodeData[branchId].branches.length)
-		{
-			delete nodeData[branchId];
-		}
-		else
-		{
-			var branches = nodeData[branchId].branches;
-			for(var i = 0; i < branches.length; i++)
-			{
-				nodeData=removeSubtree(nodeData, branchId, branches[i]);
-			}
-		}
-		delete nodeData[branchId];
-		return nodeData;
-	}
-	function listDescendants(nodeData, obj, branchId) {
-		if(nodeData[branchId].branches.length)
-		{
-			for(var i = 0; i < nodeData[branchId].branches.length; i++)
-			{
-				var temp = listDescendants(nodeData, obj, nodeData[branchId].branches[i]);
-				for(var key in temp.nodes)
-					obj.nodes[key]=temp.nodes[key];
-				for(var key in temp.lines)
-					obj.lines[key]=temp.lines[key];
-			}
-		}
-		else
-		{
-			obj={
-				"nodes" : branchId,
-				"lines" : nodeData[branchId].parent+"-"+branchId
-			}
-		}
-		return obj;
-	}
 	
 	function prepareLeafNodes(nodeData) {
     	index=1;
@@ -487,7 +471,7 @@ function RuleContainer() {
         {
             var obj=Object.keys(nodeData)[i];
             var type=nodeData[obj].type;
-            if(type=="EventDecision")
+            if(nodeData[obj]["default"])
             {
                 nodeData[obj].branches.push(nodeData[obj]["default"]);
                 nodeData[obj].ranges.push([null, null]);
