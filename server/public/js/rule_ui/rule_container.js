@@ -162,7 +162,6 @@ function RuleContainer() {
 		delete treeMap[nid];
     };
 	self.deleteNode = function(nid) {
-		alert("deleting node");
 		var pid=treeMap[nid].parent;
 		if(!treeMap[pid])
 			return;
