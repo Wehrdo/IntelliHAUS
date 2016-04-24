@@ -31,38 +31,58 @@ public:
 	Node(function<void(const Hub::Packet&)> cbPacket,
 		function<void(Hub::Node*)> cbClose);
 
+	//Deconstructor
 	~Node();
 
-	//No longer used, kept for legacy value
+	//GetSocket
+	//returns : shared_ptr<boost::asio::ip::tcp::socket>
 	shared_ptr<boost::asio::ip::tcp::socket> GetSocket();
 
+	//void Start()
+	//Start the connection
 	void Start();
 
+	//void SendPacket(const Packet& p) const
+	//Send a packet to the Node
+	//Param const Packet& p : reference to packet to send
 	void SendPacket(const Packet& p) const;
 
+	//uint64_t GetID()
+	//Returns the ID of the node if identified, 0 otherwise
+	//Return : uint64_t
 	uint64_t GetID();
+
 private:
 	static const int BUFFER_SIZE = 1;
 
 	bool clientClose;
 
+	//async thread routine
 	void ThreadRoutine();
 
+	//Callback for packet check event
 	void cbCheckPacket(const Hub::Packet& packet);
+
+	//Callback for async receive event
 	void cbReceive(const boost::system::error_code& error,
 		size_t bytesTransferred);
+
+	//Callback for async send event
 	void cbSend();
 
 	uint64_t id;
 
+	//async receive buffer
 	unsigned char buffer[BUFFER_SIZE];
 
+	//Communicator state machine
 	Hub::Communicator comm;
 
 	boost::asio::io_service ioService;
 	shared_ptr<boost::asio::ip::tcp::socket> tcpSocket;
 	thread asyncThread;
 
+	//External callbacks
 	function<void(const Hub::Packet&)> cbPacket;
 	function<void(Hub::Node*)> cbClose;
 };
