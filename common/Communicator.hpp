@@ -18,19 +18,31 @@ class Communicator
 {
 public:
 
+	//Constructor
 	Communicator(uint32_t nodeID, const string& remoteHostName,
 			function<void(const Node::Packet&)> cbPacket);
 
-	//int Connect();
-	//int Disconnect();
-
+	//int SendPacket(const Node::Packet& p)
+	//Sends a packet
+	//param const Packet& p : const reference to packet
 	int SendPacket(const Node::Packet& p);
 
+	//int SendID()
+	//Sends an empty identification packet
 	int SendID();
+
+	//int SendInt(int32_t datapoint)
+	//Sends a 32bit integer
+	//param int32_t datapoint : the datapoint to send
 	int SendInt(int32_t datapoint);
+
+	//int SendFloat(float datapoint)
+	//Sends a 32bit float
+	//param float datapoint : the datapoint to send
 	int SendFloat(float datapoint);
 
 private:
+	//The buffer size
 	static const int BUFFER_SIZE = 1;
 	static const unsigned char PACKET_START_BYTE = 0xAA;
 
@@ -39,6 +51,7 @@ private:
 
 	bool isConnected;
 
+	//State of the receiver state machine
 	enum {
 		STATE_READY,
 		STATE_ID,
@@ -50,6 +63,7 @@ private:
 	Node::Packet tempPacket;
 	vector<unsigned char> tempData;
 
+	//Process a single byte
 	void ProcessSingleByte(unsigned char byte);
 
 	void ThreadRoutine();

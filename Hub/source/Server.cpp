@@ -7,6 +7,7 @@ Hub::Server::Server(int homeID, const string& url, const string& username,
 			: http(url, [this](){cbConnect();}),
 			userName(username), password(password),
 			asyncThread([this](){ThreadRoutine();}) {
+
 	this->homeID = homeID;
 	this->cbUpdate = cbUpdate;
 }
@@ -26,6 +27,8 @@ void Hub::Server::ThreadRoutine() {
 
 void Hub::Server::cbConnect() {
 	cout << "cbConnect" << endl;
+
+	//Post the authentication method onto the 
 	ioService.post([this](){ Authenticate(); });
 }
 
@@ -35,8 +38,6 @@ void Hub::Server::Authenticate() {
 				"\"password\": \"" + password + "\"}");
 
 	if(!http.IsConnected()) {
-//		cbAuthenticate(Exception(Error_Code::SERVER_NOT_CONNECTED,
-//				"Server::Authenticate error: not connected"), HTTP::Message());
 		cout << "Not connected." << endl;
 		return;
 	}
@@ -59,13 +60,16 @@ void Hub::Server::cbAuthenticate(const Exception& e, const HTTP::Message& msg) {
 
 	cout << "HTTP Message:\r\n" << msg.GetBody() << endl;
 
+
 	if(e.GetErrorCode() == Error_Code::SERVER_NOT_CONNECTED) {
 		cout << "Authenticate error: Server not connected.";
 	}
 
+	//Stream the response value
 	Json::Value jsonResp;
 	stringstream jsonStream(msg.GetBody());
 
+	//try parsing the json stream
 	try {
 		jsonStream >> jsonResp;
 	}
@@ -81,6 +85,7 @@ void Hub::Server::cbAuthenticate(const Exception& e, const HTTP::Message& msg) {
 
 	bool success;
 
+	//Check the success code
 	try {
 		success = jsonResp.get("success", false).asBool();
 	}
@@ -90,19 +95,19 @@ void Hub::Server::cbAuthenticate(const Exception& e, const HTTP::Message& msg) {
 	}
 
 	if(!success) {
-		//throw Exception(Error_Code::SERVER_ERROR_NOT_SPECIFIED,
-		//		"Authenticate exception: " +
-		//	jsonResp.get("error", "Unspecified error").asString());
 		cout << "Authentication error: " <<
 			jsonResp.get("error", "Unspecified error").asString() << endl;
 
 		return;
 	}
 
+	//Grab the access token
 	accessToken = jsonResp.get("token", "").asString();
 
+	//Query the server for previous node states
 	QueryStates();
 
+	//Start long polling
 	LongPoll();
 
 	cout << "cbAuthenticate finished." << endl;
@@ -116,6 +121,7 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 
 	cout << "SendDatapoint" << endl;
 
+	//Pack the Json value
 	jsonRequest["nodeid"] = nodeID;
 	jsonRequest["data"] = data;
 
@@ -127,6 +133,7 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 
 	HTTP::Message msg(header, streamRequest.str());
 
+	//Create the callback lambda for the response
 	auto cbLambda = [](const HTTP::Message& msgResp) {
 		Json::Value jsonResp;
 		stringstream streamResp(msgResp.GetBody());
@@ -135,6 +142,7 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 
 		bool success;
 
+		//Check the success code
 		try {
 			success = jsonResp.get("success", "false").asBool();
 		}
@@ -146,7 +154,6 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 			cout << "SendDatapoint non std::exception"
 				"exception caught." << endl;
 		}
-
 		if(!success) {
 			cout << "SendDatapoint exception: " <<
 				jsonResp.get("error", "No error specified")
@@ -158,6 +165,7 @@ int Hub::Server::SendDatapoint(int nodeID, float data) {
 			cout << "SendDatapoint complete." << endl;
 	};
 
+	//Start the async post request
 	try {
 		http.Post("/api/datapoint", msg, cbLambda);
 	}
@@ -177,6 +185,7 @@ int Hub::Server::SendDiscrete(int nodeID, int data) {
 
 	cout << "SendDatapoint" << endl;
 
+	//Craft the Json request
 	jsonRequest["nodeid"] = nodeID;
 	jsonRequest["data"] = data;
 
@@ -246,6 +255,7 @@ void Hub::Server::LongPoll() {
 			"x-access-token: " + accessToken + "\r\n"
 			"homeid: " + std::to_string(homeID) + "\r\n";
 
+	//Start the async get command
 	try {
 		http.Get("/api/updates", header, [this](const Hub::HTTP::Message& msg){cbLongPoll(msg);});
 	}
@@ -261,6 +271,7 @@ void Hub::Server::QueryStates() {
 			"x-access-token: " + accessToken + "\r\n"
 			"homeid: " + std::to_string(homeID) + "\r\n";
 
+	//Start the async get command
 	try {
 		http.Get("/api/updates/all", header, [this](const Hub::HTTP::Message& msg){cbQueryStates(msg);});
 	}
@@ -285,6 +296,7 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 
 	bool success;
 
+	//check the success code
 	try {
 		success = jsonResp.get("success", "false").asBool();
 	}
@@ -298,13 +310,16 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 		return;
 	}
 
+	//read the updates array
 	Json::Value updates = jsonResp["updates"];
 
+	//parse the updates array
 	UpdateStates(updates);
 
 	int updateCount = 0;
 	vector<ServerUpdate> serverUpdates;
 
+	//Read and process all of the updates
 	for(auto &update : updates) {
 		updateCount++;
 
@@ -325,9 +340,11 @@ void Hub::Server::cbLongPoll(const Hub::HTTP::Message& msg) {
 
 	cout << "Long Poll response: " << updateCount << " updates." << endl;
 
+	//Forward the updates to the external callback
 	if(updateCount > 0)
 		cbUpdate(serverUpdates);
 
+	//Restart the long polling
 	LongPoll();
 }
 
