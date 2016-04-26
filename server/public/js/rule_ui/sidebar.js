@@ -199,10 +199,13 @@ function SidebarModel() {
 
     // Remove a branch
     self.deleteBranch = function(index) {
-        self.ranges.splice(index, 1);
+        // self.ranges.splice(index, 1);
         // TODO: Notify ruleContainer
         // self.branches.splice(index, 1);
-        ruleContainer.deleteBranch(self.branches[index]);
+        var nodeId=self.branches[index];
+        console.log(nodeId);
+        ruleContainer.deleteAllBranches(nodeId);
+        ruleContainer.deleteNode(nodeId);
     };
 
     // Converts the minutes of a day (0 - 1440) into a date string for a time input box
