@@ -12,6 +12,7 @@ Node::Communicator::Communicator(uint32_t nodeID, const string& remoteHostName,
 	state = STATE_READY;
 	isConnected = false;
 
+	//Connect on initialization
 	Connect();
 
 	cout << "Connector initialized with hostname: " << hostName << endl;
@@ -36,7 +37,6 @@ int Node::Communicator::Connect() {
 
 	tcpSocket.reset(new boost::asio::ip::tcp::socket(ioService));
 
-	//try {
 		//Try to connect to the server
 		boost::asio::connect(*tcpSocket, endpointIterator);
 
@@ -44,9 +44,9 @@ int Node::Communicator::Connect() {
 	}
 	catch(exception &e) {
 		cout << "Node::Communicator exception: " << e.what() << endl;
-		//return -1;
 	}
 
+	//If the connection failed, retry after 1 second
 	if(failed) {
 		this_thread::sleep_for(chrono::seconds(1));
 		ioService.post([this](){Connect();});
@@ -56,8 +56,10 @@ int Node::Communicator::Connect() {
 	else {
 		isConnected = true;
 
+		//Upon connection, send identification packet
 		SendPacket(Packet(nodeID, Packet::TYPE_ID, vector<unsigned char>()));
 
+		//Start the async receive loop
 		StartListening();
 	}
 
@@ -80,8 +82,7 @@ int Node::Communicator::Disconnect() {
 
 	//error occurred
 	if(error) {
-		//TODO: return meaningful error code
-		//return -1;
+		//It doesn't matter, we're gonna close it anyways
 	}
 
 	tcpSocket->close();
@@ -106,6 +107,7 @@ void Node::Communicator::ProcessSingleByte(unsigned char byte) {
         static uint64_t tempLength = 0;
         static Packet tempPacket;
 
+				//Enter the communicator state machine
         switch(state) {
         case STATE_READY:
                 if(byte == PACKET_START_BYTE) {
@@ -138,6 +140,8 @@ void Node::Communicator::ProcessSingleByte(unsigned char byte) {
                 index++;
                 if(index == 2) {
                         if(tempLength == 0) {
+																//if the length is 0, skip the payload state
+																//call the external callback
                                 cbPacket(tempPacket);
                                 state = STATE_READY;
                         }
@@ -154,6 +158,7 @@ void Node::Communicator::ProcessSingleByte(unsigned char byte) {
                 if(tempData.size() == tempLength) {
                         tempPacket.data = tempData;
 
+												//Call the external callback
                         cbPacket(tempPacket);
                         state = STATE_READY;
                 }
@@ -169,6 +174,7 @@ void Node::Communicator::cbReceive(const boost::system::error_code& error,
 	if(error) {
 		cout << "General async_receive error" << endl;
 
+		//Disconnect and reconnect on error
 		Disconnect();
 
 		ioService.post([this](){Connect();});
@@ -177,7 +183,6 @@ void Node::Communicator::cbReceive(const boost::system::error_code& error,
 	}
 	else {
 		for(int i = 0; i < bytesTransferred; i++) {
-//			cout << "Received byte: " << (int)buffer[i] << endl;
 			ProcessSingleByte(buffer[i]);
 		}
 	}
@@ -227,6 +232,7 @@ int Node::Communicator::SendPacket(const Node::Packet& p) {
 	catch(exception &e) {
 		cout << "Write error: " << e.what() << endl;
 
+		//On error, disconnect and attempt to reconnect
 		Disconnect();
 
 		ioService.post([this](){Connect();});
@@ -240,6 +246,7 @@ int Node::Communicator::SendPacket(const Node::Packet& p) {
 }
 
 int Node::Communicator::SendID() {
+	//Send the empty identification packet
 	Packet p(nodeID, Packet::TYPE_ID, vector<unsigned char>());
 
 	return SendPacket(p);
@@ -250,6 +257,7 @@ int Node::Communicator::SendInt(int32_t datapoint) {
 
 	uint32_t dataBits = *(uint32_t*)(&datapoint);
 
+	//Unpack the bits of the int
 	data.push_back( (dataBits >> 24) & 0xFF);
 	data.push_back( (dataBits >> 16) & 0xFF);
 	data.push_back( (dataBits >> 8) & 0xFF);

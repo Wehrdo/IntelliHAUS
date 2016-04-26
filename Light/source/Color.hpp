@@ -9,11 +9,21 @@ typedef unsigned char byte;
 
 class Color {
 public:
+	//Default constructor
 	Color();
+
+	//Constructor from packet RRGGBB integer
 	Color(unsigned long c);
+
+	//Constructor from individual r, g, b values
 	Color(int r, int g, int b);
 
+	//Color operator=(Color)
+	//operator= for color class
 	Color operator=(Color c);
+
+	//bool operator!=(Color rhs)
+
 	bool operator!=(Color rhs);
 	bool operator==(Color rhs);
 

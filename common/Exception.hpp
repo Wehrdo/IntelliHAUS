@@ -10,8 +10,10 @@ namespace Node {
 
 class Exception : public exception {
 public:
+	//constructor
 	Exception(const string& msg);
 
+	//returns the error message
 	virtual const char* what() const noexcept;
 
 private:
