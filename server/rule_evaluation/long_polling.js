@@ -13,7 +13,7 @@ function sendUpdate(homeId, update_info) {
     var hasListeners = updatesBus.emit(homeId, update_info);
     // There were no listeners for this home; store in backlog
     if (!hasListeners) {
-        console.log("Storing node " + update_info.nodeId + " update in backlog");
+        console.log("Storing node " + update_info.nodeId + " update in backlog: " + update_info.data.toString());
         updates_backlog.push({
             time: new Date(),
             homeId: homeId,
