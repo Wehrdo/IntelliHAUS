@@ -9,12 +9,6 @@ var jwt = require('jsonwebtoken');
 var models = require('../../models');
 var config = require("../../" + (process.env.NODE_ENV || "dev") + "_config");
 
-// Logging router
-router.use(function(req, res, next) {
-    console.log('%s %s', req.method, req.url);
-    next();
-});
-
 // TODO: I really don't like this repeat of authentication code, but it seemed necessary
 router.get('/', function (req, res) {
     var publicRoot = path.join(__dirname, '../../public');
