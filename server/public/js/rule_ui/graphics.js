@@ -157,10 +157,18 @@ function RuleGraphics() {
 		for(var key in nodeData)
 		{
 			var j=0;
-			if(nodeData[key].ranges===[null, null])
+			console.log("range: "+key);
+			console.log(nodeData[key].ranges);
+			if(!nodeData[key].ranges[0])
 			{
+				console.log("continue");
+				continue;
+			}
+			else if(nodeData[key].ranges[0][0]===null)
+			{
+				console.log("default");
 				j=1
-				var def=nodeData[nodeData[key].branches[1]];
+				var def=nodeData[nodeData[key].default];
 				lineData.push({
 					"x1" : nodeData[key].x,
 					"y1" : nodeData[key].y,
@@ -170,6 +178,8 @@ function RuleGraphics() {
 					"type" : "default"
 				});
 			}
+			else
+				console.log("branch");
 			for(var i = j; i < nodeData[key].branches.length; i++)
 			{
 				var branch=nodeData[nodeData[key].branches[i]];
@@ -179,7 +189,7 @@ function RuleGraphics() {
 					"x2" : branch.x,
 					"y2" : branch.y,
 					"id" : nodeData[key].dotId+"-"+branch.dotId,
-					"type" : null
+					"type" : (nodeData[key].ranges[i][0]===null)? "default":null
 				});
 			}
 		}
