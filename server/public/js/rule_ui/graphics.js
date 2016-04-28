@@ -156,10 +156,11 @@ function RuleGraphics() {
 		lineData=[];
 		for(var key in nodeData)
 		{
-			var i;
-			if(nodeData[key].default)
+			var j=0;
+			if(nodeData[key].ranges===[null, null])
 			{
-				var def=nodeData[nodeData[key].default];
+				j=1
+				var def=nodeData[nodeData[key].branches[1]];
 				lineData.push({
 					"x1" : nodeData[key].x,
 					"y1" : nodeData[key].y,
@@ -169,7 +170,7 @@ function RuleGraphics() {
 					"type" : "default"
 				});
 			}
-			for(i = 0; i < nodeData[key].branches.length; i++)
+			for(var i = j; i < nodeData[key].branches.length; i++)
 			{
 				var branch=nodeData[nodeData[key].branches[i]];
 				lineData.push({
