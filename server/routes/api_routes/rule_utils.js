@@ -335,21 +335,15 @@ exports.idValidate = function(req, res, next) {
 };
 
 
-// Returns a generic error 400 catch handler for the database creation chain
-var catchHandler = function(res) {
-    return function(error) {
-        res.status(400).json({
-            success: false,
-            error: error.toString()
-        });
-        throw error;
-    }
-};
-exports.catchHandler = catchHandler;
-
 // Take an existing rule as req.rule, and set all of its associations
 // Used for creating and updating rules
 exports.setAssociations = function(req, res, next) {
+    var success = true;
+    var errors = [];
+    var catchHandler = function(errors) {
+        success = false;
+        errors.push(error);
+    };
     var rule = req.rule;
     var ruleId = rule.id;
 
@@ -372,13 +366,20 @@ exports.setAssociations = function(req, res, next) {
             next();
         }
         else {
-            catchHandler(res)("Eval times not created");
+            catchHandler("Eval times not created");
         }
         // After creation or updating of rule, evaluate it
         ruleEvaluation.evalRule(ruleId);
-    }).catch(catchHandler(res))
-    }).catch(catchHandler(res))
-    }).catch(catchHandler(res))
+    }).catch(catchHandler)
+    }).catch(catchHandler)
+    }).catch(catchHandler);
+
+    if (!success) {
+        res.status(400).json({
+            success: false,
+            error: errors
+        });
+    }
 };
 
 var inst =
