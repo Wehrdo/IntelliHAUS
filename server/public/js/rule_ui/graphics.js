@@ -164,22 +164,6 @@ function RuleGraphics() {
 				console.log("continue");
 				continue;
 			}
-			else if(nodeData[key].ranges[0][0]===null)
-			{
-				console.log("default");
-				j=1
-				var def=nodeData[nodeData[key].default];
-				lineData.push({
-					"x1" : nodeData[key].x,
-					"y1" : nodeData[key].y,
-					"x2" : def.x,
-					"y2" : def.y,
-					"id" : nodeData[key].dotId+"-"+def.dotId,
-					"type" : "default"
-				});
-			}
-			else
-				console.log("branch");
 			for(var i = j; i < nodeData[key].branches.length; i++)
 			{
 				var branch=nodeData[nodeData[key].branches[i]];
