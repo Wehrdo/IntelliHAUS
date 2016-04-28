@@ -94,8 +94,14 @@ function evaluate(datastream) {
     })
 }
 
-// check for new rules that need to be evaluated every minute
-setInterval(timeEvaluation.checkNow, 60000, evalRule);
+// How many seconds are left in this minute
+var remainingSeconds = 60 - (new Date()).getSeconds();
+console.log("setting timeout for " + remainingSeconds);
+setTimeout(function() {
+    console.log("Set interval");
+    // check for new rules that need to be evaluated every minute
+    setInterval(timeEvaluation.checkNow, 60000, evalRule);
+}, remainingSeconds*1000);
 
 exports.evaluate = evaluate;
 exports.evalRule = evalRule;

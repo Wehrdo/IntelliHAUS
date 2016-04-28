@@ -8,6 +8,7 @@ var models = require('../models/index');
  actUpon is the function to call with each rule ID as the argument
   */
 function checkNow(actUpon) {
+    console.log("Looking for rules that change right now");
     var now = new Date();
     var now_minutes = now.getHours()*60 + now.getMinutes();
 
