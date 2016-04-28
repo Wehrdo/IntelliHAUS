@@ -48,6 +48,7 @@
 	width: 20%;
     flex-grow: 4;
     flex-basis: 0;
+    min-width: 420px;
 }
 
 .default-box {
