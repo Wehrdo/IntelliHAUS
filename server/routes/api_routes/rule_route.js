@@ -43,6 +43,12 @@ router.post('/',
 
 router.put('/:id(\\d+)',
     function(req, res, next) {
+        var success = true;
+        var errors = [];
+        var catchHandler = function(errors) {
+            success = false;
+            errors.push(error);
+        };
         // Find the rule for this ID that belongs to the user
         models.Rule.findOne({
             where: {
@@ -56,14 +62,26 @@ router.put('/:id(\\d+)',
                 next();
             } else {
                 // If none found, respond with error
-                ruleUtils.catchHandler(res)("Unable to find matching rule");
+                catchHandler("Unable to find matching rule");
             }
-        }).catch(ruleUtils.catchHandler(res));
+        }).catch(catchHandler);
+        if (!success) {
+            res.status(400).json({
+                success: false,
+                error: errors
+            });
+        }
     },
     ruleUtils.schemaValidate,
     ruleUtils.logicValidate,
     ruleUtils.idValidate,
     function(req, res, next) {
+        var success = true;
+        var errors = [];
+        var catchHandler = function(errors) {
+            success = false;
+            errors.push(error);
+        };
         // Update the corresponding rule
         req.rule.update(
             req.body,
@@ -77,8 +95,14 @@ router.put('/:id(\\d+)',
             }).then(function() {
                 // Rule ready to update associations
                 next();
-            }).catch(ruleUtils.catchHandler(res));
-        }).catch(ruleUtils.catchHandler(res));
+            }).catch(catchHandler);
+        }).catch(catchHandler);
+        if (!success) {
+            res.status(400).json({
+                success: false,
+                error: errors
+            });
+        }
     },
     ruleUtils.setAssociations,
     function(req, res) {
