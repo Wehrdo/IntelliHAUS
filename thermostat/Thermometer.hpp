@@ -10,4 +10,4 @@ private:
     std::string getDeviceName();
     std::string devicePath;
     std::ifstream sensor;
-}
+};

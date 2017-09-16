@@ -2,6 +2,7 @@
 #include "Exceptions.hpp"
 
 #include <dirent.h>
+#include <iostream>
 
 using std::string;
 
@@ -9,25 +10,25 @@ using std::string;
 
 void Thermometer::initialize() {
     // Find the thermometer
-    string sensor_name = GetSensorName();
+    string sensor_name = getDeviceName();
     if (sensor_name.length() == 0) {
         throw DangerousException("No thermometer found");
     }
-    devicePath = SENSOR_DIR + GetSensorName() + "/w1_slave";
+    devicePath = SENSOR_DIR + getDeviceName() + "/w1_slave";
 
 }
 
 float Thermometer::getTemp() {
     // Open sensor
-    std::ifstream sensor(sensorPath);
+    std::ifstream sensor(devicePath);
     // Verify successful opening
     if(!sensor.is_open()) {
-        throw DangerousException("Couldn't open thermometer at " + sensor_name);
+        throw DangerousException("Couldn't open thermometer at " + devicePath);
     }
 
     string line;
     float temp;
-    while(getline(sensor, line)) {
+    while(std::getline(sensor, line)) {
         int tempPos = line.find("t=");
 
         if(tempPos == string::npos)
@@ -38,9 +39,9 @@ float Thermometer::getTemp() {
         try {
             temp = stoi(tempStr) / 1000.f;
         }
-        catch(exception &e) {
-            cout << "Exception trying to convert '" << tempStr <<
-                "' to integer" << endl;
+        catch(std::exception &e) {
+            std::cout << "Exception trying to convert '" << tempStr <<
+                "' to integer" << std::endl;
 
             continue;
         }

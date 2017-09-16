@@ -1,5 +1,6 @@
 #include <wiringPi.h>
 #include "Adafruit_CharacterOLED.h"
+#include "Thermometer.hpp"
 
 #include <iostream>
 #include <cstdint>
@@ -15,7 +16,7 @@ int main() {
     // setupEncoder();
 
     Thermometer temp_sensor;
-    temp_sensor.init();
+    temp_sensor.initialize();
 
     // Adafruit_CharacterOLED lcd(OLED_V2, 8, 9, 15, 0, 2, 3, 4);
     // lcd.begin(16, 2);
