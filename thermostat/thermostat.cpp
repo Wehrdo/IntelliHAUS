@@ -14,10 +14,16 @@ int main() {
     wiringPiSetup();
     // setupEncoder();
 
-    Adafruit_CharacterOLED lcd(OLED_V2, 8, 9, 15, 0, 2, 3, 4);
-    lcd.begin(16, 2);
-    lcd.print("Wuddup?");
-    while(1) {};
+    Thermometer temp_sensor;
+    temp_sensor.init();
+
+    // Adafruit_CharacterOLED lcd(OLED_V2, 8, 9, 15, 0, 2, 3, 4);
+    // lcd.begin(16, 2);
+    // lcd.print("Wuddup?");
+    while(1) {
+        float cur_temp = temp_sensor.getTemp();
+        std::cout << "Temp = " << cur_temp << " *F" << std::endl;
+    };
     return 0;
 }
 
