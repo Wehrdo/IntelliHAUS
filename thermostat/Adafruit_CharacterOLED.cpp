@@ -66,16 +66,17 @@ void Adafruit_CharacterOLED::begin(uint8_t cols, uint8_t lines)
 {
   _numlines = lines;
   _currline = 0;
+  _numcols = cols;
   
   pinMode(_rs_pin, OUTPUT);
-  pinMode(_rw_pin, OUTPUT);
+  // pinMode(_rw_pin, OUTPUT);
   pinMode(_enable_pin, OUTPUT);
   
-  digitalWrite(_rs_pin, LOW);
+  // digitalWrite(_rs_pin, LOW);
   digitalWrite(_enable_pin, LOW);
-  digitalWrite(_rw_pin, LOW);
+  // digitalWrite(_rw_pin, LOW);
   
-  delayMicroseconds(50000); // give it some time to power up
+  // delayMicroseconds(50000); // give it some time to power up
   
   // Now we pull both RS and R/W low to begin commands
   
@@ -83,6 +84,25 @@ void Adafruit_CharacterOLED::begin(uint8_t cols, uint8_t lines)
     pinMode(_data_pins[i], OUTPUT);
     digitalWrite(_data_pins[i], LOW);
   }
+
+  // Initialise display into 4 bit mode, using recommended delays
+  send(0x33, MODE_CMD, DEL_INITNEXT_us, DEL_INITMID_us);
+  send(0x32, MODE_CMD, DEL_INITNEXT_us);
+
+  // Now perform remainder of display init in 4 bit mode - IMPORTANT!
+  // These steps MUST be exactly as follows, as OLEDs in particular are rather fussy
+  send(0x29, MODE_CMD, DEL_INITNEXT_us);    // two lines and Western European font
+  send(0x08, MODE_CMD, DEL_INITNEXT_us);    // display OFF, cursor off, blink off
+  send(0x01, MODE_CMD, DEL_POSTCLEAR_us);   // clear display, waiting for longer delay
+  send(0x06, MODE_CMD, DEL_INITNEXT_us);    // entry mode set
+  send(0x02, MODE_CMD, DEL_INITNEXT_us);    // Return cursor to home
+
+  // extra steps required for OLED initialisation (no effect on LCD)
+  send(0x17, MODE_CMD, DEL_INITNEXT_us);    // character mode, power on
+
+  // now turn on the display, ready for use - IMPORTANT!
+  send(0x0C, MODE_CMD, DEL_INITNEXT_us);    // display on, cursor/blink off
+
 
   // Initialization sequence is not quite as documented by Winstar.
   // Documented sequence only works on initial power-up.  
@@ -92,30 +112,33 @@ void Adafruit_CharacterOLED::begin(uint8_t cols, uint8_t lines)
   // In the data sheet, the timing specs are all zeros(!).  These have been tested to 
   // reliably handle both warm & cold starts.
 
-  // 4-Bit initialization sequence from Technobly
-  write4bits(0x03); // Put back into 8-bit mode
-  delayMicroseconds(5000);
-  if(_oled_ver == OLED_V2) {  // only run extra command for newer displays
-    write4bits(0x08);
-    delayMicroseconds(5000);
-  }
-  write4bits(0x02); // Put into 4-bit mode
-  delayMicroseconds(5000);
-  write4bits(0x02);
-  delayMicroseconds(5000);
-  write4bits(0x08);
-  delayMicroseconds(5000);
+  // int cmd_delay = 5000;
+
+
+  // // 4-Bit initialization sequence from Technobly
+  // write4bits(0x03); // Put back into 8-bit mode
+  // delayMicroseconds(cmd_delay);
+  // if(_oled_ver == OLED_V2) {  // only run extra command for newer displays
+  //   write4bits(0x08);
+  //   delayMicroseconds(cmd_delay);
+  // }
+  // write4bits(0x02); // Put into 4-bit mode
+  // delayMicroseconds(cmd_delay);
+  // write4bits(0x02);
+  // delayMicroseconds(cmd_delay);
+  // write4bits(0x08);
+  // delayMicroseconds(cmd_delay);
   
-  command(0x08);	// Turn Off
-  delayMicroseconds(5000);
-  command(0x01);	// Clear Display
-  delayMicroseconds(5000);
-  command(0x06);	// Set Entry Mode
-  delayMicroseconds(5000);
-  command(0x02);	// Home Cursor
-  delayMicroseconds(5000);
-  command(0x0C);	// Turn On - enable cursor & blink
-  delayMicroseconds(5000);
+  // command(0x08);	// Turn Off
+  // delayMicroseconds(cmd_delay);
+  // command(0x01);	// Clear Display
+  // delayMicroseconds(cmd_delay);
+  // command(0x06);	// Set Entry Mode
+  // delayMicroseconds(cmd_delay);
+  // command(0x02);	// Home Cursor
+  // delayMicroseconds(cmd_delay);
+  // command(0x0C);	// Turn On - enable cursor & blink
+  // delayMicroseconds(cmd_delay);
 }
 
 /********** high level commands, for the user! */
@@ -232,50 +255,80 @@ void Adafruit_CharacterOLED::print(std::string str) {
   for (char& c : str) {
     write(static_cast<uint8_t>(c));
   }
+  // for (int i = 0; i < _numcols; ++i) {
+  //   if (i < str.length()) {
+  //     write(static_cast<uint8_t>(str[i]));
+  //   }
+  //   else {
+  //     write(' ');
+  //   }
+  // }
 }
 
 /*********** mid level commands, for sending data/cmds */
 
 inline void Adafruit_CharacterOLED::command(uint8_t value) 
 {
-  send(value, LOW);
-  waitForReady();
+  send(value, MODE_CMD);
+  // waitForReady();
 }
 
 inline size_t Adafruit_CharacterOLED::write(uint8_t value) 
 {
-  send(value, HIGH);
-  waitForReady();
+  send(value, MODE_CHAR);
+  // waitForReady();
 }
 
 /************ low level data pushing commands **********/
 
 // write either command or data
-void Adafruit_CharacterOLED::send(uint8_t value, uint8_t mode) 
-{
-  digitalWrite(_rs_pin, mode);
-  pinMode(_rw_pin, OUTPUT);
-  digitalWrite(_rw_pin, LOW);
+// void Adafruit_CharacterOLED::send(uint8_t value, uint8_t mode) 
+// {
+//   write8bits(value, mode);
+//   // digitalWrite(_rs_pin, mode);
+//   // pinMode(_rw_pin, OUTPUT);
+//   // digitalWrite(_rw_pin, LOW);
   
-  write4bits(value>>4);
-  write4bits(value);
-}
+//   // write4bits(value>>4);
+//   // write4bits(value);
+// }
 
 void Adafruit_CharacterOLED::pulseEnable(void) 
 {
+  // Toggle 'Enable' pin, wrapping with minimum delays
+  delayMicroseconds(EDEL_TAS_us);
   digitalWrite(_enable_pin, HIGH);
-  delayMicroseconds(50);    // Timing Spec?
+  delayMicroseconds(EDEL_PWEH_us);
   digitalWrite(_enable_pin, LOW);
+  delayMicroseconds(EDEL_TAH_us);
+}
+
+void Adafruit_CharacterOLED::send(uint8_t value, int mode, int post_delay, int mid_delay) {
+  // set mode = HIGH  for character, LOW for command
+  digitalWrite(_rs_pin, mode);
+
+  // Output 4 high bits
+  write4bits(value >> 4);
+
+  // Wait for extra mid delay if specified (special case)
+  if (mid_delay) {
+    delayMicroseconds(mid_delay);
+  }
+
+  // Output 4 low bits
+  write4bits(value);
+
+  if (post_delay) {
+    delayMicroseconds(post_delay);
+  }
 }
 
 void Adafruit_CharacterOLED::write4bits(uint8_t value) 
 {
   for (int i = 0; i < 4; i++) 
   {
-    pinMode(_data_pins[i], OUTPUT);
     digitalWrite(_data_pins[i], (value >> i) & 0x01);
   }
-  delayMicroseconds(50); // Timing spec?
   pulseEnable();
 }
 

@@ -82,7 +82,7 @@ public:
   void print(std::string str);
   
 private:
-  void send(uint8_t, uint8_t);
+  void send(uint8_t value, int mode, int post_delay=0, int mid_delay=0);
   void write4bits(uint8_t);
   void pulseEnable();
   void waitForReady();
@@ -100,6 +100,28 @@ private:
   uint8_t _initialized;
   uint8_t _currline;
   uint8_t _numlines;
+  uint8_t _numcols;
+
+  static constexpr int MODE_CHAR = HIGH;
+  static constexpr int MODE_CMD = LOW;
+
+  static constexpr uint8_t LCD_LINE_1 = 0x80; // LCD RAM address for the 1st line
+  static constexpr uint8_t LCD_LINE_2 = 0xC0; // LCD RAM address for the 2nd line
+
+  // Timing constants for low level write operations
+  // NOTE: Enable cycle time must be at least 1 microsecond
+  // NOTE2: Actually, these can be zero and the LCD will typically still work OK
+  static constexpr int EDEL_TAS_us =  10;      // Address setup time (TAS)
+  static constexpr int EDEL_PWEH_us = 10;      // Pulse width of enable (PWEH)
+  static constexpr int EDEL_TAH_us =  10;      // Address hold time (TAH)
+
+  // Timing constraints for initialisation steps - IMPORTANT!
+  // Note that post clear display must be at least 6.2ms for OLEDs, as opposed
+  // to only 1.4ms for HD44780 LCDs. This has caused confusion in the past.
+  static constexpr int DEL_INITMID_us = 10000;       // middle of initial write (min 4.1ms)
+  static constexpr int DEL_INITNEXT_us = 200;        // post second initial write (min 100ns)
+  static constexpr int DEL_POSTCLEAR_us = 10000;     // post clear display step (busy, min 6.2ms)
+
 };
 
 #endif
