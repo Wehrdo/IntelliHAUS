@@ -6,7 +6,7 @@ var express = require('express');
 var router = express.Router();
 var password = require('password-hash-and-salt');
 var models = require('../../models/index');
-var config = require("../../" + (process.env.NODE_ENV || "dev") + "_config");
+var config = require("../../" + (process.env.NODE_ENV || "development") + "_config");
 var jwt = require('jsonwebtoken');
 
 /*

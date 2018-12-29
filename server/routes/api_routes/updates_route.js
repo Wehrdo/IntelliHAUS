@@ -7,7 +7,7 @@ var router = express.Router();
 var models = require('../../models/index');
 var middleware = require('./../customMiddleware');
 var longPolling = require('../../rule_evaluation/long_polling');
-var env       = process.env.NODE_ENV || "dev";
+var env       = process.env.NODE_ENV || "development";
 var config = require("../../" + env + "_config");
 
 

@@ -3,7 +3,7 @@
  */
 var jwt = require('jsonwebtoken');
 var models = require('../models');
-var config = require("../" + (process.env.NODE_ENV || "dev") + "_config");
+var config = require("../" + (process.env.NODE_ENV || "development") + "_config");
 
 /*
 Attempts to verify the token (possibly) given in request

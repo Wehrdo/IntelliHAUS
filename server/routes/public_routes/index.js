@@ -7,7 +7,7 @@ var router = express.Router();
 var path = require('path');
 var jwt = require('jsonwebtoken');
 var models = require('../../models');
-var config = require("../../" + (process.env.NODE_ENV || "dev") + "_config");
+var config = require("../../" + (process.env.NODE_ENV || "development") + "_config");
 
 // TODO: I really don't like this repeat of authentication code, but it seemed necessary
 router.get('/', function (req, res) {

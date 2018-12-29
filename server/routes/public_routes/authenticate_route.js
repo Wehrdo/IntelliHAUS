@@ -7,7 +7,7 @@ var router = express.Router();
 var jwt = require('jsonwebtoken');
 var password = require('password-hash-and-salt');
 var models = require('../../models');
-var config = require("../../" + (process.env.NODE_ENV || "dev") + "_config");
+var config = require("../../" + (process.env.NODE_ENV || "development") + "_config");
 
 /*
 Looks for the user with username that was passed into the request

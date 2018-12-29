@@ -8,7 +8,7 @@ var models = require("./models");
 var routes = require("./routes");
 var cookieParser = require("cookie-parser");
 var bodyParser = require('body-parser');
-var config = require("./" + (process.env.NODE_ENV || "dev") + "_config");
+var config = require("./" + (process.env.NODE_ENV || "development") + "_config");
 
 app.set('port', config.port);
 

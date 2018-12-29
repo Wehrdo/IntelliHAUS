@@ -8,7 +8,7 @@ Contains general configuration information for the app on your development serve
 var config = {};
 
 config.jwt_secret = "secret";
-config.port = 80;
+config.port = 8080;
 
 // Database connection options
 config.db_name = 'intellihaus';
